@@ -1,0 +1,28 @@
+.food-display {
+    padding: 20px;
+    text-align: center;
+}
+
+.food-display h2 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.food-display-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+
+@media (max-width: 480px) {
+    .food-display {
+        padding: 10px;
+    }
+
+    .food-display h2 {
+        font-size: 24px;
+    }
+}
