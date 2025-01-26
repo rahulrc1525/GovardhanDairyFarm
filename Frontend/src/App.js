@@ -18,6 +18,7 @@ import AboutUs from './pages/AboutUs/AboutUs';
 import BlogPage from './pages/Blog/BlogPage';
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy';
 import ReturnAndRefund from './components/rrpolicy/returnandrefund';
+import MyOrders from './pages/MyOrders/MyOrders';
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="/AboutUs" element={<AboutUs />} />
           <Route path="/BlogPage" element={<BlogPage />} />
           <Route path="/Return-Refund-Policy" element={<ReturnAndRefund/>}/>
+          <Route path="/myorders" element={<MyOrders/>}/>
       
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       

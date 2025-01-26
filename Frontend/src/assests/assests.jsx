@@ -52,6 +52,7 @@ import Blogmilk2 from './Blogmilk2.jpg';
 import Blogmilk3 from './Blogmilk3.jpg';
 import Blogmilk4 from './Blogmilk4.jpg';
 import farmvideo from './farmvideo.mp4';
+import parcel_icon from './parcel_icon.png';
 
 
 export const assests = {
@@ -108,12 +109,13 @@ export const assests = {
     contactusimg,
     profile_icon,
     bag_icon,
-    logout_icon
+    logout_icon,
+    parcel_icon
 
 }
 export const foodList = [
   {
-    id: 1,
+    _id: 1,
     name: "Gir Cow Ghee 1kg",
     image: assests.GHEE,
     price: 3000,
@@ -121,7 +123,7 @@ export const foodList = [
     categories: ["Ghee"],
   },
   {
-    id: 2,
+    _id: 2,
     name: "Gir Cow Ghee 500g",
     image: assests.GHEE,
     price: 1500,
@@ -129,7 +131,7 @@ export const foodList = [
     categories: ["Ghee"],
   },
   {
-    id: 3,
+    _id: 3,
     name: "A2 Milk 1ltr",
     image: assests.milk1ltr,
     price: 120,
@@ -137,7 +139,7 @@ export const foodList = [
     categories: ["Milk"],
   },
   {
-    id: 4,
+    _id: 4,
     name: "A2 Milk 500ml",
     image: assests.milk,
     price: 60,
@@ -145,7 +147,7 @@ export const foodList = [
     categories: ["Milk"],
   },
   {
-    id: 5,
+    _id: 5,
     name: "A2 Milk 6 ltr",
     image: assests.milk6ltr,
     price: 720,
@@ -153,7 +155,7 @@ export const foodList = [
     categories: ["Milk"],
   },
   {
-    id: 6,
+    _id: 6,
     name: "Ghee 2kg",
     image: assests.GHEE,
     price: 6000,
@@ -161,7 +163,7 @@ export const foodList = [
     categories: ["Ghee"],
   },
   {
-    id: 7,
+    _id: 7,
     name: "Curd 1kg",
     image: assests.CURD,
     price: 125,
@@ -169,7 +171,7 @@ export const foodList = [
     categories: ["Curd"],
   },
   {
-    id: 8,
+    _id: 8,
     name: "Curd 6kg",
     image: assests.CURD,
     price: 750,
@@ -177,7 +179,7 @@ export const foodList = [
     categories: ["Curd"],
   },
   {
-    id: 9,
+    _id: 9,
     name: "Buttermilk 2ltr",
     image: assests.logo,
     price: 150,
@@ -185,7 +187,7 @@ export const foodList = [
     categories: ["Buttermilk"],
   },
   {
-    id: 10,
+    _id: 10,
     name: "Buttermilk 5ltr",
     image: assests.logo,
     price: 375,
@@ -193,7 +195,7 @@ export const foodList = [
     categories: ["Buttermilk"],
   },
   {
-    id: 11,
+    _id: 11,
     name: "Gir Gomutra 250ml",
     image: assests.Gomutra250ml,
     price: 150,
@@ -201,7 +203,7 @@ export const foodList = [
     categories: ["Gir Gomutra"],
   },
   {
-    id: 12,
+    _id: 12,
     name: "Gir Gomutra 500ml",
     image: assests.Gomutra500ml,
     price: 300,
@@ -209,7 +211,7 @@ export const foodList = [
     categories: ["Gir Gomutra"],
   },
   {
-    id: 13,
+    _id: 13,
     name: "Cow Dung 250g",
     image: assests.Cowdung,
     price: 150,
@@ -217,7 +219,7 @@ export const foodList = [
     categories: ["Cow Dung Cake"],
   },
   {
-    id: 14,
+    _id: 14,
     name: "Cow Dung 500g",
     image: assests.Cowdung,
     price: 300,

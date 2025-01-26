@@ -59,6 +59,7 @@ const StoreContextProvider = (props) => {
         url+"/api/cart/add",
         { itemId: item.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
+
       );
     } catch (error) {
       console.error("Error updating cart on backend:", error);
@@ -158,5 +159,6 @@ const StoreContextProvider = (props) => {
     </StoreContext.Provider>
   );
 };
-
 export default StoreContextProvider;
+
+

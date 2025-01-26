@@ -5,14 +5,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    cartData: {
-      items: [
-        {
-          productId: { type: mongoose.Schema.Types.ObjectId, ref: "food" }, // Reference foodModel
-          quantity: { type: Number, default: 1 },
-        },
-      ],
-    },
+    cartData: { type: Object, default: {} }, // This should be able to store item IDs and quantities
   },
   {
     timestamps: true,

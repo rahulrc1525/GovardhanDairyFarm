@@ -9,7 +9,7 @@ const FoodItem = ({ id, name, price, description, image }) => {
   const [showQuantity, setShowQuantity] = useState(false);
 
   const handleIncrease = () => {
-    addToCart({ id, name, price, image });
+    addToCart({ id, name, price, image }); // Ensure 'id' is passed correctly
     setQuantity((prev) => prev + 1);
     setShowQuantity(true);
     setTimeout(() => setShowQuantity(false), 2000); // Hide after 2 seconds
@@ -27,7 +27,11 @@ const FoodItem = ({ id, name, price, description, image }) => {
   return (
     <div className="food-item">
       <div className="food-item-img-container">
-        <img className="food-item-image" src={`${url}/images/${image}`} alt={name} />
+        <img
+          className="food-item-image"
+          src={`${url}/images/${image}`}
+          alt={name}
+        />
       </div>
       <div className="food-item-info">
         <div className="food-item-name-rating">

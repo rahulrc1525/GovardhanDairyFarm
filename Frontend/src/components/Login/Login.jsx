@@ -31,11 +31,12 @@ const Login = ({ setShowLogin }) => {
         email: data.email,
         password: data.password,
       });
-
+  
       if (response.data.success) {
-        const { token } = response.data;
+        const { token, userId } = response.data; // Ensure userId is returned
         setToken(token);
         localStorage.setItem("token", token);
+        localStorage.setItem("userId", userId); // Store userId
         setShowLogin(false); // Close login modal
       } else {
         setErrorMessage(response.data.message);

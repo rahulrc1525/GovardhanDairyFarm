@@ -17,8 +17,8 @@ const FoodDisplay = ({ category }) => {
         {filteredFoodList.length > 0 ? (
           filteredFoodList.map((item) => (
             <FoodItem
-              key={item.id} // Updated for consistency
-              id={item.id}
+              key={item._id} // Use _id as the key
+              id={item._id} // Pass _id instead of id
               name={item.name}
               description={item.description}
               price={item.price}
@@ -33,4 +33,4 @@ const FoodDisplay = ({ category }) => {
   );
 };
 
-export default FoodDisplay;
+export default FoodDisplay; 
