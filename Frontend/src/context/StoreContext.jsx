@@ -14,7 +14,7 @@ const StoreContextProvider = (props) => {
     const storedUserId = localStorage.getItem("userId");
     return storedUserId ? storedUserId : "";
   });
-  const url = "http://localhost:4000";
+  const url = "https://govardhandairyfarm.onrender.com";
 
   const fetchCartData = async () => {
     try {
