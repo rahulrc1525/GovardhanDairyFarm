@@ -1,0 +1,260 @@
+/* General Styling */
+.aboutus-container {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f7fa;
+  padding: 0;
+  margin: 0;
+  color: #333;
+}
+
+/* Section Title Styling */
+.section-title {
+  font-size: 36px;
+  color: #1a5276;
+  margin-bottom: 40px;
+  text-align: center;
+  text-transform: uppercase;
+  position: relative;
+  letter-spacing: 2px;
+  animation: fadeInTitle 1s ease-in-out;
+}
+
+.section-title::after {
+  content: '';
+  width: 80px;
+  height: 4px;
+  background-color: #1a5276;
+  display: block;
+  margin: 20px auto 0;
+  border-radius: 2px;
+}
+
+/* Hero Section */
+.hero-section {
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px;
+  background: linear-gradient(to right, #eef2f7, #e3ebf1);
+  animation: fadeIn 1.2s ease-in;
+}
+
+.hero-text h1 {
+  font-size: 48px;
+  color: #154360;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+  animation: slideInLeft 1s ease-out;
+}
+
+.hero-text p {
+  font-size: 22px;
+  color: #566573;
+  margin-bottom: 30px;
+  animation: slideInLeft 1.2s ease-out;
+}
+
+.hero-image img {
+  width: 450px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: scaleIn 1.5s ease-in-out;
+}
+
+.hero-image:hover img {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+/* About Us Section */
+.aboutus-content {
+  background-color: #ffffff;
+  padding: 60px 20px;
+  text-align: center;
+  animation: fadeIn 1s ease-out;
+}
+
+.aboutus-description {
+  font-size: 20px;
+  line-height: 1.8;
+  color: #555;
+  max-width: 900px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.aboutus-content:hover {
+  background-color: #f9fafc;
+}
+
+/* Mission Section */
+.mission-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px;
+  background-color: #f4f7fa;
+}
+
+.mission-text {
+  max-width: 500px;
+  animation: slideInLeft 1s ease-out;
+}
+
+.mission-text h2 {
+  font-size: 34px;
+  color: #1a5276;
+}
+
+.mission-text p {
+  font-size: 18px;
+  color: #4d5656;
+}
+
+.mission-image img {
+  width: 320px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  animation: slideInRight 1s ease-out;
+  transition: transform 0.3s ease;
+  margin-right: 100px;
+}
+
+.mission-image img:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Values Section */
+.values-section {
+  padding: 70px 20px;
+  background: #ffffff;
+  text-align: center;
+  animation: fadeIn 1.2s ease-out;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.value-item {
+  background-color: #f4f7fa;
+  padding: 40px;
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  animation: slideInUp 1s ease-out;
+}
+
+.value-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+.value-item h3 {
+  color: #154360;
+  font-size: 26px;
+  margin-bottom: 15px;
+}
+
+.value-item p {
+  font-size: 18px;
+  color: #4d5656;
+}
+
+.value-item::before {
+  content: '';
+  width: 60px;
+  height: 4px;
+  background-color: #154360;
+  display: block;
+  margin: 0 auto 15px;
+  border-radius: 2px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInTitle {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .hero-section, .mission-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .hero-image img, .mission-image img {
+    width: 300px;
+    margin-top: 30px;
+  }
+}

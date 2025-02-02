@@ -1,0 +1,213 @@
+/* General Layout */
+.place-order-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 40px;
+    background-color: #f3f4f6;
+    font-family: 'Roboto', sans-serif;
+    gap: 40px;
+  }
+  
+  /* Section Title Styling */
+  .section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+  }
+  
+  /* Delivery Info Form */
+  .delivery-info {
+    width: 55%;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  /* Hover effect on form */
+  .delivery-info:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .delivery-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+  
+  /* Form Group Styling */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  /* Form Labels */
+  .form-group label {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #555;
+    text-transform: capitalize;
+    letter-spacing: 0.03rem;
+  }
+  
+  /* Input Fields */
+  .form-group input {
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: #f8f8f8;
+  }
+  
+  /* Interactive Input Styling */
+  .form-group input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+    background-color: #fff;
+    outline: none;
+  }
+  
+  .form-group input:hover {
+    border-color: #bbb;
+  }
+  
+  .form-group input::placeholder {
+    color: #aaa;
+    font-size: 0.95rem;
+  }
+  
+  /* Cart Totals Section */
+  .cart-totals {
+    width: 35%;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  /* Hover effect on Cart Totals */
+  .cart-totals:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-details {
+    margin-bottom: 25px;
+  }
+  
+  .summary-details p {
+    font-size: 1.3rem;
+    color: #444;
+    margin-bottom: 12px;
+  }
+  
+  .summary-value {
+    float: right;
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #2c3e50;
+  }
+  
+  .total-amount {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid #ddd;
+  }
+  
+  /* Proceed Button */
+  .proceed-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .proceed-btn:hover {
+    background-color: #1f4e79;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Promo Code Section */
+  .promo-section {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .promo-section p {
+    font-size: 1.2rem;
+    color: #555;
+  }
+  
+  .promo-code {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  
+  .promo-code input {
+    padding: 10px;
+    width: 70%;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .promo-code input:focus {
+    border-color: #3498db;
+  }
+  
+  .promo-code button {
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .promo-code button:hover {
+    background-color: #1f4e79;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .place-order-container {
+      flex-direction: column;
+    }
+  
+    .delivery-info, .cart-totals {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+  
+    .delivery-form {
+      grid-template-columns: 1fr;
+    }
+  
+    .proceed-btn {
+      width: 100%;
+    }
+  }
+  

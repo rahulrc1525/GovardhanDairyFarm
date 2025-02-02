@@ -1,0 +1,142 @@
+/* src/components/Add/Add.css */
+
+/* Main container styling */
+.add {
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+}
+
+/* Form styling */
+.add form {
+    width: 100%;               /* Take full width of available space */
+    max-width: 800px;           /* Optional max-width for readability */
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin: 0;                  /* Remove margin to align with the sidebar */
+}
+
+/* Flex column utility */
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Upload image section */
+.add-img-upload {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.add-img-upload p {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.add-img-upload label {
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.add-img-upload img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px dashed #ddd;
+    padding: 10px;
+}
+
+.add-img-upload label:hover {
+    transform: scale(1.1);
+}
+
+/* Input and Textarea styling */
+.add-product-name,
+.add-product-description {
+    margin-bottom: 1.5rem;
+}
+
+.add-product-name p,
+.add-product-description p,
+.add-category p,
+.add-price p {
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 0.3rem;
+}
+
+.add-product-name input,
+.add-product-description textarea,
+.add-category select,
+.add-price input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+.add-product-name input:focus,
+.add-product-description textarea:focus,
+.add-category select:focus,
+.add-price input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+/* Category and Price styling */
+.add-category-price {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.add-category,
+.add-price {
+    flex: 1;
+}
+
+/* Button styling */
+.add-btn {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #4a90e2;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-btn:hover {
+    background-color: #357abd;
+}
+
+.add-btn:active {
+    transform: scale(0.98);
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+    .add form {
+        padding: 1.5rem;
+    }
+    .add-category-price {
+        flex-direction: column;
+    }
+}

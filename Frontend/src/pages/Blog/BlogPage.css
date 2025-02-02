@@ -1,0 +1,446 @@
+/* * {
+    border: none !important;
+    box-shadow: none !important;
+} */
+
+.blog-page {
+  font-family: 'Arial', sans-serif;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Center the content on larger screens */
+}
+
+.blog-section {
+  background: linear-gradient(135deg, #f1e7ec, #fff);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  /* Increased spacing between sections */
+  /* padding: 20px; */
+
+}
+
+.section-images,
+.section-content {
+  flex: 1;
+  margin: 0 20px;
+  text-align: justify;
+  /* Increased margin for better spacing */
+}
+
+.section-images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* margin-right: 50px; */
+}
+
+.slideshow-container {
+
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.slideshow {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.slideshow-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+
+
+
+
+.slideshow:hover .slideshow-image {
+  transform: scale(1.1);
+  /* Zoom in on hover */
+}
+
+.section-content {
+  text-align: justify;
+  margin: 0 20px;
+  /* Ensure justified text alignment */
+}
+
+.slideshow img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.section-content h2 {
+  font-size: 26px;
+  /* Slightly larger for better emphasis */
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.section-content p {
+  font-size: 16px;
+  /* Increased readability */
+  line-height: 1.6;
+  /* Improved line spacing */
+  margin: 10px 0;
+  text-align: justify;
+}
+
+@media (max-width: 768px) {
+  .blog-section {
+      flex-direction: column;
+      /* Stack sections vertically on smaller screens */
+      text-align: center;
+      padding: 15px;
+  }
+
+  .section-images,
+  .section-content {
+      margin: 10px 0;
+      /* Adjust spacing for smaller screens */
+  }
+
+  .slideshow {
+      max-width: 100%;
+      /* Ensure slideshow fits smaller screens */
+      height: auto;
+  }
+}
+
+.blog-page {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Center the content on larger screens */
+}
+
+.blog-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 60px;
+  /* Increased spacing between sections */
+  padding: 20px;
+  /* Add padding for better spacing */
+
+  /* Optional: Separate sections visually */
+}
+
+.section-images,
+.section-content {
+  flex: 1;
+  margin: 0 40px;
+  /* Increased margin for better spacing */
+  text-align: justify;
+}
+
+.section-images {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slideshow {
+  width: 100%;
+  max-width: 500px;
+  /* Adjusted for better visual balance */
+  height: 350px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.slideshow img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.section-content h2 {
+  font-size: 28px;
+  /* Slightly larger for better emphasis */
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.section-content p {
+  font-size: 18px;
+  /* Increased readability */
+  line-height: 1.8;
+  /* Improved line spacing */
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .blog-section {
+      flex-direction: column;
+      /* Stack sections vertically on smaller screens */
+      text-align: center;
+  }
+
+  .section-images,
+  .section-content {
+      margin: 10px 0;
+      /* Adjust spacing for smaller screens */
+  }
+
+  .slideshow {
+      max-width: 100%;
+      /* Ensure slideshow fits smaller screens */
+      height: auto;
+  }
+}
+
+/* Cow Section Styles */
+.cow-section {
+  text-align: center;
+  margin: 40px 0;
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.cow-images-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* Two columns */
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.cow-image-wrapper {
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cow-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.cow-image-wrapper:hover .cow-image {
+  transform: scale(1.1);
+}
+
+/* Adjust layout for smaller screens */
+@media (max-width: 768px) {
+  .cow-images-container {
+      grid-template-columns: 1fr;
+      /* Single column for smaller screens */
+  }
+}
+
+
+/* Testimonial Section */
+/* Testimonial Section */
+.testimonial-section {
+  background: linear-gradient(135deg, #d8d799, #fff);
+  padding: 40px 20px;
+  border-radius: 12px;
+  margin: 40px auto;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial-title {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.testimonial-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* Testimonials Partition */
+/* Testimonial Section */
+.testimonial-section {
+  background: linear-gradient(135deg, #fff);
+  padding: 40px 20px;
+  border-radius: 12px;
+  margin: 40px auto;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+.testimonial-section .video-container .video-element {
+  width: 100%;
+  max-width: 700px;
+  /* Adjust to your desired size */
+  min-width: 200px;
+  height: auto;
+  /* Ensure the height adjusts proportionally */
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.testimonial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.testimonial-title {
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+  flex: 1;
+}
+
+.video-title {
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+  flex: 1;
+}
+
+.testimonial-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* Testimonials Partition */
+.testimonial-partition {
+  flex: 1;
+  max-width: 50%;
+}
+
+.testimonial-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.testimonial-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: scale(1.05);
+}
+
+.testimonial-quote {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.testimonial-name {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.testimonial-role {
+  font-size: 14px;
+  color: #888;
+}
+
+/* Video Partition */
+.video-partition {
+  flex: 1;
+  max-width: 100%;
+  text-align: left;
+}
+
+.video-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.video-element {
+  width: 100%;
+  max-width: 400px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.video-description {
+  font-size: 15px; /* Slightly smaller text for better readability on mobile */
+  line-height: 1.5;
+  margin-top: 15px;
+  padding: 0 15px; /* Increased padding for mobile spacing */
+  text-align: left; /* Align text for a cleaner look */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .testimonial-header {
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+  }
+
+  .testimonial-container {
+      flex-direction: column;
+      gap: 40px;
+  }
+
+  .testimonial-partition,
+  .video-partition {
+      max-width: 100%;
+  }
+
+  .video-container {
+      justify-content: center;
+  }
+
+      .video-element {
+          width: 100%;
+          /* This will take the full width of the container */
+          max-width: 600px;
+          /* Increase the maximum width */
+          min-width: 400px;
+          /* Optional: Ensure a minimum width */
+          border: 2px solid #ccc;
+          border-radius: 8px;
+          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      }
+}

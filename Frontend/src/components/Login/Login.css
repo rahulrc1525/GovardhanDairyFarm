@@ -1,0 +1,258 @@
+/* Modal background overlay */
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+/* Overlay to click outside and close modal */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Background transparency */
+  z-index: 1000;
+}
+
+/* Login Modal Wrapper */
+.login-background {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 15px;
+  padding: 40px 20px;
+  color: white;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15); /* Transparent background */
+  backdrop-filter: blur(12px); /* Apply the blur effect */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Animation for modal appearance */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form box styling */
+.form-box {
+  width: 100%;
+}
+
+.form-box.show {
+  display: block; /* Show the active form */
+}
+
+.form-box.hidden {
+  display: none; /* Hide the inactive form */
+}
+
+/* Close button styling */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  left: 160px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  
+}
+
+.close-btn svg {
+  color: white;
+  font-size: 24px;
+}
+
+/* Form styling */
+form {
+  width: 100%;
+}
+
+h1 {
+  font-size: 24px;
+  color: white;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.input-box {
+  position: relative;
+  margin: 20px 0;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 12px 20px 12px 40px;
+  border-radius: 30px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.input-box input:focus {
+  border-color: #5ed527; /* Green border when focused */
+  box-shadow: 0 0 8px rgba(94, 213, 39, 0.5);
+}
+
+.input-box .icon {
+  position: absolute;
+  top: 50%;
+  left: 318px;
+  transform: translateY(-50%);
+  color: #5ed527;
+  font-size: 18px;
+}
+
+/* Button styling */
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 30px;
+  background-color: #5ed527;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* button:hover {
+  background-color: #4bb122;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+} */
+
+
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.remember-forgot a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.remember-forgot a:hover {
+  text-decoration: underline;
+}
+
+.register-link {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.register-link a {
+  color: white;
+  text-decoration: underline;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.register-link a:hover {
+  color: #5ed527;
+}
+
+/* Success message styling */
+.login-success-message {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 128, 0, 0.9); /* Green background */
+  color: white;
+  border-radius: 10px;
+  padding: 20px 40px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1s ease-in-out;
+}
+
+.success-icon {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-background {
+    width: 90%;
+    padding: 30px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .input-box input {
+    padding: 10px 15px 10px 35px;
+  }
+
+  button {
+    padding: 10px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-background {
+    width: 95%;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .input-box input {
+    padding: 8px 10px 8px 30px;
+    font-size: 14px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .remember-forgot a {
+    font-size: 12px;
+  }
+}
