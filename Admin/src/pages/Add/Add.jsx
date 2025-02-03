@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const Add = () => {
-  const url = "http://localhost:4000/api/food/add";
+  const url = "https://govardhandairyfarmbackend.onrender.com/api/food/add";
   const [image, setImage] = useState(null);
   const [data, setData] = useState({
     name: "",
