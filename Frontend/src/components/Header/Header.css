@@ -7,7 +7,6 @@
   position: relative;
   margin: 20px auto; /* Center the container horizontally */
   padding: 0 20px; /* Optional: Add padding to avoid touching screen edges */
-  
 }
 
 /* Image container to ensure full coverage of the header */
@@ -22,11 +21,12 @@
 /* Styling for the images in the carousel */
 .header-image {
   width: 100%;
-  height: 0%;
-  object-fit: cover;
+  height: 100%; /* Ensure it covers the full container */
+  object-fit: cover; /* Ensures images maintain aspect ratio */
   transition: transform 0.5s ease-in-out, filter 0.5s ease-in-out; /* Smooth transition for zoom and brightness */
   opacity: 0.9;
   filter: brightness(1); /* Slightly darken by default */
+  display: block;
 }
 
 /* Hover effect for zoom and brightness */
@@ -90,7 +90,6 @@
   right: 20px;
 }
 
-/* Mobile responsiveness: Adjust height and width for smaller screens */
 /* Mobile responsiveness */
 @media (max-width: 1920px) {
   .header-container {
@@ -100,39 +99,45 @@
 
 @media (max-width: 1600px) {
   .header-container {
-    height: 78vh; /* Further reduce height for extra large screens */
+    height: 78vh;
   }
 }
 
 @media (max-width: 1440px) {
   .header-container {
-    height: 78vh; /* Further reduce height for large screens */
+    height: 78vh;
   }
 }
 
 @media (max-width: 1366px) {
   .header-container {
-    height: 78vh; /* Further reduce height for medium screens */
+    height: 78vh;
   }
 }
 
 @media (max-width: 1280px) {
   .header-container {
-    height: 78vh; /* Further reduce height for small screens */
+    height: 78vh;
   }
 }
 
+/* Fix for disappearing images at smaller sizes */
 @media (max-width: 1050px) {
   .header-container {
-    height: 78vw; /* Smaller height for mobile */
+    height: 78vw; /* Adjust based on viewport width */
   }
 
   .header-image-container {
-    justify-content: flex-start; /* Adjust image position */
+    justify-content: center; /* Keep centered */
+    height: 100%;
   }
 
   .header-image {
-    height: 100%; /* Ensure image covers full height on mobile */
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
+    min-height: 100%; /* Ensure full height */
+    object-fit: cover;
+    display: block;
   }
 
   .slick-prev, .slick-next {
@@ -142,12 +147,6 @@
 
 @media (max-width: 750px) {
   .header-container {
-    height: 58vw; /* Further reduce height for extra small screens */
-  }
-}
-
-@media (max-width: 750px) {
-  .header-container {
-    height: 58vw; /* Further reduce height for extra small screens */
+    height: 58vw;
   }
 }
