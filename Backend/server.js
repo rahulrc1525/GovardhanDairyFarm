@@ -40,5 +40,5 @@ app.get("/", (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server started on http://localhost:${port}`);
+  console.log(`Server started on https://govardhandairyfarmbackend.onrender.com`);
 });
