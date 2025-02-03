@@ -17,13 +17,14 @@ const Header = () => {
   const settings = {
     dots: true,
     infinite: true,
-    speed: 500, // Slide transition speed (0.5 seconds)
+    speed: 600, // Smooth transition speed
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 4000, // Change duration between slides (4 seconds)
     fade: true, // Enable fade transition
     cssEase: 'linear',
+    arrows: false, // Hide default arrows for a cleaner look
   };
 
   const handleHeaderClick = (event) => {
