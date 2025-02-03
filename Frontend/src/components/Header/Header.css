@@ -1,81 +1,208 @@
 /* General Styles */
 body {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    background-color: #f7fafc;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  background-color: #f7fafc;
 }
 
 /* Header Container */
 .header-container {
-    width: 100%;
-    height: 70vh; /* Increased height for better display */
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #000;
+  width: 100%;
+  height: 70vh; /* Increased height for better display */
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
 }
 
 /* Image Styling */
 .header-image-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .header-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Ensures images scale properly */
-    border-radius: 10px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures images scale properly */
+  border-radius: 10px;
 }
 
 /* Slick Dots Customization */
 .slick-dots {
-    position: absolute;
-    bottom: 15px;
-    display: flex;
-    justify-content: center;
-    width: 100%;
+  position: absolute;
+  bottom: 15px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .slick-dots li button:before {
-    font-size: 12px;
-    color: white;
-    opacity: 0.8;
+  font-size: 12px;
+  color: white;
+  opacity: 0.8;
 }
 
 .slick-dots li.slick-active button:before {
-    color: #48bb78;
-    opacity: 1;
+  color: #48bb78;
+  opacity: 1;
 }
 
 /* Responsive Design */
+@media (max-width: 1920px) {
+  .header-container {
+    height: 70vh;
+  }
+  .header-image {
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 1600px) {
+  .header-container {
+    height: 65vh;
+  }
+  .header-image {
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 1440px) {
+  .header-container {
+    height: 60vh;
+  }
+  .header-image {
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 1366px) {
+  .header-container {
+    height: 55vh;
+  }
+  .header-image {
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 1280px) {
+  .header-container {
+    height: 50vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
 @media (max-width: 1024px) {
-    .header-container {
-        height: 60vh; /* Slightly smaller height */
-    }
+  .header-container {
+    height: 45vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 960px) {
+  .header-container {
+    height: 40vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-container {
+    height: 35vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 840px) {
+  .header-container {
+    height: 30vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
 }
 
 @media (max-width: 768px) {
-    .header-container {
-        height: 50vh; /* Adjust height for smaller screens */
-    }
+  .header-container {
+    height: 25vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
 
-    .header-image {
-        object-fit: contain;
-    }
+@media (max-width: 720px) {
+  .header-container {
+    height: 20vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-container {
+    height: 15vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 580px) {
+  .header-container {
+    height: 10vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
 }
 
 @media (max-width: 480px) {
-    .header-container {
-        height: 40vh; /* Ensure visibility on very small screens */
-    }
+  .header-container {
+    height: 8vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+  .slick-dots li button:before {
+    font-size: 10px;
+  }
+}
 
-    .slick-dots li button:before {
-        font-size: 10px;
-    }
+@media (max-width: 380px) {
+  .header-container {
+    height: 6vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+  .slick-dots li button:before {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 320px) {
+  .header-container {
+    height: 4vh;
+  }
+  .header-image {
+    object-fit: contain;
+  }
+  .slick-dots li button:before {
+    font-size: 6px;
+  }
 }
