@@ -5,204 +5,399 @@ body {
   background-color: #f7fafc;
 }
 
-/* Header Container */
-.header-container {
-  width: 100%;
-  height: 70vh; /* Increased height for better display */
-  overflow: hidden;
+.contact-page {
+  color: #1a202c;
+}
+
+/* Header Section */
+.header-section {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #000;
+  margin: 40px 10px 20px;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6),
+          rgba(0, 0, 0, 0.6)),
+      url('../../assests/contactusimg.png');
+  background-size: cover;
+  background-position: center;
+  padding: 120px 20px;
+  border-radius: 15px;
+  text-align: center;
+  color: #fff;
 }
 
-/* Image Styling */
-.header-image-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.header-content h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.header-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ensures images scale properly */
+.header-content p {
+  font-size: 1.2rem;
+  margin-top: 10px;
+  font-weight: 400;
+}
+
+/* Contact Information */
+.contact-info {
+  text-align: center;
+  padding: 50px 20px;
+  background-color: #edf2f7;
   border-radius: 10px;
+  margin: 30px auto;
+  max-width: 1200px;
 }
 
-/* Slick Dots Customization */
-.slick-dots {
-  position: absolute;
-  bottom: 15px;
+.contact-info h2 {
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+}
+
+.info-section {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
-.slick-dots li button:before {
-  font-size: 12px;
-  color: white;
-  opacity: 0.8;
+.info-item {
+  flex: 1 1 300px;
+  margin: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
-.slick-dots li.slick-active button:before {
+.info-item:hover {
+  transform: scale(1.05);
+}
+
+.info-item h3 {
+  font-size: 1.4rem;
+  margin-top: 10px;
+  color: #2d3748;
+}
+
+.info-item p {
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+.icon {
+  font-size: 2rem;
   color: #48bb78;
-  opacity: 1;
 }
 
-/* Responsive Design */
+/* Contact Form Section */
+.contact-form-section {
+  margin: 100px auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 40px 20px;
+  max-width: 600px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  overflow: visible;
+}
+
+.contact-form-section h2 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-box {
+  margin-bottom: 20px;
+}
+
+.input-box label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.input-box input,
+.input-box textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-box input:focus,
+.input-box textarea:focus {
+  border-color: #48bb78;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 20px;
+}
+
+.submit-button {
+  width: 100%;
+  height: 50px;
+  padding: 14px;
+  background-color: #48bb78;
+  color: #fff;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-button:hover {
+  background-color: #38a169;
+}
+
+/* Media Queries */
 @media (max-width: 1920px) {
-  .header-container {
-    height: 70vh;
+  .header-section {
+    padding: 100px 20px;
   }
-  .header-image {
-    object-fit: cover;
+  .contact-info {
+    padding: 40px 20px;
+  }
+  .info-item {
+    flex: 1 1 250px;
+  }
+  .contact-form-section {
+    padding: 30px 20px;
   }
 }
 
 @media (max-width: 1600px) {
-  .header-container {
-    height: 65vh;
+  .header-section {
+    padding: 90px 20px;
   }
-  .header-image {
-    object-fit: cover;
+  .contact-info {
+    padding: 30px 20px;
+  }
+  .info-item {
+    flex: 1 1 200px;
+  }
+  .contact-form-section {
+    padding: 20px 20px;
   }
 }
 
 @media (max-width: 1440px) {
-  .header-container {
-    height: 60vh;
+  .header-section {
+    padding: 80px 20px;
   }
-  .header-image {
-    object-fit: cover;
+  .contact-info {
+    padding: 20px 20px;
+  }
+  .info-item {
+    flex: 1 1 150px;
+  }
+  .contact-form-section {
+    padding: 15px 20px;
   }
 }
 
 @media (max-width: 1366px) {
-  .header-container {
-    height: 55vh;
+  .header-section {
+    padding: 70px 20px;
   }
-  .header-image {
-    object-fit: cover;
+  .contact-info {
+    padding: 15px 20px;
+  }
+  .info-item {
+    flex: 1 1 120px;
+  }
+  .contact-form-section {
+    padding: 10px 20px;
   }
 }
 
 @media (max-width: 1280px) {
-  .header-container {
-    height: 50vh;
+  .header-section {
+    padding: 60px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 10px 20px;
+  }
+  .info-item {
+    flex: 1 1 100px;
+  }
+  .contact-form-section {
+    padding: 5px 20px;
   }
 }
 
 @media (max-width: 1024px) {
-  .header-container {
-    height: 45vh;
+  .header-section {
+    padding: 50px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 5px 20px;
+  }
+  .info-item {
+    flex: 1 1 80px;
+  }
+  .contact-form-section {
+    padding: 0px 20px;
   }
 }
 
 @media (max-width: 960px) {
-  .header-container {
-    height: 40vh;
+  .header-section {
+    padding: 40px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 20px;
+  }
+  .info-item {
+    flex: 1 1 60px;
+  }
+  .contact-form-section {
+    padding: 0px 10px;
   }
 }
 
 @media (max-width: 900px) {
-  .header-container {
-    height: 35vh;
+  .header-section {
+    padding: 30px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 10px;
+  }
+  .info-item {
+    flex: 1 1 50px;
+  }
+  .contact-form-section {
+    padding: 0px 5px;
   }
 }
 
 @media (max-width: 840px) {
-  .header-container {
-    height: 30vh;
+  .header-section {
+    padding: 20px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 5px;
+  }
+  .info-item {
+    flex: 1 1 40px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 768px) {
-  .header-container {
-    height: 25vh;
+  .header-section {
+    padding: 10px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
+  }
+  .info-item {
+    flex: 1 1 30px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
+  }
+  .info-section {
+    flex-direction: column;
+  }
+  .info-item {
+    margin: 15px auto;
   }
 }
 
 @media (max-width: 720px) {
-  .header-container {
-    height: 20vh;
+  .header-section {
+    padding: 5px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
+  }
+  .info-item {
+    flex: 1 1 20px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 640px) {
-  .header-container {
-    height: 15vh;
+  .header-section {
+    padding: 0px 20px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
+  }
+  .info-item {
+    flex: 1 1 15px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 580px) {
-  .header-container {
-    height: 10vh;
+  .header-section {
+    padding: 0px 10px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
+  }
+  .info-item {
+    flex: 1 1 10px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 480px) {
-  .header-container {
-    height: 8vh;
+  .header-section {
+    padding: 0px 5px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
   }
-  .slick-dots li button:before {
-    font-size: 10px;
+  .info-item {
+    flex: 1 1 5px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 380px) {
-  .header-container {
-    height: 6vh;
+  .header-section {
+    padding: 0px 0px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
   }
-  .slick-dots li button:before {
-    font-size: 8px;
+  .info-item {
+    flex: 1 1 0px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
 
 @media (max-width: 320px) {
-  .header-container {
-    height: 4vh;
+  .header-section {
+    padding: 0px 0px;
   }
-  .header-image {
-    object-fit: contain;
+  .contact-info {
+    padding: 0px 0px;
   }
-  .slick-dots li button:before {
-    font-size: 6px;
+  .info-item {
+    flex: 1 1 0px;
+  }
+  .contact-form-section {
+    padding: 0px 0px;
   }
 }
