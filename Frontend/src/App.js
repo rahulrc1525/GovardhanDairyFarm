@@ -20,6 +20,7 @@ import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy';
 import ReturnAndRefund from './components/rrpolicy/returnandrefund';
 import MyOrders from './pages/MyOrders/MyOrders';
 import ContactPage from './pages/Contactus/Contactus';
+import Verify from './pages/Verify/Verify';
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -40,6 +41,7 @@ const App = () => {
           <Route path="/BlogPage" element={<BlogPage />} />
           <Route path="/Return-Refund-Policy" element={<ReturnAndRefund/>}/>
           <Route path="/myorders" element={<MyOrders/>}/>
+          <Route path="/verify" element={<Verify/>} />
       
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       
