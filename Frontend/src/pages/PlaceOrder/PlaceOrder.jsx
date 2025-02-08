@@ -24,13 +24,15 @@ const PlaceOrder = () => {
     setData((data) => ({ ...data, [name]: value }));
   };
 
-  useEffect(()=>{
-    console.log(data);
-  },[data]);
+  useEffect(() => {
+    console.log("Updated Form Data:", data);
+  }, [data]);
 
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
+
+    console.log("Placing Order...");
 
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
@@ -48,6 +50,8 @@ const PlaceOrder = () => {
       address: data,
     };
 
+    console.log("Order Data:", orderData);
+
     try {
       const response = await fetch(`${url}/api/order/placeorder`, {
         method: "POST",
@@ -59,7 +63,10 @@ const PlaceOrder = () => {
 
       const result = await response.json();
 
+      console.log("Order Response:", result);
+
       if (result.success) {
+        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
@@ -72,6 +79,8 @@ const PlaceOrder = () => {
   };
 
   const handleRazorpayPayment = async (order) => {
+    console.log("Processing Razorpay Payment for Order ID:", order.id);
+
     const options = {
       key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY, // Your Razorpay public key
       amount: order.amount,
@@ -80,12 +89,16 @@ const PlaceOrder = () => {
       description: "Dairy Product Purchase",
       order_id: order.id, // Order ID from backend
       handler: async function (response) {
+        console.log("Payment Success Response:", response);
+
         const verifyData = {
           orderId: order.receipt,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
         };
+
+        console.log("Verifying Payment with Data:", verifyData);
 
         try {
           const verifyResponse = await fetch(`${url}/api/order/verifypayment`, {
@@ -97,6 +110,8 @@ const PlaceOrder = () => {
           });
 
           const verifyResult = await verifyResponse.json();
+
+          console.log("Payment Verification Response:", verifyResult);
 
           if (verifyResult.success) {
             alert("Payment Successful!");
@@ -117,6 +132,7 @@ const PlaceOrder = () => {
       },
     };
 
+    console.log("Initializing Razorpay...");
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
@@ -131,6 +147,11 @@ const PlaceOrder = () => {
   }, 0);
   const deliveryFee = Object.keys(cart).length > 0 ? 100 : 0;
   const total = subtotal + deliveryFee;
+
+  console.log("Cart Items:", cart);
+  console.log("Subtotal:", subtotal);
+  console.log("Delivery Fee:", deliveryFee);
+  console.log("Total Amount:", total);
 
   return (
     <div className="place-order-container">
@@ -219,18 +240,6 @@ const PlaceOrder = () => {
               value={data.ZipCode}
               required
               placeholder="123456"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="country">Country</label>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              onChange={onChangeHandler}
-              value={data.country}
-              required
-              placeholder="Country Name"
             />
           </div>
           <div className="form-group">
