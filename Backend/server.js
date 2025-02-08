@@ -27,7 +27,7 @@ app.use("/images", express.static("Uploads"));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/contact", contactRouter);
-app.use("/api/order", orderRouter)
+// app.use("/api/order", orderRouter)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
