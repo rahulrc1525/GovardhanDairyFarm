@@ -1,9 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
-import './Placeorder.css';
-import { StoreContext } from '../../context/StoreContext';
+import React, { useContext, useEffect, useState } from "react";
+import "./Placeorder.css";
+import { StoreContext } from "../../context/StoreContext";
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url } = useContext(StoreContext);
+  const { cart, token, foodList, url, getTotalCartAmount, cartItems } =
+    useContext(StoreContext);
   const [data, setData] = useState({
     firstName: "",
     lastName: "",
@@ -15,6 +16,7 @@ const PlaceOrder = () => {
     country: "",
     phone: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const onChangeHandler = (event) => {
     const name = event.target.name;
@@ -22,17 +24,101 @@ const PlaceOrder = () => {
     setData((data) => ({ ...data, [name]: value }));
   };
 
+  useEffect(()=>{
+    console.log(data);
+  },[data]);
+
   const placeOrder = async (event) => {
     event.preventDefault();
-    let orderItems = [];
-    foodList.map((item) => {
-      if (cart[item._id] > 0) {
-        let itemInfo = item;
-        itemInfo["quantity"] = cart[item._id];
-        orderItems.push(itemInfo);
+    setLoading(true);
+
+    const orderItems = foodList
+      .filter((item) => cart[item._id] > 0)
+      .map((item) => ({
+        _id: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: cart[item._id],
+      }));
+
+    const orderData = {
+      userId: token, // Assuming token is the user ID
+      items: orderItems,
+      amount: total,
+      address: data,
+    };
+
+    try {
+      const response = await fetch(`${url}/api/order/placeorder`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        handleRazorpayPayment(result.order);
+      } else {
+        alert("Failed to create order. Try again.");
       }
-    });
-    console.log(orderItems);
+    } catch (error) {
+      console.error("Error placing order:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRazorpayPayment = async (order) => {
+    const options = {
+      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY, // Your Razorpay public key
+      amount: order.amount,
+      currency: "INR",
+      name: "Govardhan Dairy Farm",
+      description: "Dairy Product Purchase",
+      order_id: order.id, // Order ID from backend
+      handler: async function (response) {
+        const verifyData = {
+          orderId: order.receipt,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        };
+
+        try {
+          const verifyResponse = await fetch(`${url}/api/order/verifypayment`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(verifyData),
+          });
+
+          const verifyResult = await verifyResponse.json();
+
+          if (verifyResult.success) {
+            alert("Payment Successful!");
+          } else {
+            alert("Payment verification failed.");
+          }
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+        }
+      },
+      prefill: {
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        contact: data.phone,
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   // Calculate subtotal and total
@@ -43,15 +129,13 @@ const PlaceOrder = () => {
     }
     return acc;
   }, 0);
-  const deliveryFee = Object.keys(cart).length > 0 ? 100 : 0; // Dynamic delivery fee
+  const deliveryFee = Object.keys(cart).length > 0 ? 100 : 0;
   const total = subtotal + deliveryFee;
 
   return (
     <div className="place-order-container">
-      {/* Delivery Info Form */}
       <div className="delivery-info">
         <h2 className="section-title">Delivery Information</h2>
-
         <form onSubmit={placeOrder} className="delivery-form">
           <div className="form-group">
             <label htmlFor="firstName">First Name</label>
@@ -164,21 +248,14 @@ const PlaceOrder = () => {
         </form>
       </div>
 
-      {/* Cart Totals Section */}
       <div className="cart-totals">
         <h2 className="section-title">Cart Total</h2>
         <div className="summary-details">
-          <p>
-            Subtotal: <span className="summary-value">Rs. {subtotal}</span>
-          </p>
-          <p>
-            Delivery Fees: <span className="summary-value">Rs. {deliveryFee}</span>
-          </p>
-          <p className="total-amount">
-            Total: <span className="summary-value">Rs. {total}</span>
-          </p>
-          <button type="submit" className="proceed-btn">
-            Proceed to Payment
+          <p>Subtotal: <span className="summary-value">Rs. {subtotal}</span></p>
+          <p>Delivery Fees: <span className="summary-value">Rs. {deliveryFee}</span></p>
+          <p className="total-amount">Total: <span className="summary-value">Rs. {total}</span></p>
+          <button type="submit" className="proceed-btn" disabled={loading}>
+            {loading ? "Processing..." : "Proceed to Payment"}
           </button>
         </div>
       </div>
