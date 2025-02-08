@@ -3,7 +3,7 @@ import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url, getTotalCartAmount, cartItems } =
+  const { cart, token, foodList, url, getTotalCartAmount } =
     useContext(StoreContext);
   const [data, setData] = useState({
     firstName: "",
@@ -19,9 +19,8 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
 
   const onChangeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setData((data) => ({ ...data, [name]: value }));
+    const { name, value } = event.target;
+    setData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   useEffect(() => {
@@ -53,10 +52,11 @@ const PlaceOrder = () => {
     console.log("Order Data:", orderData);
 
     try {
-      const response = await fetch(`${url}/api/order/placeorder`, {
+      const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Added token in headers
         },
         body: JSON.stringify(orderData),
       });
@@ -87,7 +87,7 @@ const PlaceOrder = () => {
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Dairy Product Purchase",
-      order_id: order.id, // Order ID from backend
+      order_id: order.id,
       handler: async function (response) {
         console.log("Payment Success Response:", response);
 
@@ -105,6 +105,7 @@ const PlaceOrder = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Added token in headers
             },
             body: JSON.stringify(verifyData),
           });
@@ -140,11 +141,9 @@ const PlaceOrder = () => {
   // Calculate subtotal and total
   const subtotal = Object.keys(cart).reduce((acc, itemId) => {
     const itemInfo = foodList.find((product) => product._id === itemId);
-    if (itemInfo) {
-      return acc + itemInfo.price * cart[itemId];
-    }
-    return acc;
+    return itemInfo ? acc + itemInfo.price * cart[itemId] : acc;
   }, 0);
+
   const deliveryFee = Object.keys(cart).length > 0 ? 100 : 0;
   const total = subtotal + deliveryFee;
 
