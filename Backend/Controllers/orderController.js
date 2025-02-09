@@ -9,8 +9,8 @@ dotenv.config();
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_PUBLIC_KEY,
-    key_secret: process.env.RAZORPAY_PRIVATE_KEY
+    key_id: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY,
+    key_secret: process.env.REACT_APP_RAZORPAY_PRIVATE_KEY
 });
 
 // Placing user order from frontend
@@ -53,7 +53,7 @@ const verifyOrder = async (req, res) => {
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
+            .createHmac("sha256", process.env.REACT_APP_RAZORPAY_PRIVATE_KEY)
             .update(body)
             .digest("hex");
 
