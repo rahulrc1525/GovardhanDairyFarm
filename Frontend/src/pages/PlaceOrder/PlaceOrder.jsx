@@ -3,8 +3,7 @@ import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url, getTotalCartAmount, cartItems } =
-    useContext(StoreContext);
+  const { cart, token, foodList, url } = useContext(StoreContext);
   const [data, setData] = useState({
     firstName: "",
     lastName: "",
@@ -18,20 +17,26 @@ const PlaceOrder = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const onChangeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setData((data) => ({ ...data, [name]: value }));
-  };
+  // Calculate Subtotal & Total
+  const subtotal = Object.keys(cart).reduce((acc, itemId) => {
+    const itemInfo = foodList.find((product) => product._id === itemId);
+    return itemInfo ? acc + itemInfo.price * cart[itemId] : acc;
+  }, 0);
+  const deliveryFee = subtotal > 0 ? 100 : 0;
+  const total = subtotal + deliveryFee;
 
   useEffect(() => {
     console.log("Updated Form Data:", data);
   }, [data]);
 
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
-
     console.log("Placing Order...");
 
     const orderItems = foodList
@@ -62,7 +67,6 @@ const PlaceOrder = () => {
       });
 
       const result = await response.json();
-
       console.log("Order Response:", result);
 
       if (result.success) {
@@ -81,13 +85,18 @@ const PlaceOrder = () => {
   const handleRazorpayPayment = async (order) => {
     console.log("Processing Razorpay Payment for Order ID:", order.id);
 
+    if (!window.Razorpay) {
+      alert("Razorpay SDK not loaded. Try again.");
+      return;
+    }
+
     const options = {
-      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY, // Your Razorpay public key
+      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",      // Your Razorpay public key
       amount: order.amount,
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Dairy Product Purchase",
-      order_id: order.id, // Order ID from backend
+      order_id: order.order_id, // Order ID from backend
       handler: async function (response) {
         console.log("Payment Success Response:", response);
 
@@ -101,7 +110,8 @@ const PlaceOrder = () => {
         console.log("Verifying Payment with Data:", verifyData);
 
         try {
-          const verifyResponse = await fetch(`${url}/api/order/verifypayment`, {
+          const verifyResponse = await fetch(`${url}/api/order/verify`, {
+
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -110,7 +120,6 @@ const PlaceOrder = () => {
           });
 
           const verifyResult = await verifyResponse.json();
-
           console.log("Payment Verification Response:", verifyResult);
 
           if (verifyResult.success) {
@@ -137,123 +146,28 @@ const PlaceOrder = () => {
     rzp.open();
   };
 
-  // Calculate subtotal and total
-  const subtotal = Object.keys(cart).reduce((acc, itemId) => {
-    const itemInfo = foodList.find((product) => product._id === itemId);
-    if (itemInfo) {
-      return acc + itemInfo.price * cart[itemId];
-    }
-    return acc;
-  }, 0);
-  const deliveryFee = Object.keys(cart).length > 0 ? 100 : 0;
-  const total = subtotal + deliveryFee;
-
-  console.log("Cart Items:", cart);
-  console.log("Subtotal:", subtotal);
-  console.log("Delivery Fee:", deliveryFee);
-  console.log("Total Amount:", total);
-
   return (
     <div className="place-order-container">
       <div className="delivery-info">
         <h2 className="section-title">Delivery Information</h2>
         <form onSubmit={placeOrder} className="delivery-form">
-          <div className="form-group">
-            <label htmlFor="firstName">First Name</label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              onChange={onChangeHandler}
-              value={data.firstName}
-              required
-              placeholder="John"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="lastName">Last Name</label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              onChange={onChangeHandler}
-              value={data.lastName}
-              required
-              placeholder="Doe"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">E-mail Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              onChange={onChangeHandler}
-              value={data.email}
-              required
-              placeholder="example@email.com"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="street">Street</label>
-            <input
-              type="text"
-              id="street"
-              name="street"
-              onChange={onChangeHandler}
-              value={data.street}
-              required
-              placeholder="1234 Elm St"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="city">City</label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              onChange={onChangeHandler}
-              value={data.city}
-              required
-              placeholder="City Name"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="state">State</label>
-            <input
-              type="text"
-              id="state"
-              name="state"
-              onChange={onChangeHandler}
-              value={data.state}
-              required
-              placeholder="State"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="zipCode">Zip Code</label>
-            <input
-              type="text"
-              id="zipCode"
-              name="ZipCode"
-              onChange={onChangeHandler}
-              value={data.ZipCode}
-              required
-              placeholder="123456"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="phone">Phone</label>
-            <input
-              type="text"
-              id="phone"
-              name="phone"
-              onChange={onChangeHandler}
-              value={data.phone}
-              required
-              placeholder="3335511111"
-            />
-          </div>
+          {["firstName", "lastName", "email", "street", "city", "state", "ZipCode", "phone"].map((field) => (
+            <div className="form-group" key={field}>
+              <label htmlFor={field}>{field.replace(/([A-Z])/g, " $1")}</label>
+              <input
+                type={field === "email" ? "email" : "text"}
+                id={field}
+                name={field}
+                onChange={onChangeHandler}
+                value={data[field]}
+                required
+                placeholder={`Enter ${field}`}
+              />
+            </div>
+          ))}
+          <button type="submit" className="proceed-btn" disabled={loading}>
+            {loading ? "Processing..." : "Proceed to Payment"}
+          </button>
         </form>
       </div>
 
@@ -263,9 +177,6 @@ const PlaceOrder = () => {
           <p>Subtotal: <span className="summary-value">Rs. {subtotal}</span></p>
           <p>Delivery Fees: <span className="summary-value">Rs. {deliveryFee}</span></p>
           <p className="total-amount">Total: <span className="summary-value">Rs. {total}</span></p>
-          <button type="submit" className="proceed-btn" disabled={loading}>
-            {loading ? "Processing..." : "Proceed to Payment"}
-          </button>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import foodRouter from "./Routes/foodRoute.js";
 import userRouter from "./Routes/userRoute.js";
 import cartRouter from "./Routes/cartRoute.js";
 import contactRouter from "./Routes/contactRoute.js";
-// import orderRouter from './Routes/orderRoute.js';
+import orderRouter from './Routes/orderRoute.js';
 
 dotenv.config();
 
@@ -27,7 +27,7 @@ app.use("/images", express.static("Uploads"));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/contact", contactRouter);
-// app.use("/api/order", orderRouter)
+app.use("/api/order", orderRouter)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
