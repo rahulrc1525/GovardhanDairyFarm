@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "*" }));
 
-
 // Connect to the database
 connectDB();
 
@@ -27,12 +26,12 @@ app.use("/images", express.static("Uploads"));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/contact", contactRouter);
-app.use("/api/order", orderRouter)
+app.use("/api/order", orderRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send("Something broke!");
+  res.status(500).json({ success: false, message: "Internal Server Error" });
 });
 
 // Root route

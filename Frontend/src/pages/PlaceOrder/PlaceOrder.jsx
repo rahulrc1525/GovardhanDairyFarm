@@ -51,7 +51,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token, // Assuming token is the user ID
       items: orderItems,
-      amount: total,
+      amount: total * 100,
       address: data,
     };
 
@@ -69,7 +69,7 @@ const PlaceOrder = () => {
       const result = await response.json();
       console.log("Order Response:", result);
 
-      if (result.success) {
+      if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
       } else {
@@ -91,12 +91,12 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",      // Your Razorpay public key
+      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount,
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Dairy Product Purchase",
-      order_id: order.order_id, // Order ID from backend
+      order_id: order.id, // Order ID from backend
       handler: async function (response) {
         console.log("Payment Success Response:", response);
 
@@ -111,7 +111,6 @@ const PlaceOrder = () => {
 
         try {
           const verifyResponse = await fetch(`${url}/api/order/verify`, {
-
             method: "POST",
             headers: {
               "Content-Type": "application/json",
