@@ -7,9 +7,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_PUBLIC_KEY,
-    key_secret: process.env.RAZORPAY_PRIVATE_KEY
+    key_id: process.env.RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",
+    key_secret: process.env.RAZORPAY_PRIVATE_KEY || "uf8isD31QbkZJimkqYEzv74Z"
 });
+
 
 // Placing user order
 const placeOrder = async (req, res) => {
