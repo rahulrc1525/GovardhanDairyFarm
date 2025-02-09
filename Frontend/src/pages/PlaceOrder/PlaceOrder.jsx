@@ -62,9 +62,11 @@ const PlaceOrder = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Correct way to send token
         },
         body: JSON.stringify(orderData),
       });
+      
 
       const result = await response.json();
       console.log("Order Response:", result);
