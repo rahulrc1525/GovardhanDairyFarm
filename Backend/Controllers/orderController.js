@@ -30,7 +30,7 @@ const placeOrder = async (req, res) => {
 
     // Create Razorpay order
     const options = {
-      amount: amount * 100, // Convert to paisa
+      amount: total, // Convert to paisa
       currency: "INR",
       receipt: newOrder._id.toString(),
     };
