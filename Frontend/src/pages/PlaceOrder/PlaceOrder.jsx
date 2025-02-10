@@ -93,43 +93,39 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",
+      key: "rzp_test_bLYiZbozwEBRbx", // Replace with actual Razorpay public key
       amount: order.amount,
-      currency: "INR",
+      currency: order.currency,
       name: "Govardhan Dairy Farm",
-      description: "Dairy Product Purchase",
-      order_id: order.id, // Order ID from backend
+      description: "Complete your payment",
+      order_id: order.id,
       handler: async function (response) {
-        console.log("Payment Success Response:", response);
-
-        const verifyData = {
-          orderId: order.receipt,
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-        };
-
-        console.log("Verifying Payment with Data:", verifyData);
-
+        console.log("Razorpay Response:", response);
+  
         try {
-          const verifyResponse = await fetch(`${url}/api/order/verify`, {
+          const verificationResponse = await fetch(`${url}/api/order/verify`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(verifyData),
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order.receipt, // Backend order ID
+            }),
           });
-
-          const verifyResult = await verifyResponse.json();
-          console.log("Payment Verification Response:", verifyResult);
-
-          if (verifyResult.success) {
-            alert("Payment Successful!");
+  
+          const verificationResult = await verificationResponse.json();
+  
+          if (verificationResponse.ok && verificationResult.success) {
+            alert("Payment successful!");
           } else {
-            alert("Payment verification failed.");
+            alert("Payment verification failed!");
           }
         } catch (error) {
           console.error("Error verifying payment:", error);
+          alert("Payment verification error. Try again.");
         }
       },
       prefill: {
@@ -138,12 +134,11 @@ const PlaceOrder = () => {
         contact: data.phone,
       },
       theme: {
-        color: "#3399cc",
+        color: "#F37254",
       },
     };
-
-    console.log("Initializing Razorpay...");
-    const rzp = new window.Razorpay(options);
+  
+    const rzp = new Razorpay(options);
     rzp.open();
   };
 

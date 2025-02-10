@@ -1,73 +1,72 @@
-import orderModel from "../models/orderModel.js";
-import userModel from "../models/userModel.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import orderModel from "../models/orderModel.js";
+import userModel from "../models/userModel.js";
 
 dotenv.config();
 
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_PUBLIC_KEY || "rzp_test_bLYiZbozwEBRbx",
-    key_secret: process.env.RAZORPAY_PRIVATE_KEY || "uf8isD31QbkZJimkqYEzv74Z"
+  key_id: process.env.RAZORPAY_PUBLIC_KEY,
+  key_secret: process.env.RAZORPAY_PRIVATE_KEY,
 });
 
-
-// Placing user order
+// Place Order
 const placeOrder = async (req, res) => {
-    try {
-        const { userId, items, amount, address } = req.body;
+  try {
+    const { userId, items, amount, address } = req.body;
 
-        const newOrder = new orderModel({
-            userId,
-            items,
-            amount,
-            address,
-            status: "Pending"
-        });
+    // Create new order in the database
+    const newOrder = await orderModel.create({
+      userId,
+      items,
+      amount,
+      address,
+      status: "Pending",
+    });
 
-        await newOrder.save();
-        await userModel.findByIdAndUpdate(userId, { cartData: {} });
+    // Clear user's cart
+    await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-        // Create Razorpay order
-        const options = {
-            amount: amount * 100, // Convert to paisa
-            currency: "INR",
-            receipt: newOrder._id.toString(),
-            payment_capture: 1
-        };
+    // Create Razorpay order
+    const options = {
+      amount: amount * 100, // Convert to paisa
+      currency: "INR",
+      receipt: newOrder._id.toString(),
+    };
+    const razorpayOrder = await razorpay.orders.create(options);
 
-        const razorpayOrder = await razorpay.orders.create(options);
-
-        res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
-    } catch (error) {
-        console.error("Error placing order:", error);
-        res.status(500).json({ success: false, message: "Error placing order" });
-    }
+    res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
+  } catch (error) {
+    console.error("Error placing order:", error);
+    res.status(500).json({ success: false, message: "Error placing order" });
+  }
 };
 
-// Verify payment from Razorpay webhook
-const verifyOrder = async (req, res) => {
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+// Verify Payment
+ const verifyOrder = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
-        const body = razorpay_order_id + "|" + razorpay_payment_id;
-        const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
-            .update(body)
-            .digest("hex");
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
+      .update(body)
+      .digest("hex");
 
-        if (expectedSignature === razorpay_signature) {
-            await orderModel.findByIdAndUpdate(orderId, { status: "Paid" });
-            return res.status(200).json({ success: true, message: "Payment verified" });
-        } else {
-            await orderModel.findByIdAndDelete(orderId); // Delete if payment fails
-            return res.status(400).json({ success: false, message: "Payment verification failed" });
-        }
-    } catch (error) {
-        console.error("Error verifying payment:", error);
-        res.status(500).json({ success: false, message: "Error verifying payment" });
+    if (expectedSignature === razorpay_signature) {
+      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
+      return res.status(200).json({ success: true, message: "Payment verified" });
+    } else {
+      await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
+      return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    res.status(500).json({ success: false, message: "Error verifying payment" });
+  }
 };
+
 
 // Get orders of a user
 const userOrders = async (req, res) => {
