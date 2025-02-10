@@ -1,9 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
+import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
   const { cart, token, foodList, url } = useContext(StoreContext);
+  const navigate = useNavigate(); // Added navigate hook
+
   const [data, setData] = useState({
     firstName: "",
     lastName: "",
@@ -15,6 +18,7 @@ const PlaceOrder = () => {
     country: "",
     phone: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
@@ -67,16 +71,25 @@ const PlaceOrder = () => {
     };
 
     try {
-      const token = localStorage.getItem("token"); // Retrieve token from local storage
-      const response = await fetch("https://govardhandairyfarmbackend.onrender.com/api/order/place", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,  // Ensure this token is correct
-        },
-        body: JSON.stringify(orderData),
-      });
-      
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Session expired. Please log in again.");
+        navigate("/login"); // Navigating to login if token is missing
+        return;
+      }
+
+      const response = await fetch(
+        "https://govardhandairyfarmbackend.onrender.com/api/order/place",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Ensuring correct format
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
 
       const result = await response.json();
       if (response.status === 201 && result.success) {
@@ -99,7 +112,7 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: "rzp_test_bLYiZbozwEBRbx", // Replace with your Razorpay public key
+      key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount,
       currency: order.currency,
       name: "Govardhan Dairy Farm",
@@ -116,7 +129,7 @@ const PlaceOrder = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              orderId: order.receipt, 
+              orderId: order.receipt,
             }),
           });
 
@@ -151,9 +164,20 @@ const PlaceOrder = () => {
       <div className="delivery-info">
         <h2 className="section-title">Delivery Information</h2>
         <form onSubmit={placeOrder} className="delivery-form">
-          {["firstName", "lastName", "email", "street", "city", "state", "ZipCode", "phone"].map((field) => (
+          {[
+            "firstName",
+            "lastName",
+            "email",
+            "street",
+            "city",
+            "state",
+            "ZipCode",
+            "phone",
+          ].map((field) => (
             <div className="form-group" key={field}>
-              <label htmlFor={field}>{field.replace(/([A-Z])/g, " $1")}</label>
+              <label htmlFor={field}>
+                {field.replace(/([A-Z])/g, " $1")}
+              </label>
               <input
                 type={field === "email" ? "email" : "text"}
                 id={field}
@@ -174,9 +198,16 @@ const PlaceOrder = () => {
       <div className="cart-totals">
         <h2 className="section-title">Cart Total</h2>
         <div className="summary-details">
-          <p>Subtotal: <span className="summary-value">Rs. {subtotal}</span></p>
-          <p>Delivery Fees: <span className="summary-value">Rs. {deliveryFee}</span></p>
-          <p className="total-amount">Total: <span className="summary-value">Rs. {total}</span></p>
+          <p>
+            Subtotal: <span className="summary-value">Rs. {subtotal}</span>
+          </p>
+          <p>
+            Delivery Fees:{" "}
+            <span className="summary-value">Rs. {deliveryFee}</span>
+          </p>
+          <p className="total-amount">
+            Total: <span className="summary-value">Rs. {total}</span>
+          </p>
         </div>
       </div>
     </div>
