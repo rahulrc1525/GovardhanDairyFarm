@@ -16,6 +16,22 @@ const PlaceOrder = () => {
     phone: "",
   });
   const [loading, setLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadRazorpay = async () => {
+      if (!window.Razorpay) {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => setRazorpayLoaded(true);
+        script.onerror = () => console.error("Failed to load Razorpay SDK");
+        document.body.appendChild(script);
+      } else {
+        setRazorpayLoaded(true);
+      }
+    };
+    loadRazorpay();
+  }, []);
 
   // Calculate Subtotal & Total
   const subtotal = Object.keys(cart).reduce((acc, itemId) => {
@@ -25,10 +41,6 @@ const PlaceOrder = () => {
   const deliveryFee = subtotal > 0 ? 100 : 0;
   const total = subtotal + deliveryFee;
 
-  useEffect(() => {
-    console.log("Updated Form Data:", data);
-  }, [data]);
-
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
@@ -37,7 +49,6 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
-    console.log("Placing Order...");
 
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
@@ -49,28 +60,23 @@ const PlaceOrder = () => {
       }));
 
     const orderData = {
-      userId: token, // Assuming token is the user ID
+      userId: token,
       items: orderItems,
       amount: total * 100,
       address: data,
     };
-
-    console.log("Order Data:", orderData);
 
     try {
       const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Correct way to send token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(orderData),
       });
-      
 
       const result = await response.json();
-      console.log("Order Response:", result);
-
       if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
@@ -85,23 +91,19 @@ const PlaceOrder = () => {
   };
 
   const handleRazorpayPayment = async (order) => {
-    console.log("Processing Razorpay Payment for Order ID:", order.id);
-
-    if (!window.Razorpay) {
+    if (!razorpayLoaded || !window.Razorpay) {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
 
     const options = {
-      key: "rzp_test_bLYiZbozwEBRbx", // Replace with actual Razorpay public key
+      key: "rzp_test_bLYiZbozwEBRbx", // Replace with your Razorpay public key
       amount: order.amount,
       currency: order.currency,
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
       order_id: order.id,
       handler: async function (response) {
-        console.log("Razorpay Response:", response);
-  
         try {
           const verificationResponse = await fetch(`${url}/api/order/verify`, {
             method: "POST",
@@ -112,12 +114,12 @@ const PlaceOrder = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              orderId: order.receipt, // Backend order ID
+              orderId: order.receipt, 
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
           } else {
@@ -137,8 +139,8 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
-    const rzp = new Razorpay(options);
+
+    const rzp = new window.Razorpay(options);
     rzp.open();
   };
 
