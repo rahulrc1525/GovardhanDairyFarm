@@ -67,14 +67,16 @@ const PlaceOrder = () => {
     };
 
     try {
-      const response = await fetch(`${url}/api/order/place`, {
+      const token = localStorage.getItem("token"); // Retrieve token from local storage
+      const response = await fetch("https://govardhandairyfarmbackend.onrender.com/api/order/place", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,  // Ensure this token is correct
         },
         body: JSON.stringify(orderData),
       });
+      
 
       const result = await response.json();
       if (response.status === 201 && result.success) {
