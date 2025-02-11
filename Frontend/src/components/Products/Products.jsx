@@ -6,7 +6,7 @@ const products = [
   { id: 1, src: assests.Feature, name: "All", categories: "All" },
   { id: 2, src: assests.milk, name: "Milk", categories: "Milk" },
   { id: 3, src: assests.GHEE, name: "Ghee", categories: "Ghee" },
-  { id: 4, src: assests.CURD, name: "Curd", categories: "Curd" },
+  { id: 4, src: assests.curd_product, name: "Curd", categories: "Curd" },
   { id: 5, src: assests.bannermilk, name: "Buttermilk", categories: "Buttermilk" },
   { id: 6, src: assests.Cowdung, name: "Cow Dung Cake", categories: "Cow Dung Cake" },
   { id: 7, src: assests.Gomutra250ml, name: "Gir Gomutra", categories: "Gir Gomutra" },

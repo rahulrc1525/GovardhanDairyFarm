@@ -53,6 +53,7 @@ import Blogmilk3 from './Blogmilk3.jpg';
 import Blogmilk4 from './Blogmilk4.jpg';
 import farmvideo from './farmvideo.mp4';
 import parcel_icon from './parcel_icon.png';
+import curd_product from './curd_product';
 
 
 export const assests = {
@@ -110,7 +111,8 @@ export const assests = {
     profile_icon,
     bag_icon,
     logout_icon,
-    parcel_icon
+    parcel_icon,
+    curd_product
 
 }
 export const foodList = [
