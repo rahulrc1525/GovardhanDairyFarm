@@ -53,11 +53,15 @@ import Blogmilk3 from './Blogmilk3.jpg';
 import Blogmilk4 from './Blogmilk4.jpg';
 import farmvideo from './farmvideo.mp4';
 import parcel_icon from './parcel_icon.png';
-import curd_product from './curd_product';
-
-
+import curd_product from './curd_product.png';
+import videobyvi from './videobyvi.mp4';
+import videobyme1 from './videobyme1.mp4';
+import bigvideo from './bigvideo.mp4';
 export const assests = {
     farmvideo,
+    bigvideo,
+    videobyme1,
+    videobyvi,
     Blogcow1,
     Blogcow2,
     Blogcow3,

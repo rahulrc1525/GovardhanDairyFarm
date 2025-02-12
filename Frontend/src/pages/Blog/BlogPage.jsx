@@ -81,11 +81,13 @@ const BlogPage = () => {
         <div className="section-content">
           <h2>Ghee</h2>
           <p>
-            Our ghee is crafted using the traditional bilona method, which
-            preserves its authenticity and quality. Rich in Omega-3 fatty
-            acids and antioxidants, it's a nutritious choice for a healthy
-            lifestyle. Available in convenient 200g, 500g, and 1kg jars, our
-            packaging ensures freshness and purity.
+            Our ghee is handcrafted using the <b>traditional bilona method</b>,
+             ensuring its <b>authentic taste, rich aroma and high nutritions</b>. 
+             This time-honored process helps retain essential nutrients, making our ghee
+              a wholesome and pure choice for your daily diet. Rich in Omega-3 fatty acids, antioxidants,
+               and essential vitamins, it supports <b>heart health, digestion, and immunity</b>. Whether used for 
+               cooking,  or daily consumption, our ghee enhances both flavor and well-being.
+             Carefully packed to maintain <b>freshness and purity</b>, it comes in convenient sizes to fit your needs.
           </p>
         </div>
       </section>
@@ -95,10 +97,12 @@ const BlogPage = () => {
         <div className="section-content">
           <h2>Milk</h2>
           <p>
-            Our milk is sourced from healthy cows and processed to retain its
-            nutritional value. Rich in calcium and essential vitamins, it's
-            perfect for your daily diet. Available in pasteurized and
-            unpasteurized options, with eco-friendly packaging.
+         Our milk comes from <b>pure Gir cows</b>, known for producing <b>A2-quality milk</b> which is easier to digest and
+          healthier than regular milk. It contains only the A2 protein making it a great choice
+           for those with sensitive stomachs. Packed with <b>calcium, vitamins, and nutrients</b> it helps support
+            strong bones and overall health. We offer both <b>pasteurized and unpasteurized</b> options, 
+            delivered fresh in eco-friendly packaging
+          for your well-being and a greener planet.
           </p>
         </div>
         <div className="section-images">
@@ -155,7 +159,7 @@ const BlogPage = () => {
           <div className="video-partition" data-aos="fade-up" data-aos-delay="500">
             <div className="video-container">
               <video controls className="video-element">
-                <source src="path-to-your-video.mp4" type="video/mp4" />
+                <source src={assests.videobyme1} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
@@ -171,4 +175,4 @@ const BlogPage = () => {
 
 
 
-export default BlogPage;  
+export default BlogPage;

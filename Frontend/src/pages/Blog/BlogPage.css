@@ -229,7 +229,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   /* Two columns */
-  gap: 20px;
+  gap: 15px;
   justify-content: center;
   align-items: center;
   margin: 0 auto;
@@ -244,8 +244,11 @@
 .cow-image {
   width: 100%;
   height: auto;
+  /* max-width: 400px; */
+    /* Adjust this to your desired size */
   object-fit: cover;
   transition: transform 0.3s ease;
+  
 }
 
 .cow-image-wrapper:hover .cow-image {
@@ -406,8 +409,11 @@
   font-size: 15px; /* Slightly smaller text for better readability on mobile */
   line-height: 1.5;
   margin-top: 15px;
+  margin-left: 32px;
   padding: 0 15px; /* Increased padding for mobile spacing */
-  text-align: left; /* Align text for a cleaner look */
+  /* text-align: left; */
+   /* Align text for a cleaner look */
+  
 }
 
 /* Responsive Design */
