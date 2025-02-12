@@ -56,10 +56,9 @@ import parcel_icon from './parcel_icon.png';
 import curd_product from './curd_product.png';
 import videobyvi from './videobyvi.mp4';
 import videobyme1 from './videobyme1.mp4';
-import bigvideo from './bigvideo.mp4';
 export const assests = {
     farmvideo,
-    bigvideo,
+    
     videobyme1,
     videobyvi,
     Blogcow1,
