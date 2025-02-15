@@ -50,7 +50,7 @@ const PlaceOrder = () => {
     setData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const placeOrder = async (event) => {
+  const placeorder = async (event) => {
     event.preventDefault();
     setLoading(true);
   
@@ -66,7 +66,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total * 100,
+      amount: total,
       address: data,
     };
   
@@ -83,19 +83,25 @@ const PlaceOrder = () => {
         }
       );
   
-      const result = await response.json();
-      if (response.status === 201 && result.success) {
-        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
-        handleRazorpayPayment(result.order);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          console.log("Order Placed Successfully. Initiating Razorpay Payment...");
+          handleRazorpayPayment(result.order);
+        } else {
+          alert("Failed to create order. Try again.");
+        }
       } else {
         alert("Failed to create order. Try again.");
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      alert("Failed to create order. Try again.");
     } finally {
       setLoading(false);
     }
   };
+  
   
 
   const handleRazorpayPayment = async (order) => {
@@ -103,17 +109,17 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-
+  
     // Generate order summary
     const orderSummary = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => `${item.name} (x${cart[item._id]}) - Rs. ${item.price * cart[item._id]}`)
       .join(", ");
-
+  
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
-      amount: order.amount,
-      currency: order.currency,
+      amount: order.amount * 100,
+      currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
       order_id: order.id,
@@ -134,9 +140,9 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-
+  
           const verificationResult = await verificationResponse.json();
-
+  
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
             navigate("/myorders", { state: { token } });
@@ -157,17 +163,18 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-
+  
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
+  
 
   return (
     <div className="place-order-container">
       <div className="delivery-info">
         <h2 className="section-title">Delivery Information</h2>
-        <form onSubmit={placeOrder} className="delivery-form">
-          {[
+        <form onSubmit={placeorder} className="delivery-form">
+        {[
             "firstName",
             "lastName",
             "email",
