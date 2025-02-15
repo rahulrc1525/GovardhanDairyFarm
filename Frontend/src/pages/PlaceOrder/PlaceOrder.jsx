@@ -66,13 +66,13 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total,
+      amount: total * 100, // Multiply by 100
       address: data,
     };
   
     try {
       const response = await fetch(
-"https://govardhandairyfarmbackend.onrender.com/api/order/place",
+        `${url}/api/order/place`,
         {
           method: "POST",
           headers: {
@@ -92,6 +92,8 @@ const PlaceOrder = () => {
           alert("Failed to create order. Try again.");
         }
       } else {
+        const errorResponse = await response.json();
+        console.error("Error placing order:", errorResponse);
         alert("Failed to create order. Try again.");
       }
     } catch (error) {
@@ -101,6 +103,7 @@ const PlaceOrder = () => {
       setLoading(false);
     }
   };
+  
   
   
 
