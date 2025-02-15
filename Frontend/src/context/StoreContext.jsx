@@ -4,30 +4,34 @@ import axios from "axios";
 export const StoreContext = createContext(null);
 
 const StoreContextProvider = ({ children }) => {
-  const [cart, setCartItems] = useState({});
+  const url = "https://govardhandairyfarmbackend.onrender.com";
+
+  // Load cart from localStorage or initialize an empty object
+  const [cart, setCartItems] = useState(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : {};
+  });
+
   const [foodList, setFoodList] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
 
-  const url = "https://govardhandairyfarmbackend.onrender.com";
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
-  // Fetch Cart Data
+  // Fetch Cart Data from Backend
   const fetchCartData = async () => {
-    if (!token || !userId) {
-      setCartItems({});
-      return;
-    }
+    if (!token || !userId) return;
+    
     try {
       const response = await axios.post(
         `${url}/api/cart/get`,
         { userId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-            "Content-Type": "application/json"
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
+
       if (response.data.success) {
         setCartItems(response.data.cartData);
       } else {
@@ -38,8 +42,11 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
+  // Auto-fetch cart on login or page refresh
   useEffect(() => {
-    fetchCartData();
+    if (token && userId) {
+      fetchCartData();
+    }
   }, [token, userId]);
 
   // Add Item to Cart
@@ -48,16 +55,12 @@ const StoreContextProvider = ({ children }) => {
       alert("Please login to add items to the cart.");
       return;
     }
+
     try {
       const response = await axios.post(
         `${url}/api/cart/add`,
         { userId, itemId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-            "Content-Type": "application/json"
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       if (response.data.success) {
@@ -65,7 +68,6 @@ const StoreContextProvider = ({ children }) => {
           ...prevCart,
           [itemId]: (prevCart[itemId] || 0) + 1
         }));
-        console.log("Item added to cart:", response.data);
       } else {
         console.error("Add to cart failed:", response.data.message);
       }
@@ -80,16 +82,12 @@ const StoreContextProvider = ({ children }) => {
       alert("Please login to remove items from cart.");
       return;
     }
+
     try {
       const response = await axios.post(
         `${url}/api/cart/remove`,
         { userId, itemId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-            "Content-Type": "application/json"
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       if (response.data.success) {
@@ -102,7 +100,6 @@ const StoreContextProvider = ({ children }) => {
           }
           return updatedCart;
         });
-        console.log("Item removed from cart:", response.data);
       } else {
         console.error("Remove from cart failed:", response.data.message);
       }
@@ -144,7 +141,7 @@ const StoreContextProvider = ({ children }) => {
     setCartItems({});
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
-    console.log("User logged out");
+    localStorage.removeItem("cart"); // Clear cart from localStorage
   };
 
   return (

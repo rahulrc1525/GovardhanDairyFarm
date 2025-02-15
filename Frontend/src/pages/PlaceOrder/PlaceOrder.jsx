@@ -164,9 +164,20 @@ const PlaceOrder = () => {
       <div className="delivery-info">
         <h2 className="section-title">Delivery Information</h2>
         <form onSubmit={placeOrder} className="delivery-form">
-          {["firstName", "lastName", "email", "street", "city", "state", "ZipCode", "phone"].map((field) => (
+          {[
+            "firstName",
+            "lastName",
+            "email",
+            "street",
+            "city",
+            "state",
+            "ZipCode",
+            "phone",
+          ].map((field) => (
             <div className="form-group" key={field}>
-              <label htmlFor={field}>{field.replace(/([A-Z])/g, " $1")}</label>
+              <label htmlFor={field}>
+                {field.replace(/([A-Z])/g, " $1")}
+              </label>
               <input
                 type={field === "email" ? "email" : "text"}
                 id={field}
@@ -187,9 +198,16 @@ const PlaceOrder = () => {
       <div className="cart-totals">
         <h2 className="section-title">Cart Total</h2>
         <div className="summary-details">
-          <p>Subtotal: <span className="summary-value">Rs. {subtotal}</span></p>
-          <p>Delivery Fees: <span className="summary-value">Rs. {deliveryFee}</span></p>
-          <p className="total-amount">Total: <span className="summary-value">Rs. {total}</span></p>
+          <p>
+            Subtotal: <span className="summary-value">Rs. {subtotal}</span>
+          </p>
+          <p>
+            Delivery Fees:{" "}
+            <span className="summary-value">Rs. {deliveryFee}</span>
+          </p>
+          <p className="total-amount">
+            Total: <span className="summary-value">Rs. {total}</span>
+          </p>
         </div>
       </div>
     </div>
