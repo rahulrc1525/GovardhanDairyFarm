@@ -1,4 +1,3 @@
-// PlaceOrder.jsx
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
@@ -6,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
   const { cart, token, foodList, url } = useContext(StoreContext);
-  const navigate = useNavigate(); // Added navigate hook
+  const navigate = useNavigate();
 
   const [data, setData] = useState({
     firstName: "",
@@ -73,12 +72,12 @@ const PlaceOrder = () => {
 
     try {
       const response = await fetch(
-        "https://govardhandairyfarmbackend.onrender.com/api/order/place",
+        `${url}/api/order/place`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Ensuring correct format
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(orderData),
         }
@@ -118,7 +117,7 @@ const PlaceOrder = () => {
       description: "Complete your payment",
       order_id: order.id,
       notes: {
-        order_summary: orderSummary, // Pass order details to Razorpay
+        order_summary: orderSummary,
       },
       handler: async function (response) {
         try {

@@ -13,7 +13,6 @@ const razorpay = new Razorpay({
 });
 
 // Place Order
-// Place Order
 export const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
@@ -48,7 +47,6 @@ export const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
-
 
 // Verify Payment
 export const verifyOrder = async (req, res) => {
@@ -92,22 +90,20 @@ export const verifyOrder = async (req, res) => {
 // Get User Orders
 export const userOrders = async (req, res) => {
   try {
-      const userId = req.body.userId;
+    const userId = req.body.userId;
 
-      if (!userId) {
-          return res.status(400).json({ success: false, message: "User ID is required" });
-      }
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
 
-      const orders = await orderModel.find({ userId }).sort({ createdAt: -1 });
+    const orders = await orderModel.find({ userId }).sort({ createdAt: -1 });
 
-      res.status(200).json({ success: true, data: orders });
+    res.status(200).json({ success: true, data: orders });
   } catch (error) {
-      console.error("Error fetching user orders:", error);
-      res.status(500).json({ success: false, message: "Error fetching orders" });
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ success: false, message: "Error fetching orders" });
   }
-}
-
-
+};
 
 // Get All Orders (Admin Only)
 export const listOrders = async (req, res) => {
