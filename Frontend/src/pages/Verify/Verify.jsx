@@ -1,8 +1,9 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import "./Verify.css";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { StoreContext } from './../../context/StoreContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Verify = () => {
     const [searchParams] = useSearchParams();
@@ -13,16 +14,16 @@ const Verify = () => {
 
     const { url } = useContext(StoreContext);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
 
     const verifyPayment = async () => {
-        try {
-            if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-                console.error("Invalid payment details");
-                alert("Payment verification failed. Redirecting to home...");
-                navigate("/");
-                return;
-            }
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+            toast.error("Invalid payment details. Redirecting to home...");
+            navigate("/");
+            return;
+        }
 
+        try {
             const response = await axios.post(`${url}/api/order/verify`, {
                 razorpay_order_id,
                 razorpay_payment_id,
@@ -31,27 +32,41 @@ const Verify = () => {
             });
 
             if (response.data.success) {
-                alert("Payment verified successfully!");
+                toast.success("Payment verified successfully!");
                 navigate("/myorders");
             } else {
-                alert("Payment verification failed.");
+                toast.error("Payment verification failed. Please try again.");
                 navigate("/");
             }
         } catch (error) {
             console.error("Error during payment verification:", error);
-            alert("Error verifying payment.");
+            toast.error("Error verifying payment. Please try again.");
             navigate("/");
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        verifyPayment();
-    }, [razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId]);
+        if (razorpay_order_id && razorpay_payment_id && razorpay_signature && orderId) {
+            verifyPayment();
+        } else {
+            setLoading(false);
+            toast.error("Missing payment details. Redirecting...");
+            navigate("/");
+        }
+    }, []);
 
     return (
         <div className='verify'>
-            <div className="spinner"></div>
-            <p>Verifying Payment, please wait...</p>
+            {loading ? (
+                <>
+                    <div className="spinner"></div>
+                    <p>Verifying Payment, please wait...</p>
+                </>
+            ) : (
+                <p>Redirecting...</p>
+            )}
         </div>
     );
 };

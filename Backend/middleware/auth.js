@@ -1,54 +1,36 @@
 import jwt from "jsonwebtoken";
-import userModel from "../models/userModel.js"; // Import user model
+import userModel from "../models/userModel.js"; 
 
 const authMiddleware = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    console.log("Received Authorization Header:", authHeader); // Check if token is received
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ success: false, message: "No token provided. Please login." });
+    }
+
     try {
-        // Get token from the authorization header
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({
-                success: false,
-                message: "Not authorized. Please login again.",
-            });
-        }
-
-        // Extract token from 'Bearer <token>'
         const token = authHeader.split(" ")[1];
-
-        // Verify the token
+        console.log("Extracted Token:", token); // Verify token is extracted
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Decoded Token:", decoded); // Check decoded data
 
-        // Check if user exists in the database
         const user = await userModel.findById(decoded.id).select("-password");
+        console.log("Authenticated User:", user); // Ensure user is found
 
         if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: "User not found. Please login again.",
-            });
+            return res.status(401).json({ success: false, message: "User not found. Please login again." });
         }
 
-        // Attach user data to the request object
         req.user = user;
-        next(); // Continue to the next middleware
-
+        next();
     } catch (error) {
-        console.error("Authentication Error:", error);
-
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({
-                success: false,
-                message: "Token has expired. Please login again.",
-                expiredAt: error.expiredAt,
-            });
-        }
-
-        return res.status(401).json({
-            success: false,
-            message: "Invalid token or token expired.",
-        });
+        console.error("Token Verification Error:", error);
+        return res.status(401).json({ success: false, message: "Invalid or expired token. Please login again." });
     }
 };
+
+
+
 
 export default authMiddleware;
