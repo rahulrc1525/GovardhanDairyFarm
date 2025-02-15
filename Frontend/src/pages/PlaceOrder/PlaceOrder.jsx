@@ -1,3 +1,4 @@
+// PlaceOrder.jsx
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
@@ -21,6 +22,7 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -53,6 +55,7 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
+    setError(null);
 
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
@@ -71,14 +74,6 @@ const PlaceOrder = () => {
     };
 
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Session expired. Please log in again.");
-        navigate("/login"); // Navigating to login if token is missing
-        return;
-      }
-
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
@@ -91,15 +86,20 @@ const PlaceOrder = () => {
         }
       );
 
-      const result = await response.json();
-      if (response.status === 201 && result.success) {
-        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
-        handleRazorpayPayment(result.order);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          console.log("Order Placed Successfully. Initiating Razorpay Payment...");
+          handleRazorpayPayment(result.order);
+        } else {
+          setError(result.message);
+        }
       } else {
-        alert("Failed to create order. Try again.");
+        setError("Failed to create order. Try again.");
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      setError("Error placing order. Try again.");
     } finally {
       setLoading(false);
     }
@@ -110,13 +110,13 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     // Generate order summary
     const orderSummary = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => `${item.name} (x${cart[item._id]}) - Rs. ${item.price * cart[item._id]}`)
       .join(", ");
-  
+
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount,
@@ -141,9 +141,9 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
           } else {
@@ -163,11 +163,10 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
-  
 
   return (
     <div className="place-order-container">
@@ -202,6 +201,7 @@ const PlaceOrder = () => {
           <button type="submit" className="proceed-btn" disabled={loading}>
             {loading ? "Processing..." : "Proceed to Payment"}
           </button>
+          {error && <p style={{ color: "red" }}>{error}</p>}
         </form>
       </div>
 

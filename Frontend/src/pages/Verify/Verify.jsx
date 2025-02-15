@@ -1,3 +1,4 @@
+// Verify.jsx
 import React, { useEffect, useContext, useState } from 'react';
 import "./Verify.css";
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -12,7 +13,7 @@ const Verify = () => {
     const razorpay_signature = searchParams.get("razorpay_signature");
     const orderId = searchParams.get("orderId");
 
-    const { url } = useContext(StoreContext);
+    const { url, token } = useContext(StoreContext);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +34,7 @@ const Verify = () => {
 
             if (response.data.success) {
                 toast.success("Payment verified successfully!");
-                navigate("/myorders");
+                navigate("/myorders", { state: { token } });
             } else {
                 toast.error("Payment verification failed. Please try again.");
                 navigate("/");
