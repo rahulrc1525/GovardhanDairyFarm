@@ -13,13 +13,18 @@ const razorpay = new Razorpay({
 });
 
 // Place Order
-// Place Order
+// orderController.js
 export const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
 
     if (!userId || !items || !amount || !address) {
       return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    // Validate amount
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid amount" });
     }
 
     // Create new order in the database
@@ -51,6 +56,7 @@ export const placeOrder = async (req, res) => {
 
 
 // Verify Payment
+
 export const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -61,10 +67,9 @@ export const verifyOrder = async (req, res) => {
 
     // Generate expected signature
     const generatedSignature = crypto
-  .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
-  .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-  .digest("hex");
-
+      .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
 
     if (generatedSignature === razorpay_signature) {
       // Update order status to 'Paid'
