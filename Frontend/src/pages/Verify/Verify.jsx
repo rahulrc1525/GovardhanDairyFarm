@@ -6,7 +6,9 @@ import axios from 'axios';
 
 const Verify = () => {
     const [searchParams] = useSearchParams();
-    const success = searchParams.get("success");
+    const razorpay_order_id = searchParams.get("razorpay_order_id");
+    const razorpay_payment_id = searchParams.get("razorpay_payment_id");
+    const razorpay_signature = searchParams.get("razorpay_signature");
     const orderId = searchParams.get("orderId");
 
     const { url } = useContext(StoreContext);
@@ -14,29 +16,37 @@ const Verify = () => {
 
     const verifyPayment = async () => {
         try {
-            if (!orderId || success === null) {
-                console.error("Invalid query parameters");
+            if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+                console.error("Invalid payment details");
+                alert("Payment verification failed. Redirecting to home...");
                 navigate("/");
                 return;
             }
 
-            const response = await axios.post(`${url}/api/order/verify`, { success, orderId });
+            const response = await axios.post(`${url}/api/order/verify`, {
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+                orderId,
+            });
 
             if (response.data.success) {
+                alert("Payment verified successfully!");
                 navigate("/myorders");
             } else {
-                console.error("Payment verification failed:", response.data.message);
+                alert("Payment verification failed.");
                 navigate("/");
             }
         } catch (error) {
             console.error("Error during payment verification:", error);
+            alert("Error verifying payment.");
             navigate("/");
         }
     };
 
     useEffect(() => {
         verifyPayment();
-    }, [orderId, success]); // Dependency array ensures it only runs when needed
+    }, [razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId]);
 
     return (
         <div className='verify'>
