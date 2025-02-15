@@ -72,7 +72,7 @@ const PlaceOrder = () => {
   
     try {
       const response = await fetch(
-        `${url}/api/order/place`,
+"https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
           method: "POST",
           headers: {
