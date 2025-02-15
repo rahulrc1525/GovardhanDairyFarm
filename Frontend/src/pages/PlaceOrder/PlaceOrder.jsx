@@ -1,3 +1,4 @@
+// PlaceOrder.jsx
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
@@ -71,14 +72,6 @@ const PlaceOrder = () => {
     };
 
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Session expired. Please log in again.");
-        navigate("/login"); // Navigating to login if token is missing
-        return;
-      }
-
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
@@ -110,13 +103,13 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     // Generate order summary
     const orderSummary = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => `${item.name} (x${cart[item._id]}) - Rs. ${item.price * cart[item._id]}`)
       .join(", ");
-  
+
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount,
@@ -141,11 +134,12 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
+            navigate("/myorders", { state: { token } });
           } else {
             alert("Payment verification failed!");
           }
@@ -163,11 +157,10 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
-  
 
   return (
     <div className="place-order-container">

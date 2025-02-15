@@ -30,6 +30,10 @@ const Verify = () => {
                 razorpay_payment_id,
                 razorpay_signature,
                 orderId,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
             });
 
             if (response.data.success) {

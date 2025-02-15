@@ -5,9 +5,10 @@ import axios from 'axios';
 import { assests } from '../../assests/assests';
 import './MyOrder.css'
 
-const MyOrders = () => {
+const MyOrders = ({ location }) => {
     const [data, setData] = useState([]);
-    const { url, token } = useContext(StoreContext);
+    const { url } = useContext(StoreContext);
+    const token = location.state.token;
 
     const fetchOrders = async () => {
         try {
