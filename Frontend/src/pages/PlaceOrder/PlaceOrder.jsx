@@ -50,7 +50,7 @@ const { name, value } = event.target;
 setData((prevData) => ({ ...prevData, [name]: value }));
 };
 
-const placeorder = async (event) => {
+const placeOrder = async (event) => {
 event.preventDefault();
 setLoading(true);
 
@@ -173,7 +173,7 @@ return (
 <div className="place-order-container">
 <div className="delivery-info">
 <h2 className="section-title">Delivery Information</h2>
-<form onSubmit={placeorder} className="delivery-form">
+<form onSubmit={placeOrder} className="delivery-form">
 {[
 "firstName",
 "lastName",
