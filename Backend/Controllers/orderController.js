@@ -90,7 +90,7 @@ export const verifyOrder = async (req, res) => {
 // Get User Orders
 export const userOrders = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.body.userId; // Extract from request body
 
     if (!userId) {
       return res.status(400).json({ success: false, message: "User ID is required" });
@@ -104,6 +104,7 @@ export const userOrders = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching orders" });
   }
 };
+
 
 // Get All Orders (Admin Only)
 export const listOrders = async (req, res) => {
