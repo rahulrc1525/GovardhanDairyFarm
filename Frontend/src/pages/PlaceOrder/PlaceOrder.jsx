@@ -1,3 +1,4 @@
+// PlaceOrder.jsx
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
@@ -5,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
   const { cart, token, foodList, url } = useContext(StoreContext);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Added navigate hook
 
   const [data, setData] = useState({
     firstName: "",
@@ -21,6 +22,7 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -53,6 +55,7 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
+    setError(null);
 
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
@@ -71,35 +74,32 @@ const PlaceOrder = () => {
     };
 
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Session expired. Please log in again.");
-        navigate("/login");
-        return;
-      }
-
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Ensuring correct format
           },
           body: JSON.stringify(orderData),
         }
       );
 
-      const result = await response.json();
-      if (response.status === 201 && result.success) {
-        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
-        handleRazorpayPayment(result.order);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          console.log("Order Placed Successfully. Initiating Razorpay Payment...");
+          handleRazorpayPayment(result.order);
+        } else {
+          setError(result.message);
+        }
       } else {
-        alert("Failed to create order. Try again.");
+        setError("Failed to create order. Try again.");
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      setError("Error placing order. Try again.");
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ const PlaceOrder = () => {
       description: "Complete your payment",
       order_id: order.id,
       notes: {
-        order_summary: orderSummary,
+        order_summary: orderSummary, // Pass order details to Razorpay
       },
       handler: async function (response) {
         try {
@@ -201,6 +201,7 @@ const PlaceOrder = () => {
           <button type="submit" className="proceed-btn" disabled={loading}>
             {loading ? "Processing..." : "Proceed to Payment"}
           </button>
+          {error && <p style={{ color: "red" }}>{error}</p>}
         </form>
       </div>
 
