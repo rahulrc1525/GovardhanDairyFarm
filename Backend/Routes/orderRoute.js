@@ -10,10 +10,10 @@ orderRouter.post("/userOrders", authMiddleware, userOrders);
 
 // Ensure only admins can list all orders
 orderRouter.post("/listOrders", authMiddleware, async (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ success: false, message: "Unauthorized" });
-  }
-  next();
+if (req.user.role !== "admin") {
+return res.status(403).json({ success: false, message: "Unauthorized" });
+}
+next();
 }, listOrders);
 
 orderRouter.post("/updateStatus", authMiddleware, updateStatus);

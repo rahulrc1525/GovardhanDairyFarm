@@ -30,16 +30,16 @@ app.use("/api/order", orderRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: "Internal Server Error" });
+console.error(err.stack);
+res.status(500).json({ success: false, message: "Internal Server Error" });
 });
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("API WORKING");
+res.send("API WORKING");
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server started on https://govardhandairyfarmbackend.onrender.com`);
+console.log(`Server started on https://govardhandairyfarmbackend.onrender.com`);
 });
