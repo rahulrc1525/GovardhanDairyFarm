@@ -53,7 +53,7 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
-
+  
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -62,14 +62,14 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-
+  
     const orderData = {
       userId: token,
       items: orderItems,
       amount: total * 100,
       address: data,
     };
-
+  
     try {
       const response = await fetch(
         `${url}/api/order/place`,
@@ -82,7 +82,7 @@ const PlaceOrder = () => {
           body: JSON.stringify(orderData),
         }
       );
-
+  
       const result = await response.json();
       if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
@@ -96,6 +96,7 @@ const PlaceOrder = () => {
       setLoading(false);
     }
   };
+  
 
   const handleRazorpayPayment = async (order) => {
     if (!razorpayLoaded || !window.Razorpay) {

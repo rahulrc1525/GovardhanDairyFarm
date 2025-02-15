@@ -13,6 +13,7 @@ const razorpay = new Razorpay({
 });
 
 // Place Order
+// Place Order
 export const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
@@ -47,6 +48,7 @@ export const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
+
 
 // Verify Payment
 export const verifyOrder = async (req, res) => {
