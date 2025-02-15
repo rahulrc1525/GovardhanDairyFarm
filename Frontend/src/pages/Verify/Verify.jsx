@@ -1,74 +1,62 @@
-import React, { useEffect, useContext, useState } from 'react';
-import "./Verify.css";
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { StoreContext } from './../../context/StoreContext';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Verify = () => {
-const [searchParams] = useSearchParams();
-const razorpay_order_id = searchParams.get("razorpay_order_id");
-const razorpay_payment_id = searchParams.get("razorpay_payment_id");
-const razorpay_signature = searchParams.get("razorpay_signature");
-const orderId = searchParams.get("orderId");
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Extracting parameters from URL
+  const razorpay_payment_id = searchParams.get("razorpay_payment_id");
+  const razorpay_order_id = searchParams.get("razorpay_order_id");
+  const razorpay_signature = searchParams.get("razorpay_signature");
+  const orderId = searchParams.get("orderId");
+  
+  useEffect(() => {
+    const verifyPayment = async () => {
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
+        toast.error("Invalid payment details.");
+        navigate("/");
+        return;
+      }
 
-const { url } = useContext(StoreContext);
-const navigate = useNavigate();
-const [loading, setLoading] = useState(true);
+      try {
+        const { data } = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/order/verify`, {
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          orderId,
+        });
 
-const verifyPayment = async () => {
-if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-toast.error("Invalid payment details. Redirecting to home...");
-navigate("/");
-return;
-}
+        if (data.success) {
+          toast.success("Payment verified successfully!");
+          navigate("/myorders");
+        } else {
+          throw new Error("Verification failed");
+        }
+      } catch (error) {
+        console.error("Payment verification error:", error);
+        toast.error("Payment verification failed. Please contact support.");
+        navigate("/");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-try {
-const response = await axios.post(`${url}/api/order/verify`, {
-razorpay_order_id,
-razorpay_payment_id,
-razorpay_signature,
-orderId,
-});
+    verifyPayment();
+  }, [navigate, razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId]);
 
-if (response.data.success) {
-toast.success("Payment verified successfully!");
-navigate("/myorders");
-} else {
-toast.error("Payment verification failed. Please try again.");
-navigate("/");
-}
-} catch (error) {
-console.error("Error during payment verification:", error);
-toast.error("Error verifying payment. Please try again.");
-navigate("/");
-} finally {
-setLoading(false);
-}
-};
-
-useEffect(() => {
-if (razorpay_order_id && razorpay_payment_id && razorpay_signature && orderId) {
-verifyPayment();
-} else {
-setLoading(false);
-toast.error("Missing payment details. Redirecting...");
-navigate("/");
-}
-}, []);
-
-return (
-<div className='verify'>
-{loading ? (
-<>
-<div className="spinner"></div>
-<p>Verifying Payment, please wait...</p>
-</>
-) : (
-<p>Redirecting...</p>
-)}
-</div>
-);
+  return (
+    <div className="flex justify-center items-center h-screen">
+      {loading ? (
+        <p className="text-lg font-semibold">Verifying Payment...</p>
+      ) : (
+        <p className="text-lg font-semibold">Redirecting...</p>
+      )}
+    </div>
+  );
 };
 
 export default Verify;

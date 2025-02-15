@@ -61,9 +61,10 @@ export const verifyOrder = async (req, res) => {
 
     // Generate expected signature
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
+  .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
+  .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+  .digest("hex");
+
 
     if (generatedSignature === razorpay_signature) {
       // Update order status to 'Paid'
