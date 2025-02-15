@@ -110,7 +110,13 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-
+  
+    // Generate order summary
+    const orderSummary = foodList
+      .filter((item) => cart[item._id] > 0)
+      .map((item) => `${item.name} (x${cart[item._id]}) - Rs. ${item.price * cart[item._id]}`)
+      .join(", ");
+  
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount,
@@ -118,6 +124,9 @@ const PlaceOrder = () => {
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
       order_id: order.id,
+      notes: {
+        order_summary: orderSummary, // Pass order details to Razorpay
+      },
       handler: async function (response) {
         try {
           const verificationResponse = await fetch(`${url}/api/order/verify`, {
@@ -132,9 +141,9 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-
+  
           const verificationResult = await verificationResponse.json();
-
+  
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
           } else {
@@ -154,10 +163,11 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-
+  
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
+  
 
   return (
     <div className="place-order-container">
