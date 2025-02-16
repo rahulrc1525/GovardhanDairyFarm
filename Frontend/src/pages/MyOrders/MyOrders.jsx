@@ -28,13 +28,21 @@ const MyOrders = () => {
           },
         }
       );
-      console.log("Fetched orders:", response.data.data);
-      setData(response.data.data);
+
+      if (response.data.success) {
+        console.log("Fetched orders:", response.data.data);
+        setData(response.data.data);
+      } else {
+        console.error("Failed to fetch orders:", response.data.message);
+        alert("Failed to fetch orders. Please try again.");
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
       if (error.response?.status === 401) {
         alert("Session expired. Please log in again.");
         navigate("/login");
+      } else {
+        alert("An error occurred while fetching orders. Please try again.");
       }
     }
   };
@@ -58,7 +66,7 @@ const MyOrders = () => {
                 </span>
               ))}
             </p>
-            <p>Rs. {order.amount / 100}</p>
+            <p>Rs. {order.amount / 100}</p> {/* Convert paise to rupees */}
             <p>Items: {order.items.length}</p>
             <p>
               <span>&#x25cf;</span> <b>{order.status}</b>
