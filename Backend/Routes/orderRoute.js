@@ -8,6 +8,7 @@ orderRouter.post("/place", authMiddleware, placeOrder);
 orderRouter.post("/verify", verifyOrder);
 orderRouter.post("/userOrders", authMiddleware, userOrders);
 orderRouter.get("/list", listOrders);
+orderRouter.post("/status", updateStatus);
 
 // Ensure only admins can list all orders
 orderRouter.post("/listOrders", authMiddleware, async (req, res, next) => {
