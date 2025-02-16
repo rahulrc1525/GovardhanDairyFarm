@@ -66,7 +66,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total * 100, // Convert to paise for Razorpay
+      amount: total,
       address: data,
     };
 
