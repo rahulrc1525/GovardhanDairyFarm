@@ -24,18 +24,14 @@ const MyOrders = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Use Authorization header
           },
         }
       );
 
       if (response.data.success) {
-        // Filter orders to only show "Food Processing" or "Paid" status
-        const filteredOrders = response.data.data.filter(
-          (order) => order.status === "Food Processing" || order.status === "Paid"
-        );
-        console.log("Fetched orders:", filteredOrders);
-        setData(filteredOrders);
+        console.log("Fetched orders:", response.data.data);
+        setData(response.data.data);
       } else {
         console.error("Failed to fetch orders:", response.data.message);
         alert("Failed to fetch orders. Please try again.");
@@ -70,7 +66,7 @@ const MyOrders = () => {
                 </span>
               ))}
             </p>
-            <p>Rs. {order.amount / 100}</p>
+            <p>Rs. {order.amount / 100}</p> {/* Convert paise to rupees */}
             <p>Items: {order.items.length}</p>
             <p>
               <span>&#x25cf;</span> <b>{order.status}</b>
