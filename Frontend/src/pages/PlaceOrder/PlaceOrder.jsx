@@ -4,7 +4,7 @@ import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url } = useContext(StoreContext);
+  const { cart, token, foodList, url, setCartItems } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -53,7 +53,7 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -62,23 +62,23 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
       amount: total * 100, // Convert to paise for Razorpay
       address: data,
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
+
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
@@ -90,7 +90,7 @@ const PlaceOrder = () => {
           body: JSON.stringify(orderData),
         }
       );
-  
+
       const result = await response.json();
       if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
@@ -110,7 +110,7 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount, // Amount is already in paise
@@ -132,11 +132,12 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
+            setCartItems({}); // Clear the cart after successful payment
             navigate("/myorders"); // Redirect to MyOrders page after successful payment
           } else {
             alert("Payment verification failed!");
@@ -155,7 +156,7 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
