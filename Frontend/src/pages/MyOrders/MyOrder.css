@@ -35,9 +35,9 @@
     cursor: pointer;
     color: #454545
 }
-/*
 
-:root .my-orders-order button{
+
+/* :root .my-orders-order button{
     border: 1px solid tomato;
     background-color: black;
     color: white;
@@ -67,8 +67,8 @@
 
 .lightcolors .myordersp {
     color: black;
-}
-*/
+} */
+
 
 @media (max-width:900px) {
     .my-orders-order{
