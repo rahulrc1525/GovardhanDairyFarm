@@ -22,7 +22,7 @@ const placeOrder = async (req, res) => {
       items,
       amount,
       address,
-      status: "Food Processing"
+      status: "Pending",
     });
 
     // Clear user's cart
