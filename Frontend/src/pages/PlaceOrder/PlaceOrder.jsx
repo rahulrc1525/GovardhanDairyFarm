@@ -53,7 +53,7 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
-
+  
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -62,23 +62,23 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-
+  
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total,
+      amount: total * 100, // Convert to paise for Razorpay
       address: data,
     };
-
+  
     try {
       const token = localStorage.getItem("token");
-
+  
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-
+  
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
@@ -90,7 +90,7 @@ const PlaceOrder = () => {
           body: JSON.stringify(orderData),
         }
       );
-
+  
       const result = await response.json();
       if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
@@ -110,10 +110,10 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-
+  
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
-      amount: order.amount,
+      amount: order.amount, // Amount is already in paise
       currency: order.currency,
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
@@ -132,9 +132,9 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-
+  
           const verificationResult = await verificationResponse.json();
-
+  
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
             navigate("/myorders"); // Redirect to MyOrders page after successful payment
@@ -155,7 +155,7 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-
+  
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
