@@ -2,31 +2,46 @@ import React, { useContext, useEffect, useState } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
 import { assests } from "../../assests/assests";
+import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
-  const { url, token } = useContext(StoreContext);
+  const { url } = useContext(StoreContext);
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found. Redirecting to login...");
+        navigate("/login");
+        return;
+      }
+
       const response = await axios.post(
         `${url}/api/order/userorders`,
         {},
-        { headers: { token } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Use Authorization header
+          },
+        }
       );
       console.log("Fetched orders:", response.data.data);
       setData(response.data.data);
     } catch (error) {
       console.error("Error fetching orders:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please log in again.");
+        navigate("/login");
+      }
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchOrders();
-    }
-  }, [token]);
+    fetchOrders();
+  }, []);
 
   return (
     <div className="my-orders">
