@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
   const { cart, token, foodList, url } = useContext(StoreContext);
-  const navigate = useNavigate(); // Added navigate hook
+  const navigate = useNavigate();
 
   const [data, setData] = useState({
     firstName: "",
@@ -66,7 +66,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total * 100,
+      amount: total * 100, // Convert to paise for Razorpay
       address: data,
     };
 
@@ -75,7 +75,7 @@ const PlaceOrder = () => {
 
       if (!token) {
         alert("Session expired. Please log in again.");
-        navigate("/login"); // Navigating to login if token is missing
+        navigate("/login");
         return;
       }
 
@@ -85,7 +85,7 @@ const PlaceOrder = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Ensuring correct format
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(orderData),
         }
@@ -137,6 +137,7 @@ const PlaceOrder = () => {
 
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
+            navigate("/myorders"); // Redirect to MyOrders page after successful payment
           } else {
             alert("Payment verification failed!");
           }

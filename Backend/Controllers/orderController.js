@@ -56,9 +56,11 @@ const verifyOrder = async (req, res) => {
 
     if (expectedSignature === razorpay_signature) {
       await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
+      console.log(`Order ${orderId} status updated to Paid`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
+      console.log(`Order ${orderId} deleted due to payment verification failure`);
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
   } catch (error) {
@@ -69,36 +71,36 @@ const verifyOrder = async (req, res) => {
 
 // Get orders of a user
 const userOrders = async (req, res) => {
-    try {
-        const orders = await orderModel.find({ userId: req.body.userId });
-        res.status(200).json({ success: true, data: orders });
-    } catch (error) {
-        console.error("Error fetching user orders:", error);
-        res.status(500).json({ success: false, message: "Error fetching orders" });
-    }
+  try {
+    const orders = await orderModel.find({ userId: req.body.userId });
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ success: false, message: "Error fetching orders" });
+  }
 };
 
 // Get all orders (Admin only)
 const listOrders = async (req, res) => {
-    try {
-        const orders = await orderModel.find({});
-        res.status(200).json({ success: true, data: orders });
-    } catch (error) {
-        console.error("Error fetching all orders:", error);
-        res.status(500).json({ success: false, message: "Error fetching all orders" });
-    }
+  try {
+    const orders = await orderModel.find({});
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    console.error("Error fetching all orders:", error);
+    res.status(500).json({ success: false, message: "Error fetching all orders" });
+  }
 };
 
 // Update order status
 const updateStatus = async (req, res) => {
-    try {
-        const { orderId, status } = req.body;
-        await orderModel.findByIdAndUpdate(orderId, { status });
-        res.status(200).json({ success: true, message: "Order status updated" });
-    } catch (error) {
-        console.error("Error updating order status:", error);
-        res.status(500).json({ success: false, message: "Error updating order status" });
-    }
+  try {
+    const { orderId, status } = req.body;
+    await orderModel.findByIdAndUpdate(orderId, { status });
+    res.status(200).json({ success: true, message: "Order status updated" });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ success: false, message: "Error updating order status" });
+  }
 };
 
 export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
