@@ -2,13 +2,14 @@ import React, { useContext, useState } from 'react';
 import './FoodItem.css';
 import { assests } from '../../assests/assests';
 import { StoreContext } from '../../context/StoreContext';
+import axios from 'axios';
 
 const FoodItem = ({ id, name, price, description, image }) => {
-  const { addToCart, removeFromCart, token, cart } = useContext(StoreContext);
+  const { addToCart, removeFromCart, token, cart, url } = useContext(StoreContext);
   const [quantity, setQuantity] = useState(cart[id] || 0);
   const [showQuantity, setShowQuantity] = useState(false);
 
-  const handleIncrease = () => {
+  const handleIncrease = async () => {
     if (!token) {
       alert("Please login to add items to cart");
       return;
@@ -18,7 +19,24 @@ const FoodItem = ({ id, name, price, description, image }) => {
     setQuantity((prev) => prev + 1);
     setShowQuantity(true);
     setTimeout(() => setShowQuantity(false), 2000); // Hide after 2 seconds
+
+    // Update clicks
+    try {
+      const response = await axios.post(`${url}/api/food/updateclicks`, { id }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.data.success) {
+        console.log("Clicks updated");
+      } else {
+        console.error("Failed to update clicks:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating clicks:", error);
+    }
   };
+
 
   const handleDecrease = () => {
     if (quantity > 0) {

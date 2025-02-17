@@ -59,4 +59,33 @@ const removeFood = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood };
+const updateClicks = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const food = await foodModel.findById(id);
+    if (!food) {
+      return res.status(404).json({ success: false, message: "Food item not found" });
+    }
+    food.clicks += 1;
+    await food.save();
+    res.json({ success: true, message: "Clicks updated" });
+  } catch (error) {
+    console.error("Error updating clicks:", error);
+    res.status(500).json({ success: false, message: "Error updating clicks" });
+  }
+};
+
+const getRecommendedFood = async (req, res) => {
+  try {
+    const foodItems = await foodModel.find().sort({ sales: -1, clicks: -1 }).limit(10);
+    res.json({ success: true, data: foodItems });
+  } catch (error) {
+    console.error("Error getting recommended food:", error);
+    res.status(500).json({ success: false, message: "Error getting recommended food" });
+  }
+};
+
+
+
+
+export { addFood, listFood, removeFood, updateClicks, getRecommendedFood  };
