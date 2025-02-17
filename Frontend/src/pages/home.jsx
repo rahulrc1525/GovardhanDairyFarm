@@ -6,7 +6,7 @@ import GirCowGheeBenefits from '../components/GirCowGheeBenefits/GirCowGheeBenef
 import FoodDisplay from '../components/foodDisplay/FoodDisplay';
 import axios from 'axios';
 
-const url = 'https://govardhandairyfarmbackend.onrender.com'; // Define the url variable
+const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const Homepage = () => {
   const [category, setCategory] = useState("All");
@@ -34,15 +34,19 @@ const Homepage = () => {
       <Products category={category} setCategory={setCategory} />
       <FoodDisplay category={category} />
       <h2>Recommended Food</h2>
-      <div className="recommended-food">
-        {recommendedFood.map((item) => (
-          <div key={item._id} className="recommended-food-item">
-            <img src={`https://govardhandairyfarmbackend.onrender.com/images/${item.image}`} alt={item.name} />
-            <p>{item.name}</p>
-            <p>Rs. {item.price}</p>
-          </div>
-        ))}
-      </div>
+      {recommendedFood.length > 0 ? (
+        <div className="recommended-food">
+          {recommendedFood.map((item) => (
+            <div key={item._id} className="recommended-food-item">
+              <img src={`https://govardhandairyfarmbackend.onrender.com/images/${item.image}`} alt={item.name} />
+              <p>{item.name}</p>
+              <p>Rs. {item.price}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No recommended food items available.</p>
+      )}
       <Features />
       <GirCowGheeBenefits />
     </div>
