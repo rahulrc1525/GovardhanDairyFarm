@@ -69,9 +69,9 @@ const verifyOrder = async (req, res) => {
         try {
           const smsResponse = await infobip.channels.sms.send({
             messages: [{
-              destinations: [{ to: `+91${order.address.phone}` }],
+              destinations: [{ to: `+91${order.address.phone}` }], // Ensure international format
               text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
-              from: 'GovardhanDairyFarm',
+              from: 'GovardhanDairyFarm', // Your sender ID
             }]
           });
 
