@@ -7,7 +7,6 @@ const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const RecommendedFood = () => {
     const [recommendedFood, setRecommendedFood] = useState([]);
-    const [randomFood, setRandomFood] = useState([]);
   
     useEffect(() => {
       const fetchRecommendedFood = async () => {
