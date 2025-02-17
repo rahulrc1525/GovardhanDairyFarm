@@ -4,7 +4,7 @@ import { assests } from '../../assests/assests';
 import { StoreContext } from '../../context/StoreContext';
 import axios from 'axios';
 
-const FoodItem = ({ id, name, price, description, image }) => {
+const FoodItem = ({ id, name, price, description, image, showRating = true }) => {
   const { addToCart, removeFromCart, token, cart, url } = useContext(StoreContext);
   const [quantity, setQuantity] = useState(cart[id] || 0);
   const [showQuantity, setShowQuantity] = useState(false);
@@ -37,7 +37,6 @@ const FoodItem = ({ id, name, price, description, image }) => {
     }
   };
 
-
   const handleDecrease = () => {
     if (quantity > 0) {
       removeFromCart(id);
@@ -57,7 +56,7 @@ const FoodItem = ({ id, name, price, description, image }) => {
       <div className="food-item-info">
         <div className="food-item-name-rating">
           <p>{name}</p>
-          <img src={assests.Rating_starts} alt="Rating" />
+          {showRating && <img src={assests.Rating_starts} alt="Rating" />}
         </div>
         <p className="food-item-desc">{description}</p>
         <p className="food-item-price">Rs. {price}</p>

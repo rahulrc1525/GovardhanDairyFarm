@@ -38,8 +38,7 @@ const RecommendedFood = () => {
               name={item.name}
               price={item.price}
               image={item.image}
-              sales={item.sales}
-              clicks={item.clicks}
+              showRating={false}
             />
           ))}
         </div>
