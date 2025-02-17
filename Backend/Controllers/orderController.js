@@ -44,6 +44,7 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
+// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -55,8 +56,8 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
-      console.log(`Order ${orderId} status updated to Paid`);
+      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
+      console.log(`Order ${orderId} status updated to Food Processing`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
@@ -72,7 +73,7 @@ const verifyOrder = async (req, res) => {
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId });
+    const orders = await orderModel.find({ userId: req.body.userId, payment: true }); // Only fetch orders with payment true
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);

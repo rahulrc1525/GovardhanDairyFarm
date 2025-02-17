@@ -68,6 +68,7 @@ const PlaceOrder = () => {
       items: orderItems,
       amount: total * 100, // Convert to paise for Razorpay
       address: data,
+      status: "Food Processing", // Set initial status to Food Processing
     };
   
     try {

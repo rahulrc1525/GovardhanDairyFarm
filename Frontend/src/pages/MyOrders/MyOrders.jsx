@@ -24,7 +24,7 @@ const MyOrders = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Use Authorization header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -66,7 +66,7 @@ const MyOrders = () => {
                 </span>
               ))}
             </p>
-            <p>Rs. {order.amount / 100}</p> {/* Convert paise to rupees */}
+            <p>Rs. {order.amount / 100}</p>
             <p>Items: {order.items.length}</p>
             <p>
               <span>&#x25cf;</span> <b>{order.status}</b>
