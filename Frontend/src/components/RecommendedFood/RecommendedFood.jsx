@@ -25,7 +25,9 @@ const RecommendedFood = () => {
 
   return (
     <div>
-      <h2>Recommended Food</h2>
+      <div className="recommended-food-header">
+        <span>Our Top Picks</span> for you!
+      </div>
       {recommendedFood.length > 0 ? (
         <div className="recommended-food">
           {recommendedFood.map((item) => (

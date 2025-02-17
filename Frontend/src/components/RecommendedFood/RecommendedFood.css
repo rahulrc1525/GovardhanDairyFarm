@@ -1,6 +1,20 @@
 /* RecommendedFood.css */
 
-.recommended-food {
+.recommended-food-header {
+    text-align: center;
+    padding: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .recommended-food-header span {
+    color: #ff9900;
+  }
+  
+  .recommended-food {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
