@@ -6,49 +6,51 @@ import FoodItem from '../FoodItem/FoodItem';
 const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const RecommendedFood = () => {
-  const [recommendedFood, setRecommendedFood] = useState([]);
-  const [randomFood, setRandomFood] = useState([]);
-
-  useEffect(() => {
-    const fetchRecommendedFood = async () => {
-      try {
-        const response = await axios.get(`${url}/api/food/recommended`);
-        if (response.data.success) {
-          setRecommendedFood(response.data.data);
-          setRandomFood(response.data.data.sort(() => Math.random() - 0.5).slice(0, 4));
-        } else {
-          console.error("Failed to fetch recommended food:", response.data.message);
+    const [recommendedFood, setRecommendedFood] = useState([]);
+    const [randomFood, setRandomFood] = useState([]);
+  
+    useEffect(() => {
+      const fetchRecommendedFood = async () => {
+        try {
+          const response = await axios.get(`${url}/api/food/recommended`);
+          if (response.data.success) {
+            setRecommendedFood(response.data.data);
+          } else {
+            console.error("Failed to fetch recommended food:", response.data.message);
+          }
+        } catch (error) {
+          console.error("Error fetching recommended food:", error);
         }
-      } catch (error) {
-        console.error("Error fetching recommended food:", error);
-      }
-    };
-    fetchRecommendedFood();
-  }, []);
-
-  return (
-    <div>
-      <div className="recommended-food-header">
-        <span>Our Top Picks</span> for you!
-      </div>
-      {randomFood.length > 0 ? (
-        <div className="recommended-food">
-          {randomFood.map((item) => (
-            <FoodItem
-              key={item._id}
-              id={item._id}
-              name={item.name}
-              price={item.price}
-              description={item.description}
-              image={item.image}
-            />
-          ))}
+      };
+      fetchRecommendedFood();
+    }, []);
+  
+    return (
+      <div>
+        <div className="recommended-food-header">
+          <span>Our Top Picks</span> for you!
         </div>
-      ) : (
-        <p className="no-recommended-food">No recommended food items available.</p>
-      )}
-    </div>
-  );
-}
+        {recommendedFood.length > 0 ? (
+          <div className="recommended-food">
+            {recommendedFood.map((item) => (
+              <FoodItem
+                key={item._id}
+                id={item._id}
+                name={item.name}
+                price={item.price}
+                image={item.image}
+                sales={item.sales}
+                clicks={item.clicks}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="no-recommended-food">No recommended food items available.</p>
+        )}
+      </div>
+    );
+  };
+  
+  
 
 export default RecommendedFood;
