@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import "./RecommendedFood.css";
+import FoodItem from '../FoodItem/FoodItem';
 
 const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const RecommendedFood = () => {
   const [recommendedFood, setRecommendedFood] = useState([]);
+  const [randomFood, setRandomFood] = useState([]);
 
   useEffect(() => {
     const fetchRecommendedFood = async () => {
@@ -13,6 +15,7 @@ const RecommendedFood = () => {
         const response = await axios.get(`${url}/api/food/recommended`);
         if (response.data.success) {
           setRecommendedFood(response.data.data);
+          setRandomFood(response.data.data.sort(() => Math.random() - 0.5).slice(0, 4));
         } else {
           console.error("Failed to fetch recommended food:", response.data.message);
         }
@@ -28,14 +31,17 @@ const RecommendedFood = () => {
       <div className="recommended-food-header">
         <span>Our Top Picks</span> for you!
       </div>
-      {recommendedFood.length > 0 ? (
+      {randomFood.length > 0 ? (
         <div className="recommended-food">
-          {recommendedFood.map((item) => (
-            <div key={item._id} className="recommended-food-item">
-              <img src={`https://govardhandairyfarmbackend.onrender.com/images/${item.image}`} alt={item.name} />
-              <p>{item.name}</p>
-              <p>Rs. {item.price}</p>
-            </div>
+          {randomFood.map((item) => (
+            <FoodItem
+              key={item._id}
+              id={item._id}
+              name={item.name}
+              price={item.price}
+              description={item.description}
+              image={item.image}
+            />
           ))}
         </div>
       ) : (
