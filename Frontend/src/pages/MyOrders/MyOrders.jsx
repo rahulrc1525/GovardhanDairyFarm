@@ -31,7 +31,15 @@ const MyOrders = () => {
 
       if (response.data.success) {
         console.log("Fetched orders:", response.data.data);
-        setData(response.data.data);
+
+        // Sorting: Prioritize 'Arrived' status first, then by newest orders
+        const sortedOrders = response.data.data.sort((a, b) => {
+          if (a.status === "Arrived" && b.status !== "Arrived") return -1;
+          if (a.status !== "Arrived" && b.status === "Arrived") return 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        setData(sortedOrders);
       } else {
         console.error("Failed to fetch orders:", response.data.message);
         alert("Failed to fetch orders. Please try again.");

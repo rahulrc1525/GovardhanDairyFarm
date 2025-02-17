@@ -1,54 +1,69 @@
-/* Orders Page - Stylish Admin Panel */
+/* Order Management Dashboard - Stylish Admin Panel */
 .order {
-    padding: 30px;
-    background: #f4f6f9;
+    padding: 40px;
+    background: #f0f2f5;
     min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
 }
 
 .order h3 {
     text-align: center;
-    font-size: 24px;
-    color: #333;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-size: 28px;
+    color: #222;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: linear-gradient(45deg, #007BFF, #6610f2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
 }
 
+/* Order List */
 .order-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
 }
 
+/* Order Item */
 .order-item {
     display: grid;
     grid-template-columns: 0.6fr 2.5fr 1fr 1fr 1fr;
     align-items: center;
     gap: 20px;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    transition: transform 0.3s ease-in-out;
+    border-radius: 15px;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.12);
+    padding: 25px;
+    transition: all 0.3s ease-in-out;
+    border-left: 8px solid #007BFF;
+    position: relative;
 }
 
 .order-item:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Order Item Image */
 .order-item img {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 10px;
+    border: 2px solid #007BFF;
 }
 
+/* Order Details */
 .order-item-food {
     font-weight: 700;
+    font-size: 16px;
     color: #333;
 }
 
 .order-item-name {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
     color: #444;
     margin-top: 10px;
@@ -62,19 +77,27 @@
 .order-item-phone {
     font-size: 14px;
     font-weight: bold;
-    color: #007BFF;
+    color: #ff5733;
 }
 
+/* Order Price */
+.order-item p {
+    font-weight: 600;
+    color: #222;
+}
+
+/* Order Status Dropdown */
 .order-item select {
     background: #fff;
     border: 2px solid #007BFF;
     color: #007BFF;
     font-weight: bold;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 10px;
+    border-radius: 10px;
     outline: none;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
+    font-size: 14px;
 }
 
 .order-item select:hover {
@@ -82,18 +105,47 @@
     color: #fff;
 }
 
+/* Order Status Indicator */
+.order-status {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.order-status.processing {
+    background: #FFD700;
+    color: #333;
+}
+
+.order-status.delivery {
+    background: #FF6347;
+    color: #fff;
+}
+
+.order-status.delivered {
+    background: #28a745;
+    color: #fff;
+}
+
+/* Responsive Design */
 @media (max-width: 1000px) {
     .order-item {
         grid-template-columns: 0.5fr 2fr 1fr;
-        padding: 15px;
+        padding: 18px;
     }
 
     .order-item img {
-        width: 40px;
+        width: 45px;
+        height: 45px;
     }
 
     .order-item select {
-        padding: 6px;
-        font-size: 12px;
+        padding: 7px;
+        font-size: 13px;
     }
 }
