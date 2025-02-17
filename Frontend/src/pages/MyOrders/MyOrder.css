@@ -1,17 +1,20 @@
+/* General Container */
 .my-orders {
     margin: 50px auto;
     max-width: 1100px;
-    padding: 20px;
-    background: #fff;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    padding: 30px;
+    background: #ffffff;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    transition: 0.3s ease-in-out;
 }
 
+/* Header Styling */
 .my-orders h2 {
     text-align: center;
     font-size: 28px;
     font-weight: bold;
-    color: #333;
+    color: #222;
     margin-bottom: 20px;
     position: relative;
 }
@@ -19,103 +22,143 @@
 .my-orders h2::after {
     content: "";
     display: block;
-    width: 80px;
-    height: 4px;
-    background: tomato;
-    margin: 10px auto;
+    width: 100px;
+    height: 5px;
+    background: linear-gradient(45deg, #ff5733, #ff9800);
+    margin: 12px auto;
     border-radius: 2px;
 }
 
+/* Order Container */
 .my-orders .container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 20px;
 }
 
+/* Order Item */
 .my-orders-order {
-    display: grid;
-    grid-template-columns: 60px auto 100px 100px 120px 100px;
+    display: flex;
     align-items: center;
     gap: 20px;
     background: #fff;
-    border-radius: 10px;
-    padding: 15px 20px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
+    border-left: 8px solid #ff5733;
+    position: relative;
 }
 
 .my-orders-order:hover {
-    transform: translateY(-3px);
-    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.15);
 }
 
+/* Order Image */
 .my-orders-order img {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
+    border-radius: 8px;
 }
 
-.my-orders-order p {
-    font-size: 15px;
-    color: #333;
+/* Order Details */
+.order-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.my-orders-order p span {
+.order-food {
     font-weight: bold;
-    color: tomato;
+    font-size: 16px;
+    color: #444;
 }
 
-.my-orders-order p b {
-    font-weight: 600;
+.order-price {
+    font-size: 15px;
+    font-weight: bold;
+    color: #008080;
+}
+
+.order-items {
+    font-size: 14px;
+    font-weight: bold;
     color: #333;
 }
 
-.my-orders-order button {
-    background: tomato;
-    color: #fff;
+/* Order Status */
+.order-status {
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.order-status span {
+    font-size: 18px;
+}
+
+/* Color-coded Status */
+.order-status.food-processing {
+    color: #ffa500;
+}
+
+.order-status.out-for-delivery {
+    color: #007bff;
+}
+
+.order-status.arrived {
+    color: #28a745;
+}
+
+/* Track Order Button */
+.track-btn {
+    background: linear-gradient(45deg, #ff5733, #ff9800);
+    color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
+    padding: 12px 18px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: all 0.3s ease-in-out;
 }
 
-.my-orders-order button:hover {
-    background: darkred;
+.track-btn:hover {
+    background: linear-gradient(45deg, #e63900, #ff6f00);
+    transform: scale(1.05);
 }
 
-/* Mobile Responsiveness */
+/* Responsive Design */
 @media (max-width: 900px) {
     .my-orders {
-        padding: 15px;
+        padding: 20px;
     }
 
     .my-orders-order {
-        grid-template-columns: 1fr 2fr 1fr;
-        font-size: 13px;
-        padding: 10px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 
-    .my-orders-order button {
+    .track-btn {
         font-size: 12px;
-        padding: 8px 12px;
+        padding: 10px 15px;
     }
 }
 
 @media (max-width: 600px) {
     .my-orders-order {
-        grid-template-columns: 1fr;
+        padding: 15px;
         text-align: center;
-        gap: 10px;
     }
 
-    .my-orders-order img {
-        margin: 0 auto;
+    .track-btn {
+        font-size: 12px;
+        padding: 8px 12px;
     }
 }

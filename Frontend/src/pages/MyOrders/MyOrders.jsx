@@ -10,6 +10,7 @@ const MyOrders = () => {
   const { url } = useContext(StoreContext);
   const navigate = useNavigate();
 
+  // Fetch and Sort Orders
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -23,19 +24,17 @@ const MyOrders = () => {
         `${url}/api/order/userorders`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.data.success) {
         console.log("Fetched orders:", response.data.data);
 
-        // Sorting: Prioritize 'Arrived' status first, then by newest orders
+        // Sorting: Show newest orders first, "Arrived" orders go at the bottom
         const sortedOrders = response.data.data.sort((a, b) => {
-          if (a.status === "Arrived" && b.status !== "Arrived") return -1;
-          if (a.status !== "Arrived" && b.status === "Arrived") return 1;
+          if (a.status === "Arrived" && b.status !== "Arrived") return 1;
+          if (a.status !== "Arrived" && b.status === "Arrived") return -1;
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
@@ -61,25 +60,29 @@ const MyOrders = () => {
 
   return (
     <div className="my-orders">
-      <h2>My Orders</h2>
+      <h2>📦 My Orders</h2>
       <div className="container">
         {data.map((order, index) => (
           <div key={index} className="my-orders-order">
-            <img src={assests.parcel_icon} alt="" />
-            <p>
-              {order.items.map((item, index) => (
-                <span key={index}>
-                  {item.name} x {item.quantity}
-                  {index !== order.items.length - 1 ? ", " : ""}
-                </span>
-              ))}
-            </p>
-            <p>Rs. {order.amount / 100}</p>
-            <p>Items: {order.items.length}</p>
-            <p>
-              <span>&#x25cf;</span> <b>{order.status}</b>
-            </p>
-            <button onClick={fetchOrders}>Track Order</button>
+            <img src={assests.parcel_icon} alt="Order Icon" />
+
+            <div className="order-details">
+              <p className="order-food">
+                {order.items.map((item, index) => (
+                  <span key={index}>
+                    {item.name} x {item.quantity}
+                    {index !== order.items.length - 1 ? ", " : ""}
+                  </span>
+                ))}
+              </p>
+              <p className="order-price">💰 Rs. {order.amount / 100}</p>
+              <p className="order-items">🛒 Items: {order.items.length}</p>
+              <p className={`order-status ${order.status.toLowerCase()}`}>
+                <span>&#x25cf;</span> <b>{order.status}</b>
+              </p>
+            </div>
+
+            <button className="track-btn" onClick={fetchOrders}>🚚 Track Order</button>
           </div>
         ))}
       </div>
