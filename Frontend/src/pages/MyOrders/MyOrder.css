@@ -33,7 +33,7 @@
 /* Orders Scrollable Container */
 .orders-container {
     display: flex;
-    gap: 20px;
+    gap: 90px;
     overflow-x: auto;
     padding: 10px;
     scroll-behavior: smooth;

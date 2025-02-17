@@ -74,11 +74,13 @@ const MyOrders = () => {
                   </span>
                 ))}
               </p>
-              <p className="order-price">💰 Rs. {order.amount / 100}</p>
-              <p className="order-items">🛒 Items: {order.items.length}</p>
-              <p className={`order-status ${order.status.toLowerCase()}`}>
-                <span>&#x25cf;</span> <b>{order.status}</b>
-              </p>
+              <div className="order-summary">
+                <p className="order-price">💰 Rs. {order.amount / 100}</p>
+                <p className="order-items">🛒 Items: {order.items.length}</p>
+                <p className={`order-status ${order.status.toLowerCase()}`}>
+                  <span>&#x25cf;</span> <b>{order.status}</b>
+                </p>
+              </div>
             </div>
             <button className="track-btn" onClick={fetchOrders}>🚚 Track Order</button>
           </div>
