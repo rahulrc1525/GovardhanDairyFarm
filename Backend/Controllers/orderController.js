@@ -3,8 +3,10 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import { Infobip, AuthType } from '@infobip-api/sdk';
 
 dotenv.config();
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_PUBLIC_KEY,
@@ -58,6 +60,22 @@ const verifyOrder = async (req, res) => {
     if (expectedSignature === razorpay_signature) {
       await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
       console.log(`Order ${orderId} status updated to Food Processing`);
+
+      // Fetch order details
+      const order = await orderModel.findById(orderId);
+      if (order) {
+        // Send SMS to user
+        const smsResponse = await infobip.channels.sms.send({
+          messages: [{
+            destinations: [{ to: order.address.phone }],
+            text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
+            from: 'GovardhanDairyFarm', // Your sender ID
+          }]
+        });
+
+        console.log('SMS sent:', smsResponse);
+      }
+
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
@@ -103,5 +121,12 @@ const updateStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating order status" });
   }
 };
+
+const infobip = new Infobip({
+  baseUrl: 'qdvymq.api.infobip.com', // e.g., 'https://api.infobip.com'
+  apiKey: '814b5c981a948eaf1e9b9e01713aba48-df3a633b-fe28-424c-94a6-81dbc99229ed',
+  authType: AuthType.ApiKey,
+});
+
 
 export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
