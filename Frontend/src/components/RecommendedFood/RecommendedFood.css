@@ -7,6 +7,7 @@
     color: #333;
     background-color: #f7f7f7;
     border-bottom: 1px solid #ddd;
+    animation: slideIn 1s;
   }
   
   .recommended-food-header span {
@@ -20,18 +21,22 @@
     overflow-x: auto;
     padding: 10px;
     gap: 10px;
+    width: 100vw;
+    height: 50vh;
+    animation: fadeIn 1s;
   }
   
   /* Recommended Food Item */
   .recommended-food-item {
-    width: 150px;
-    height: 200px;
+    width: 20vw;
+    height: 40vh;
     background-color: #f7f7f7;
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease-in-out;
+    animation: zoomIn 1s;
   }
   
   .recommended-food-item:hover {
@@ -46,6 +51,33 @@
     font-weight: bold;
     color: #666;
     animation: blink 2s infinite;
+  }
+  
+  @keyframes slideIn {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes zoomIn {
+    0% {
+      transform: scale(0.5);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
   
   @keyframes blink {
