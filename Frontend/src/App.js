@@ -21,6 +21,7 @@ import ReturnAndRefund from './components/rrpolicy/returnandrefund';
 import MyOrders from './pages/MyOrders/MyOrders';
 import ContactPage from './pages/Contactus/Contactus';
 import Verify from './pages/Verify/Verify';
+import WhatsAppbot from './components/WhatsAppbot/WhatsAppbot';
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -42,13 +43,11 @@ const App = () => {
           <Route path="/Return-Refund-Policy" element={<ReturnAndRefund/>}/>
           <Route path="/myorders" element={<MyOrders/>}/>
           <Route path="/verify" element={<Verify/>} />
-      
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      
-
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </div>
       <Footer />
+      <WhatsAppbot />
     </>
   );
 };
