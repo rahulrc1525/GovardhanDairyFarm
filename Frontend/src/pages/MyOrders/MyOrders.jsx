@@ -31,7 +31,7 @@ const MyOrders = () => {
       if (response.data.success) {
         console.log("Fetched orders:", response.data.data);
 
-        // Sorting: Show newest orders first, "Arrived" orders go at the bottom
+        // Sorting: Newest first, "Arrived" at the bottom
         const sortedOrders = response.data.data.sort((a, b) => {
           if (a.status === "Arrived" && b.status !== "Arrived") return 1;
           if (a.status !== "Arrived" && b.status === "Arrived") return -1;
@@ -61,11 +61,10 @@ const MyOrders = () => {
   return (
     <div className="my-orders">
       <h2>📦 My Orders</h2>
-      <div className="container">
+      <div className="orders-container">
         {data.map((order, index) => (
           <div key={index} className="my-orders-order">
             <img src={assests.parcel_icon} alt="Order Icon" />
-
             <div className="order-details">
               <p className="order-food">
                 {order.items.map((item, index) => (
@@ -81,7 +80,6 @@ const MyOrders = () => {
                 <span>&#x25cf;</span> <b>{order.status}</b>
               </p>
             </div>
-
             <button className="track-btn" onClick={fetchOrders}>🚚 Track Order</button>
           </div>
         ))}

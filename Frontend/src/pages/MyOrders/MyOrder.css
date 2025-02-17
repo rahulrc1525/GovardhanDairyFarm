@@ -1,7 +1,7 @@
 /* General Container */
 .my-orders {
     margin: 50px auto;
-    max-width: 1100px;
+    max-width: 1200px;
     padding: 25px;
     background: #fff;
     box-shadow: 0px 5px 18px rgba(0, 0, 0, 0.12);
@@ -30,20 +30,28 @@
     border-radius: 2px;
 }
 
-/* Order Container */
-.my-orders .container {
+/* Orders Scrollable Container */
+.orders-container {
     display: flex;
-    flex-direction: column;
-    gap: 18px;
-    margin-top: 20px;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 10px;
+    scroll-behavior: smooth;
 }
 
-/* Order Item */
+.orders-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.orders-container::-webkit-scrollbar-thumb {
+    background: tomato;
+    border-radius: 10px;
+}
+
+/* Order Card */
 .my-orders-order {
-    display: grid;
-    grid-template-columns: 60px auto 90px 100px 130px 100px;
-    align-items: center;
-    gap: 20px;
+    min-width: 280px;
+    max-width: 320px;
     background: #fff;
     border-radius: 12px;
     padding: 18px 22px;
@@ -51,6 +59,10 @@
     transition: all 0.3s ease-in-out;
     border-left: 6px solid tomato;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .my-orders-order:hover {
@@ -67,24 +79,38 @@
 }
 
 /* Order Details */
-.my-orders-order p {
+.order-details p {
     font-size: 16px;
     color: #333;
-    line-height: 1.5;
+    margin: 5px 0;
 }
 
-.my-orders-order p span {
+.order-details .order-status {
     font-weight: bold;
-    color: tomato;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
 }
 
-.my-orders-order p b {
-    font-weight: 600;
-    color: #222;
+/* Status Colors */
+.order-status.preparing {
+    background: #ffcc00;
+    color: #fff;
+}
+
+.order-status.delivered {
+    background: #28a745;
+    color: #fff;
+}
+
+.order-status.arrived {
+    background: #007bff;
+    color: #fff;
 }
 
 /* Track Order Button */
-.my-orders-order button {
+.track-btn {
     background: linear-gradient(90deg, #ff6347, #e53935);
     color: white;
     border: none;
@@ -98,46 +124,17 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
 }
 
-.my-orders-order button:hover {
+.track-btn:hover {
     background: linear-gradient(90deg, #e53935, #c62828);
     transform: scale(1.05);
 }
 
 /* Mobile Responsiveness */
-@media (max-width: 900px) {
-    .my-orders {
-        padding: 18px;
-    }
-
-    .my-orders-order {
-        grid-template-columns: 1fr 2fr 1fr;
-        font-size: 14px;
-        padding: 12px;
-    }
-
-    .my-orders-order button {
-        font-size: 13px;
-        padding: 9px 14px;
-    }
-}
-
 @media (max-width: 600px) {
     .my-orders-order {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 12px;
-        padding: 15px;
-    }
-
-    .my-orders-order img {
-        margin: 0 auto;
-    }
-
-    .my-orders-order button {
-        width: 100%;
-        font-size: 14px;
-        padding: 10px;
+        min-width: 90%;
     }
 }
