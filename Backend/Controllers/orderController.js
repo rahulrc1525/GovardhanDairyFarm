@@ -64,16 +64,23 @@ const verifyOrder = async (req, res) => {
       // Fetch order details
       const order = await orderModel.findById(orderId);
       if (order) {
-        // Send SMS to user
-        const smsResponse = await infobip.channels.sms.send({
-          messages: [{
-            destinations: [{ to: order.address.phone }],
-            text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
-            from: 'GovardhanDairyFarm', // Your sender ID
-          }]
-        });
+        console.log(`Sending SMS to ${order.address.phone}`);
 
-        console.log('SMS sent:', smsResponse);
+        try {
+          const smsResponse = await infobip.channels.sms.send({
+            messages: [{
+              destinations: [{ to: `+91${order.address.phone}` }],
+              text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
+              from: 'GovardhanDairyFarm',
+            }]
+          });
+
+          console.log('SMS Response:', smsResponse);
+        } catch (error) {
+          console.error('Error sending SMS:', error.response?.data || error.message);
+        }
+      } else {
+        console.error('Order not found:', orderId);
       }
 
       return res.status(200).json({ success: true, message: "Payment verified" });
