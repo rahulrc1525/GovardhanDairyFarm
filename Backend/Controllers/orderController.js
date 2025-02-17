@@ -84,7 +84,7 @@ const userOrders = async (req, res) => {
 // Get all orders (Admin only)
 const listOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({});
+    const orders = await orderModel.find({ payment: true }); // Only fetch orders with payment true
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching all orders:", error);
