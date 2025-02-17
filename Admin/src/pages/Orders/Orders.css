@@ -1,22 +1,26 @@
-/* Order Management Dashboard - Stylish Admin Panel */
-.order {
+/* General Styles */
+.order-container {
     padding: 40px;
-    background: #f0f2f5;
+    background: #f8f9fc;
     min-height: 100vh;
     font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.order h3 {
-    text-align: center;
+/* Centered Header */
+.order-header {
     font-size: 28px;
     color: #222;
     font-weight: 700;
-    letter-spacing: 1px;
     text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 10px;
     background: linear-gradient(45deg, #007BFF, #6610f2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 25px;
 }
 
 /* Order List */
@@ -24,6 +28,8 @@
     display: flex;
     flex-direction: column;
     gap: 25px;
+    width: 90%;
+    max-width: 900px;
 }
 
 /* Order Item */
@@ -35,7 +41,7 @@
     background: white;
     border-radius: 15px;
     box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.12);
-    padding: 25px;
+    padding: 20px;
     transition: all 0.3s ease-in-out;
     border-left: 8px solid #007BFF;
     position: relative;
@@ -102,33 +108,6 @@
 
 .order-item select:hover {
     background: #007BFF;
-    color: #fff;
-}
-
-/* Order Status Indicator */
-.order-status {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    text-transform: uppercase;
-}
-
-.order-status.processing {
-    background: #FFD700;
-    color: #333;
-}
-
-.order-status.delivery {
-    background: #FF6347;
-    color: #fff;
-}
-
-.order-status.delivered {
-    background: #28a745;
     color: #fff;
 }
 
