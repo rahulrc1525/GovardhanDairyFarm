@@ -11,7 +11,7 @@ const Navbar = ({ setShowLogin }) => {
   const { getTotalCartAmount, token, logout } = useContext(StoreContext);
   const navigate = useNavigate();
 
-  const handleMobileMenuToggle = () => {
+  const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
@@ -22,53 +22,30 @@ const Navbar = ({ setShowLogin }) => {
         <img src={assests.logo} alt="Govardhan Dairy Farm" className='logo' />
       </Link>
 
-      {/* Hamburger Menu */}
-      <div className="hamburger-menu" onClick={handleMobileMenuToggle}>
-        <div></div>
-        <div></div>
-        <div></div>
+      {/* Hamburger Menu for Mobile */}
+      <div className="hamburger" onClick={toggleMobileMenu}>
+        <div className={`line ${isMobileMenuOpen ? 'line1' : ''}`}></div>
+        <div className={`line ${isMobileMenuOpen ? 'line2' : ''}`}></div>
+        <div className={`line ${isMobileMenuOpen ? 'line3' : ''}`}></div>
       </div>
 
-      {/* Mobile Navbar Menu */}
-      {isMobileMenuOpen && (
-        <div className="mobile-navbar-menu">
-          <ul>
-            <li onClick={() => setMenu("home")}>
-              <Link to="/">Home</Link>
-            </li>
-            <li onClick={() => setMenu("products")}>
-              <Link to="/Products">Products</Link>
-            </li>
-            <li onClick={() => setMenu("about_us")}>
-              <Link to="/AboutUs">About Us</Link>
-            </li>
-            <li onClick={() => setMenu("blog")}>
-              <Link to="/BlogPage">Blog</Link>
-            </li>
-            <li onClick={() => setMenu("contact")}>
-              <Link to="/Contact_us">Contact Us</Link>
-            </li>
-          </ul>
-        </div>
-      )}
-
       {/* Navbar Menu */}
-      <ul className="navbar-menu">
-        <li onClick={() => setMenu("home")} className={menu === "home" ? 'active' : ''}>
+      <ul className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+        <li onClick={() => { setMenu("home"); setIsMobileMenuOpen(false); }} className={menu === "home" ? 'active' : ''}>
           <Link to="/">Home</Link>
         </li>
-        <li onClick={() => setMenu("products")} className={menu === "products" ? 'active' : ''}>
+        <li onClick={() => { setMenu("products"); setIsMobileMenuOpen(false); }} className={menu === "products" ? 'active' : ''}>
           <ScrollLink to="products" spy={true} smooth={true} offset={-70} duration={500}>
             Products
           </ScrollLink>
         </li>
-        <li onClick={() => setMenu("about_us")} className={menu === "about_us" ? 'active' : ''}>
+        <li onClick={() => { setMenu("about_us"); setIsMobileMenuOpen(false); }} className={menu === "about_us" ? 'active' : ''}>
           <Link to="/AboutUs">About Us</Link>
         </li>
-        <li onClick={() => setMenu("blog")} className={menu === "blog" ? 'active' : ''}>
+        <li onClick={() => { setMenu("blog"); setIsMobileMenuOpen(false); }} className={menu === "blog" ? 'active' : ''}>
           <Link to="/BlogPage">Blog</Link>
         </li>
-        <li onClick={() => setMenu("contact")} className={menu === "contact" ? 'active' : ''}>
+        <li onClick={() => { setMenu("contact"); setIsMobileMenuOpen(false); }} className={menu === "contact" ? 'active' : ''}>
           <Link to="/Contact_us">Contact Us</Link>
         </li>
       </ul>
@@ -90,13 +67,13 @@ const Navbar = ({ setShowLogin }) => {
           <div className='navbar-profile'>
             <img src={assests.profile_icon} alt='profile_icon' />
             <ul className='nav-profile-dropdown'>
-              <li onClick={()=>navigate('/myorders')}>
-                <img src={assests.bag_icon} alt="bagicon"/>
+              <li onClick={() => { navigate('/myorders'); setIsMobileMenuOpen(false); }}>
+                <img src={assests.bag_icon} alt="bagicon" />
                 <p>Orders</p>
               </li>
               <hr />
               <li onClick={logout}>
-                <img src={assests.logout_icon} alt="logouticon"/>
+                <img src={assests.logout_icon} alt="logouticon" />
                 <p>Logout</p>
               </li>
             </ul>
