@@ -210,23 +210,67 @@ button {
 }
 
 /* Responsive Design */
+/* Responsive Design */
 @media (max-width: 768px) {
   .login-background {
     width: 90%;
     padding: 30px;
+    margin: 20px auto; /* Center the login box */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+    border-radius: 15px; /* Rounded corners */
+    background-color: #fff; /* Ensure background is white */
   }
 
   h1 {
     font-size: 20px;
+    text-align: center; /* Center the heading */
+    margin-bottom: 20px; /* Add spacing below the heading */
+    color: #333; /* Darker text for better readability */
+  }
+
+  .input-box {
+    margin-bottom: 15px; /* Add spacing between input boxes */
   }
 
   .input-box input {
     padding: 10px 15px 10px 35px;
+    width: 100%; /* Full width input */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 8px; /* Rounded corners for inputs */
+    font-size: 14px; /* Slightly smaller font size */
   }
 
   button {
     padding: 10px;
     font-size: 16px;
+    width: 100%; /* Full width button */
+    border: none; /* Remove default border */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #007bff; /* Primary color */
+    color: #fff; /* White text */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition */
+  }
+
+  button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+  }
+
+  .remember-forgot {
+    display: flex;
+    justify-content: space-between; /* Space out the links */
+    align-items: center;
+    margin-top: 15px; /* Add spacing above */
+  }
+
+  .remember-forgot a {
+    font-size: 12px;
+    color: #007bff; /* Link color */
+    text-decoration: none; /* Remove underline */
+  }
+
+  .remember-forgot a:hover {
+    text-decoration: underline; /* Underline on hover */
   }
 }
 
@@ -254,5 +298,19 @@ button {
 
   .remember-forgot a {
     font-size: 12px;
+  }
+
+  /* Additional improvements for very small screens */
+  .input-box input::placeholder {
+    font-size: 12px; /* Smaller placeholder text */
+  }
+
+  .remember-forgot {
+    flex-direction: column; /* Stack links vertically */
+    align-items: flex-start; /* Align links to the start */
+  }
+
+  .remember-forgot a {
+    margin-bottom: 10px; /* Add spacing between links */
   }
 }
