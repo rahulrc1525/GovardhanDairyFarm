@@ -246,9 +246,9 @@
     margin-right: 00px; /* Adjusted margin for smaller screens */
   }
 
-  .logo {
-    margin-left: 20px; /* Adjusted margin for smaller screens */
-  }
+  /* .logo {
+    margin-left: 0px; 
+  } */
 
   .searchimg, .basketimg {
     max-width: 24px; /* Reduced icon size */
