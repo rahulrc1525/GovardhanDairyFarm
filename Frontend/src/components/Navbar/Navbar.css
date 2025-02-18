@@ -244,11 +244,12 @@
   .Navbar-right {
     gap: 10px; /* Reduced gap between icons */
     margin-right: 00px; /* Adjusted margin for smaller screens */
+    margin-left: 20px;
   }
 
-  /* .logo {
-    margin-left: 0px; 
-  } */
+  .logo {
+    margin-left: 00px; 
+  }
 
   .searchimg, .basketimg {
     max-width: 24px; /* Reduced icon size */
