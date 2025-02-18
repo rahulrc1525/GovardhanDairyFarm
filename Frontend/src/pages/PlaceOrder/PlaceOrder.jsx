@@ -21,6 +21,7 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [errors, setErrors] = useState({}); // To store validation errors
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -48,12 +49,57 @@ const PlaceOrder = () => {
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
+    // Clear errors when the user starts typing
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  // Validate all fields
+  const validateForm = () => {
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "street",
+      "city",
+      "state",
+      "ZipCode",
+      "phone",
+    ];
+    const newErrors = {};
+
+    requiredFields.forEach((field) => {
+      if (!data[field]) {
+        newErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
+      }
+    });
+
+    // Validate email format
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // Validate phone number format (10 digits)
+    if (data.phone && !/^\d{10}$/.test(data.phone)) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
+
+    // Validate the form before proceeding
+    if (!validateForm()) {
+      alert("Please fill all the required fields correctly.");
+      return;
+    }
+
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -62,7 +108,7 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
@@ -70,16 +116,16 @@ const PlaceOrder = () => {
       address: data,
       status: "Food Processing", // Set initial status to Food Processing
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
+
       const response = await fetch(
         "https://govardhandairyfarmbackend.onrender.com/api/order/place",
         {
@@ -91,7 +137,7 @@ const PlaceOrder = () => {
           body: JSON.stringify(orderData),
         }
       );
-  
+
       const result = await response.json();
       if (response.status === 201 && result.success) {
         console.log("Order Placed Successfully. Initiating Razorpay Payment...");
@@ -111,7 +157,7 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_bLYiZbozwEBRbx",
       amount: order.amount, // Amount is already in paise
@@ -133,9 +179,9 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
             navigate("/myorders"); // Redirect to MyOrders page after successful payment
@@ -156,7 +202,7 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
@@ -189,11 +235,11 @@ const PlaceOrder = () => {
                 required
                 placeholder={`Enter ${field}`}
               />
+              {errors[field] && (
+                <span className="error-message">{errors[field]}</span>
+              )}
             </div>
           ))}
-          <button type="submit" className="proceed-btn" disabled={loading}>
-            {loading ? "Processing..." : "Proceed to Payment"}
-          </button>
         </form>
       </div>
 
@@ -210,6 +256,15 @@ const PlaceOrder = () => {
           <p className="total-amount">
             Total: <span className="summary-value">Rs. {total}</span>
           </p>
+          {/* Moved the button here */}
+          <button
+            type="submit"
+            className="proceed-btn"
+            onClick={placeOrder}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Proceed to Payment"}
+          </button>
         </div>
       </div>
     </div>

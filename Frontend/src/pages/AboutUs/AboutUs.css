@@ -246,15 +246,110 @@
   }
 }
 
-/* Media Queries */
+/* Mobile Responsive Styles */
 @media (max-width: 768px) {
-  .hero-section, .mission-section {
-    flex-direction: column;
-    text-align: center;
+  /* Section Title Styling */
+  .section-title {
+    font-size: 28px; /* Reduced for mobile */
+    margin-bottom: 20px; /* Reduced for mobile */
+    letter-spacing: 1px; /* Reduced for mobile */
   }
-  
-  .hero-image img, .mission-image img {
-    width: 300px;
-    margin-top: 30px;
+
+  .section-title::after {
+    width: 60px; /* Reduced for mobile */
+    height: 3px; /* Reduced for mobile */
+    margin: 10px auto 0; /* Reduced for mobile */
+  }
+
+  /* Hero Section */
+  .hero-section {
+    flex-direction: column; /* Stack vertically on mobile */
+    padding: 20px; /* Reduced for mobile */
+  }
+
+  .hero-text h1 {
+    font-size: 32px; /* Reduced for mobile */
+    margin-bottom: 15px; /* Reduced for mobile */
+    text-align: center; /* Center text on mobile */
+  }
+
+  .hero-text p {
+    font-size: 18px; /* Reduced for mobile */
+    margin-bottom: 20px; /* Reduced for mobile */
+    text-align: center; /* Center text on mobile */
+  }
+
+  .hero-image img {
+    width: 100%; /* Full width on mobile */
+    max-width: 300px; /* Limit max width */
+    border-radius: 15px; /* Reduced for mobile */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Reduced for mobile */
+  }
+
+  /* About Us Section */
+  .aboutus-content {
+    padding: 30px 20px; /* Reduced for mobile */
+  }
+
+  .aboutus-description {
+    font-size: 16px; /* Reduced for mobile */
+    line-height: 1.6; /* Adjusted for mobile */
+  }
+
+  /* Mission Section */
+  .mission-section {
+    flex-direction: column; /* Stack vertically on mobile */
+    padding: 30px 20px; /* Reduced for mobile */
+  }
+
+  .mission-text {
+    max-width: 100%; /* Full width on mobile */
+    text-align: center; /* Center text on mobile */
+  }
+
+  .mission-text h2 {
+    font-size: 28px; /* Reduced for mobile */
+  }
+
+  .mission-text p {
+    font-size: 16px; /* Reduced for mobile */
+  }
+
+  .mission-image img {
+    width: 100%; /* Full width on mobile */
+    max-width: 300px; /* Limit max width */
+    border-radius: 15px; /* Reduced for mobile */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12); /* Reduced for mobile */
+    margin: 20px 0; /* Adjusted for mobile */
+  }
+
+  /* Values Section */
+  .values-section {
+    padding: 40px 20px; /* Reduced for mobile */
+  }
+
+  .values-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted for mobile */
+    gap: 20px; /* Reduced for mobile */
+  }
+
+  .value-item {
+    padding: 20px; /* Reduced for mobile */
+    border-radius: 10px; /* Reduced for mobile */
+  }
+
+  .value-item h3 {
+    font-size: 22px; /* Reduced for mobile */
+    margin-bottom: 10px; /* Reduced for mobile */
+  }
+
+  .value-item p {
+    font-size: 16px; /* Reduced for mobile */
+  }
+
+  .value-item::before {
+    width: 40px; /* Reduced for mobile */
+    height: 3px; /* Reduced for mobile */
+    margin: 0 auto 10px; /* Reduced for mobile */
   }
 }
