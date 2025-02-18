@@ -1,27 +1,31 @@
 /* Features Section Container */
 .features-section-container {
     display: flex;
+    flex-direction: column; /* Stack items vertically for mobile */
     align-items: center;
-    justify-content: space-between;
-    padding: 50px;
+    justify-content: center;
+    padding: 40px 20px; /* Increased padding for better spacing */
     background-color: #f9f9f9;
-    margin-top: 30px;
+    margin-top: 20px;
     animation: fadeInUp 1s ease-in;
-    flex-direction: row; /* Default direction for large screens */
-    position: relative; /* Ensure positioning for potential adjustments */
+    border-radius: 20px; /* Rounded corners for a modern look */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 
 /* Milk Bottle Image Styling */
 .features-image {
-    width: 50%;
-    position: relative;
+    width: 100%; /* Full width for mobile */
+    text-align: center; /* Center the image */
+    margin-bottom: 30px; /* Increased space between image and text */
 }
 
 .milk-bottle-img {
-    width: 80%;
+    width: 80%; /* Adjust image width for mobile */
+    max-width: 300px; /* Limit maximum width */
     transform: scale(0.9);
     opacity: 0; /* Initially hidden */
-    transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+    transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    border-radius: 20px; /* Rounded corners for the image */
 }
 
 /* Apply animation when the image is visible */
@@ -31,24 +35,34 @@
 }
 
 .milk-bottle-img:hover {
-    transform: scale(1.1);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05); /* Slightly more subtle hover effect */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
 }
 
 /* Text Section */
 .features-info {
-    width: 50%;
-    padding-left: 20px; /* Add padding to the left of the text */
-    margin-right: auto; /* Pushes the text section to the left */
+    width: 100%; /* Full width for mobile */
+    text-align: center; /* Center-align text for mobile */
 }
 
 /* Header Text */
 .header-text {
-    font-size: 36px;
+    font-size: 28px; /* Slightly larger font size for mobile */
     color: #333;
-    margin-bottom: 30px;
-    font-weight: bold; /* Make the header text bold */
-    line-height: 1.3; /* Increase line height for better readability */
+    margin-bottom: 25px; /* Increased margin for better spacing */
+    font-weight: bold;
+    line-height: 1.3;
+    position: relative; /* For pseudo-element */
+}
+
+.header-text::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background-color: #ff4500;
+    margin: 10px auto 0; /* Center the line */
+    border-radius: 2px;
 }
 
 .highlight {
@@ -59,49 +73,56 @@
 /* Feature List using CSS Grid */
 .features-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 items per row on large screens */
-    gap: 20px;
+    grid-template-columns: 1fr; /* 1 item per row for mobile */
+    gap: 20px; /* Increased space between items */
 }
 
 .feature-item {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column; /* Stack icon and content vertically */
+    align-items: center; /* Center-align items */
     background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, cursor 0.2s ease;
+    padding: 20px; /* Increased padding */
+    border-radius: 15px; /* More rounded corners */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     animation: fadeInUp 0.8s ease forwards;
 }
 
 .feature-item:hover {
-    transform: translateY(-15px) translateX(5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    cursor: grab;
+    transform: translateY(-10px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2); /* More pronounced shadow on hover */
 }
 
 .feature-content {
-    margin-left: 20px; /* Add more space between the icon and the text */
+    text-align: center; /* Center-align text */
+    margin-top: 15px; /* Increased space between icon and text */
 }
 
 .feature-content h3 {
-    font-size: 20px;
+    font-size: 20px; /* Slightly larger heading size for mobile */
     margin-bottom: 10px;
     color: #333;
-    font-weight: 600; /* Make the heading text bolder */
+    font-weight: 600;
 }
 
 .feature-content p {
-    font-size: 16px;
+    font-size: 15px; /* Slightly larger paragraph size for mobile */
     color: #666;
-    line-height: 1.6; /* Improve readability */
+    line-height: 1.6; /* Improved line height for readability */
 }
 
 /* Icons */
 .icon {
-    font-size: 24px;
+    font-size: 28px; /* Slightly larger icons */
     color: #ff4500;
+    margin-bottom: 10px; /* Space between icon and text */
+    transition: transform 0.3s ease; /* Add transition for hover effect */
+}
+
+.feature-item:hover .icon {
+    transform: rotate(15deg); /* Fun rotation effect on hover */
 }
 
 /* Keyframes for fade-in animation */
@@ -116,60 +137,66 @@
     }
 }
 
-/* Responsive Design for smaller devices */
-@media (max-width: 1050px) {
-    .features-section-container {
-        flex-direction: column; /* Stack items vertically */
-        padding: 20px; /* Adjust padding */
+/* Keyframes for slide and fade-in animation */
+@keyframes slideAndFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
     }
-
-    .features-image {
-        width: 100%;
-        margin-bottom: 20px; /* Space between image and text */
-    }
-
-    .features-info {
-        width: 100%; /* Full width for text */
-        margin-right: 0; /* Reset margin */
-        padding-left: 0; /* Reset padding */
-    }
-
-    .header-text {
-        font-size: 28px; /* Adjust header size */
-    }
-
-    .features-list {
-        grid-template-columns: repeat(2, 1fr); /* Keep 2 items per row */
-    }
-
-    .feature-item {
-        padding: 15px; /* Adjust padding */
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 
-@media (max-width: 750px) {
+/* Responsive Design for Tablets and Larger Screens */
+@media (min-width: 768px) {
     .features-section-container {
-        padding: 15px; /* Adjust padding */
+        flex-direction: row; /* Side-by-side layout for tablets and larger screens */
+        padding: 60px 50px; /* Increased padding */
     }
 
     .features-image {
-        margin-bottom: 15px;
+        width: 50%; /* Half width for image */
+        margin-bottom: 0; /* Remove margin */
+    }
+
+    .features-info {
+        width: 50%; /* Half width for text */
+        text-align: left; /* Left-align text */
+        padding-left: 30px; /* Increased padding */
     }
 
     .header-text {
-        font-size: 22px; /* Smaller font size */
+        font-size: 40px; /* Larger font size */
+    }
+
+    .header-text::after {
+        margin: 15px 0; /* Adjust line margin */
+    }
+
+    .features-list {
+        grid-template-columns: repeat(2, 1fr); /* 2 items per row */
+        gap: 25px; /* Increased space between items */
     }
 
     .feature-item {
-        padding: 10px; /* Smaller padding */
-        margin-bottom: 10px; /* Space between items */
+        flex-direction: row; /* Side-by-side layout for icon and content */
+        align-items: flex-start; /* Align items to the top */
+        padding: 25px; /* Increased padding */
+    }
+
+    .feature-content {
+        text-align: left; /* Left-align text */
+        margin-left: 20px; /* Space between icon and text */
+        margin-top: 0; /* Reset margin */
     }
 
     .feature-content h3 {
-        font-size: 18px; /* Smaller heading size */
+        font-size: 22px; /* Larger heading size */
     }
 
     .feature-content p {
-        font-size: 14px; /* Smaller paragraph size */
+        font-size: 16px; /* Larger paragraph size */
     }
 }
