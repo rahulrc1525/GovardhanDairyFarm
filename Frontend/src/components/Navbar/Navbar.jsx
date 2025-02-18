@@ -7,8 +7,13 @@ import { StoreContext } from '../../context/StoreContext';
 
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getTotalCartAmount, token, logout } = useContext(StoreContext);
   const navigate = useNavigate();
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   return (
     <div className='Navbar'>
@@ -16,6 +21,36 @@ const Navbar = ({ setShowLogin }) => {
       <Link to='/'>
         <img src={assests.logo} alt="Govardhan Dairy Farm" className='logo' />
       </Link>
+
+      {/* Hamburger Menu */}
+      <div className="hamburger-menu" onClick={handleMobileMenuToggle}>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+
+      {/* Mobile Navbar Menu */}
+      {isMobileMenuOpen && (
+        <div className="mobile-navbar-menu">
+          <ul>
+            <li onClick={() => setMenu("home")}>
+              <Link to="/">Home</Link>
+            </li>
+            <li onClick={() => setMenu("products")}>
+              <Link to="/Products">Products</Link>
+            </li>
+            <li onClick={() => setMenu("about_us")}>
+              <Link to="/AboutUs">About Us</Link>
+            </li>
+            <li onClick={() => setMenu("blog")}>
+              <Link to="/BlogPage">Blog</Link>
+            </li>
+            <li onClick={() => setMenu("contact")}>
+              <Link to="/Contact_us">Contact Us</Link>
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* Navbar Menu */}
       <ul className="navbar-menu">
