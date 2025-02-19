@@ -159,7 +159,7 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: process.env.RAZORPAY_PUBLIC_KEY, // Use environment variable
+      key: process.env.RAZORPAY_PUBLIC_KEY,
       amount: order.amount * 100, // Convert to paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
