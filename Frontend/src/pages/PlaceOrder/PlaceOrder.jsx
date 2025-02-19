@@ -21,7 +21,7 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  const [errors, setErrors] = useState({}); // To store validation errors
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -38,7 +38,6 @@ const PlaceOrder = () => {
     loadRazorpay();
   }, []);
 
-  // Calculate Subtotal & Total
   const subtotal = Object.keys(cart).reduce((acc, itemId) => {
     const itemInfo = foodList.find((product) => product._id === itemId);
     return itemInfo ? acc + itemInfo.price * cart[itemId] : acc;
@@ -49,11 +48,9 @@ const PlaceOrder = () => {
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
-    // Clear errors when the user starts typing
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
-  // Validate all fields
   const validateForm = () => {
     const requiredFields = [
       "firstName",
@@ -75,24 +72,21 @@ const PlaceOrder = () => {
       }
     });
 
-    // Validate email format
     if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
       newErrors.email = "Invalid email format";
     }
 
-    // Validate phone number format (10 digits)
     if (data.phone && !/^\d{10}$/.test(data.phone)) {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
 
-    // Validate the form before proceeding
     if (!validateForm()) {
       alert("Please fill all the required fields correctly.");
       return;
@@ -112,9 +106,9 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total * 100, // Convert to paise for Razorpay
+      amount: total,
       address: data,
-      status: "Food Processing", // Set initial status to Food Processing
+      status: "Food Processing",
     };
 
     try {
@@ -126,21 +120,17 @@ const PlaceOrder = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://govardhandairyfarmbackend.onrender.com/api/order/place",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
+      const response = await fetch(`${url}/api/order/place`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
 
       const result = await response.json();
       if (response.status === 201 && result.success) {
-        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
@@ -159,9 +149,9 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: "rzp_test_utnMkTXQCua8M4",
-      amount: order.amount, // Amount is already in paise
-      currency: order.currency,
+      key: process.env.RAZORPAY_PUBLIC_KEY,
+      amount: order.amount,
+      currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
       order_id: order.id,
@@ -184,7 +174,7 @@ const PlaceOrder = () => {
 
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
-            navigate("/myorders"); // Redirect to MyOrders page after successful payment
+            navigate("/myorders");
           } else {
             alert("Payment verification failed!");
           }
@@ -256,7 +246,6 @@ const PlaceOrder = () => {
           <p className="total-amount">
             Total: <span className="summary-value">Rs. {total}</span>
           </p>
-          {/* Moved the button here */}
           <button
             type="submit"
             className="proceed-btn"
