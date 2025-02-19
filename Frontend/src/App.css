@@ -1,5 +1,7 @@
-App {
+.App {
   text-align: center;
+  max-width: 100%; /* Ensure the app container doesn't exceed the viewport width */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .App-logo {
@@ -22,6 +24,8 @@ App {
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  max-width: 100%; /* Ensure the header doesn't exceed the viewport width */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .App-link {
@@ -35,4 +39,10 @@ App {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Additional global styles to prevent horizontal overflow */
+body, html, #root {
+  width: 100%;
+  overflow-x: hidden;
 }

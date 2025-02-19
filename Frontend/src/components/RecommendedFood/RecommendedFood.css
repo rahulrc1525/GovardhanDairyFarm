@@ -1,94 +1,164 @@
 /* Recommended Food Header */
 .recommended-food-header {
-    text-align: center;
-    padding: 10px;
-    font-size: 25px;
-    font-weight: bold;
-    color: #333;
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #ddd;
-    animation: slideIn 1s;
+  text-align: center;
+  padding: 20px;
+  font-size: 30px;
+  font-weight: bold;
+  color: #333;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+  animation: slideIn 1s;
+}
+
+.recommended-food-header span {
+  color: #ff9900;
+}
+
+/* Recommended Food Container */
+.recommended-food-container {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 20px;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px; /* Increase the max-width of the container */
+  margin: 0 auto; /* Center the container */
+  animation: fadeIn 1s;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.recommended-food-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Recommended Food Item */
+.recommended-food-item {
+  flex: 0 0 auto; /* Ensure items don't shrink or grow */
+  width: 250px; /* Fixed width for each item */
+  height: 350px; /* Fixed height for each item */
+  background-color: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  animation: zoomIn 1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recommended-food-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Food Item Image */
+.recommended-food-item img {
+  width: 100%; /* Ensure the image takes the full width of the container */
+  height: 200px; /* Fixed height for the image */
+  object-fit: cover; /* Ensure the image covers the area without distortion */
+  border-radius: 10px;
+}
+
+/* Food Item Action Buttons */
+.food-item-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.food-item-action img {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.food-item-action img:hover {
+  transform: scale(1.1);
+}
+
+/* Quantity Display */
+.quantity-display {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* No Recommended Food Message */
+.no-recommended-food-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+  animation: blink 2s infinite;
+}
+
+/* Keyframe Animations */
+@keyframes slideIn {
+  0% {
+    transform: translateX(-100%);
   }
-  
-  .recommended-food-header span {
-    color: #ff9900;
+  100% {
+    transform: translateX(0);
   }
-  
-  /* Recommended Food Container */
-  .recommended-food-container {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 10px;
-    gap: 10px;
-    width: 100vw;
-    height: 50vh;
-    animation: fadeIn 1s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
   }
-  
-  /* Recommended Food Item */
-  .recommended-food-item {
-    width: 20vw;
-    height: 40vh;
-    background-color: #f7f7f7;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out;
-    animation: zoomIn 1s;
+  100% {
+    opacity: 1;
   }
-  
-  .recommended-food-item:hover {
-    transform: scale(1.1);
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(0.5);
   }
-  
-  /* No Recommended Food Message */
-  .no-recommended-food-message {
-    text-align: center;
-    padding: 20px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #666;
-    animation: blink 2s infinite;
+  100% {
+    transform: scale(1);
   }
-  
-  @keyframes slideIn {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(0);
-    }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
   }
-  
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
+  50% {
+    opacity: 0.5;
   }
-  
-  @keyframes zoomIn {
-    0% {
-      transform: scale(0.5);
-    }
-    100% {
-      transform: scale(1);
-    }
+  100% {
+    opacity: 1;
   }
-  
-  @keyframes blink {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-  
+}
+
+/* Scrollbar Styling for Recommended Food Container */
+.recommended-food-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.recommended-food-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.recommended-food-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.recommended-food-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

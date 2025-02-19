@@ -1,22 +1,46 @@
 /* @tailwind base;
 @tailwind components;
 @tailwind utilities; */
-*{
+
+* {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-}body{
-    min-height: 100vh;
 }
-a{
+
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+body {
+    position: relative;
+}
+
+a {
     text-decoration: none;
     color: inherit;
 }
-.home{
-    width:100%;
-    margin:auto;
+
+.home {
+    width: 100%;
+    max-width: 100%; /* Ensure it doesn't exceed the viewport width */
+    margin: auto;
 }
+
 html {
     scroll-behavior: smooth;
-  }
-  
+}
+
+/* Ensure all elements stay within the viewport */
+img, video, iframe, canvas, svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Prevent horizontal overflow in containers */
+.container, .section, .row, .col {
+    max-width: 100%;
+    overflow-x: hidden;
+}

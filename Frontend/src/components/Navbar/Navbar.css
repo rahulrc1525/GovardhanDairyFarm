@@ -138,6 +138,7 @@
 }
 
 /* Profile Dropdown */
+/* Profile Dropdown */
 .navbar-profile {
   position: relative;
   cursor: pointer;
@@ -158,52 +159,70 @@
 .nav-profile-dropdown {
   position: absolute;
   right: 0;
-  top: 110%;
-  display: none;
-  background: linear-gradient(135deg, #fff, #f8f9fa);
-  padding: 15px 20px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  animation: fadeInDropdown 0.3s ease forwards;
+  top: 110%; /* Position below the parent element */
+  display: none; /* Hidden by default */
+  background: linear-gradient(135deg, #fff, #f8f9fa); /* Gradient background */
+  padding: 15px 30px; /* Padding for spacing */
+  border-radius: 8px; /* Rounded corners */
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Soft shadow for depth */
+  z-index: 1000; /* Ensure it appears above other elements */
+  animation: fadeInDropdown 0.3s ease forwards; /* Fade-in animation */
+  min-width: 200px; /* Set a minimum width */
 }
 
+/* Show dropdown on hover */
 .navbar-profile:hover .nav-profile-dropdown {
   display: block;
 }
 
+/* Dropdown list items */
 .nav-profile-dropdown li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 18px;
-  color: #49557e;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  transition: color 0.3s ease, transform 0.3s ease;
-  cursor: pointer;
+  gap: 12px; /* Space between icon and text */
+  font-size: 16px; /* Slightly smaller font size */
+  color: #49557e; /* Default text color */
+  padding: 10px 0; /* Padding for each item */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Subtle separator */
+  transition: color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+  cursor: pointer; /* Pointer cursor on hover */
 }
 
+/* Remove border from the last item */
 .nav-profile-dropdown li:last-child {
   border-bottom: none;
 }
 
+/* Hover effect for list items */
 .nav-profile-dropdown li:hover {
-  color: tomato;
-  transform: translateX(10px);
+  color: tomato; /* Change text color on hover */
+  transform: translateX(8px); /* Slight shift to the right */
 }
 
+/* Icons inside dropdown items */
 .nav-profile-dropdown li img {
   width: 20px;
   height: 20px;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease; /* Smooth icon scaling */
 }
 
+/* Hover effect for icons */
 .nav-profile-dropdown li:hover img {
-  transform: scale(1.2);
+  transform: scale(1.1); /* Slightly enlarge icons on hover */
 }
 
+/* Fade-in animation for dropdown */
+@keyframes fadeInDropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px); /* Start slightly above */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0); /* End at normal position */
+  }
+}
 /* Keyframe Animations */
 @keyframes pulse {
   0% { transform: scale(1); }

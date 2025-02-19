@@ -1,52 +1,103 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import "./RecommendedFood.css";
-import FoodItem from '../FoodItem/FoodItem';
+import { StoreContext } from '../../context/StoreContext'; // Import the context
+import { assests } from '../../assests/assests'; // Import assets if needed
 
 const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const RecommendedFood = () => {
-  const [recommendedFood, setRecommendedFood] = useState([]);
-  
-  useEffect(() => {
-    const fetchRecommendedFood = async () => {
-      try {
-        const response = await axios.get(`${url}/api/food/recommended`);
-        if (response.data.success) {
-          setRecommendedFood(response.data.data);
-        } else {
-          console.error("Failed to fetch recommended food:", response.data.message);
+    const [recommendedFood, setRecommendedFood] = useState([]);
+    const { addToCart, removeFromCart, token, cart } = useContext(StoreContext); // Use context for cart functionality
+
+    useEffect(() => {
+        const fetchRecommendedFood = async () => {
+            try {
+                const response = await axios.get(`${url}/api/food/recommended`);
+                if (response.data.success) {
+                    setRecommendedFood(response.data.data);
+                } else {
+                    console.error("Failed to fetch recommended food:", response.data.message);
+                }
+            } catch (error) {
+                console.error("Error fetching recommended food:", error);
+            }
+        };
+        fetchRecommendedFood();
+    }, []);
+
+    const handleIncrease = async (id) => {
+        if (!token) {
+            alert("Please login to add items to cart");
+            return;
         }
-      } catch (error) {
-        console.error("Error fetching recommended food:", error);
-      }
+
+        addToCart(id);
+
+        // Update clicks
+        try {
+            const response = await axios.post(`${url}/api/food/updateclicks`, { id }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.data.success) {
+                console.log("Clicks updated");
+            } else {
+                console.error("Failed to update clicks:", response.data.message);
+            }
+        } catch (error) {
+            console.error("Error updating clicks:", error);
+        }
     };
-    fetchRecommendedFood();
-  }, []);
-  
-  return (
-    <div>
-      <div className="recommended-food-header">
-        <span>Our Top Picks</span> for you!
-      </div>
-      {recommendedFood.length > 0 ? (
-        <div className="recommended-food-container">
-          {recommendedFood.map((item) => (
-            <FoodItem
-              key={item._id}
-              id={item._id}
-              name={item.name}
-              price={item.price}
-              image={item.image}
-              showRating={false}
-            />
-          ))}
+
+    const handleDecrease = (id) => {
+        if (cart[id] > 0) {
+            removeFromCart(id);
+        }
+    };
+
+    return (
+        <div>
+            <div className="recommended-food-header">
+                <span>Our Top Picks</span> for you!
+            </div>
+            {recommendedFood.length > 0 ? (
+                <div className="recommended-food-container">
+                    {recommendedFood.map((item) => {
+                        const quantity = cart[item._id] || 0; // Get quantity from cart
+                        return (
+                            <div key={item._id} className="recommended-food-item">
+                                <img
+                                    src={`https://govardhandairyfarmbackend.onrender.com/images/${item.image}`}
+                                    alt={item.name}
+                                />
+                                <h3>{item.name}</h3>
+                                <p>Rs. {item.price}</p>
+                                <div className="food-item-action">
+                                    <img
+                                        src={assests.remove_icon_red} // Use your remove icon
+                                        alt="Remove"
+                                        className="food-item-action-icon"
+                                        onClick={() => handleDecrease(item._id)}
+                                    />
+                                    <span className="quantity-display">{quantity}</span>
+                                    <img
+                                        src={assests.add_icon_green} // Use your add icon
+                                        alt="Add"
+                                        className="food-item-action-icon"
+                                        onClick={() => handleIncrease(item._id)}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <p className="no-recommended-food-message">No recommended food items available.</p>
+            )}
         </div>
-      ) : (
-        <p className="no-recommended-food-message">No recommended food items available.</p>
-      )}
-    </div>
-  );
+    );
 };
 
 export default RecommendedFood;
