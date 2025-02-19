@@ -159,7 +159,7 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: "rzp_test_bLYiZbozwEBRbx",
+      key: process.env.REACT_APP_RAZORPAY_PUBLIC_KEY,
       amount: order.amount, // Amount is already in paise
       currency: order.currency,
       name: "Govardhan Dairy Farm",
