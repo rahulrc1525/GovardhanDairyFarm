@@ -29,10 +29,13 @@ const PlaceOrder = () => {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
         script.onload = () => {
-          console.log("Razorpay SDK loaded");
+          console.log("Razorpay SDK loaded successfully");
           setRazorpayLoaded(true);
         };
-        script.onerror = () => console.error("Failed to load Razorpay SDK");
+        script.onerror = () => {
+          console.error("Failed to load Razorpay SDK");
+          setRazorpayLoaded(false);
+        };
         document.body.appendChild(script);
       } else {
         console.log("Razorpay SDK already loaded");
@@ -134,6 +137,8 @@ const PlaceOrder = () => {
       });
 
       const result = await response.json();
+      console.log("Order Placement Response:", result);
+
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {
@@ -141,6 +146,7 @@ const PlaceOrder = () => {
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      alert("An error occurred while placing the order.");
     } finally {
       setLoading(false);
     }
@@ -151,10 +157,10 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     const options = {
       key: process.env.RAZORPAY_PUBLIC_KEY, // Use environment variable
-      amount: order.amount, // Amount is already in paise
+      amount: order.amount * 100, // Convert to paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
@@ -174,10 +180,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-      
+
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-      
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
             navigate("/myorders");
@@ -198,7 +204,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
+    console.log("Razorpay Options:", options);
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
