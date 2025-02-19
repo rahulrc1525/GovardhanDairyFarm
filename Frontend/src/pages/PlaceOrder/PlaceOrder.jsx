@@ -106,7 +106,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total,
+      amount: amount,
       address: data,
       status: "Food Processing",
     };
