@@ -3,22 +3,12 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-import nodemailer from "nodemailer";
 
 dotenv.config();
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_PUBLIC_KEY,
   key_secret: process.env.RAZORPAY_PRIVATE_KEY,
-});
-
-// Configure nodemailer
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
 });
 
 // Place Order
@@ -32,7 +22,7 @@ const placeOrder = async (req, res) => {
       items,
       amount,
       address,
-      status: "Food Processing"
+      status: "Food Processing", // Set initial status to "Food Processing"
     });
 
     // Clear user's cart
@@ -65,32 +55,8 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
-      console.log(`Order ${orderId} status updated to Food Processing`);
-
-      // Fetch order details
-      const order = await orderModel.findById(orderId);
-      if (order) {
-        console.log(`Sending email to ${order.address.email}`);
-
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: order.address.email,
-          subject: 'Order Confirmation - Govardhan Dairy Farm',
-          text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error('Error sending email:', error);
-          } else {
-            console.log('Email sent:', info.response);
-          }
-        });
-      } else {
-        console.error('Order not found:', orderId);
-      }
-
+      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
+      console.log(`Order ${orderId} status updated to Paid`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
@@ -106,7 +72,7 @@ const verifyOrder = async (req, res) => {
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId, payment: true }); // Only fetch orders with payment true
+    const orders = await orderModel.find({ userId: req.body.userId });
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);
@@ -117,7 +83,7 @@ const userOrders = async (req, res) => {
 // Get all orders (Admin only)
 const listOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ payment: true }); // Only fetch orders with payment true
+    const orders = await orderModel.find({});
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching all orders:", error);
