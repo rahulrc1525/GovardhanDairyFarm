@@ -4,7 +4,7 @@ import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url } = useContext(StoreContext);
+  const { cart, token, foodList, url, setCartItems } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -21,7 +21,6 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -38,6 +37,7 @@ const PlaceOrder = () => {
     loadRazorpay();
   }, []);
 
+  // Calculate Subtotal & Total
   const subtotal = Object.keys(cart).reduce((acc, itemId) => {
     const itemInfo = foodList.find((product) => product._id === itemId);
     return itemInfo ? acc + itemInfo.price * cart[itemId] : acc;
@@ -48,50 +48,10 @@ const PlaceOrder = () => {
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
-    setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
-  };
-
-  const validateForm = () => {
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "street",
-      "city",
-      "state",
-      "ZipCode",
-      "phone",
-    ];
-    const newErrors = {};
-
-    requiredFields.forEach((field) => {
-      if (!data[field]) {
-        newErrors[field] = `${
-          field.charAt(0).toUpperCase() + field.slice(1)
-        } is required`;
-      }
-    });
-
-    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    if (data.phone && !/^\d{10}$/.test(data.phone)) {
-      newErrors.phone = "Phone number must be 10 digits";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
-
-    if (!validateForm()) {
-      alert("Please fill all the required fields correctly.");
-      return;
-    }
-
     setLoading(true);
 
     const orderItems = foodList
@@ -106,9 +66,8 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total,
+      amount: total * 100, // Convert to paise for Razorpay
       address: data,
-      status: "Food Processing",
     };
 
     try {
@@ -120,17 +79,21 @@ const PlaceOrder = () => {
         return;
       }
 
-      const response = await fetch(`${url}/api/order/place`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
-      });
+      const response = await fetch(
+        "https://govardhandairyfarmbackend.onrender.com/api/order/place",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
 
       const result = await response.json();
       if (response.status === 201 && result.success) {
+        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
@@ -149,9 +112,9 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: process.env.RAZORPAY_PUBLIC_KEY,
-      amount: order.amount,
-      currency: "INR",
+      key: "rzp_test_utnMkTXQCua8M4",
+      amount: order.amount, // Amount is already in paise
+      currency: order.currency,
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
       order_id: order.id,
@@ -174,7 +137,8 @@ const PlaceOrder = () => {
 
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
-            navigate("/myorders");
+            setCartItems({}); // Clear the cart after successful payment
+            navigate("/myorders"); // Redirect to MyOrders page after successful payment
           } else {
             alert("Payment verification failed!");
           }
@@ -225,11 +189,11 @@ const PlaceOrder = () => {
                 required
                 placeholder={`Enter ${field}`}
               />
-              {errors[field] && (
-                <span className="error-message">{errors[field]}</span>
-              )}
             </div>
           ))}
+          <button type="submit" className="proceed-btn" disabled={loading}>
+            {loading ? "Processing..." : "Proceed to Payment"}
+          </button>
         </form>
       </div>
 
@@ -246,14 +210,6 @@ const PlaceOrder = () => {
           <p className="total-amount">
             Total: <span className="summary-value">Rs. {total}</span>
           </p>
-          <button
-            type="submit"
-            className="proceed-btn"
-            onClick={placeOrder}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Proceed to Payment"}
-          </button>
         </div>
       </div>
     </div>
