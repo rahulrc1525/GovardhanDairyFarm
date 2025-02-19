@@ -22,6 +22,7 @@ import MyOrders from './pages/MyOrders/MyOrders';
 import ContactPage from './pages/Contactus/Contactus';
 import Verify from './pages/Verify/Verify';
 import WhatsAppbot from './components/WhatsAppbot/WhatsAppbot';
+import Search from './pages/Search/Search';
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="/verify" element={<Verify/>} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/Login" element={<Login />} />
+          <Route path="/search" element={<Search />} />
         </Routes>
       </div>
       <Footer />

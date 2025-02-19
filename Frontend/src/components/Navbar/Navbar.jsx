@@ -15,6 +15,10 @@ const Navbar = ({ setShowLogin }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const handleSearchClick = () => {
+    navigate('/search');
+  };
+
   return (
     <div className='Navbar'>
       {/* Logo */}
@@ -52,7 +56,7 @@ const Navbar = ({ setShowLogin }) => {
 
       {/* Navbar Right Section */}
       <div className='Navbar-right'>
-        <img src={assests.search} alt='Search_icon' className='searchimg' />
+        <img src={assests.search} alt='Search_icon' className='searchimg' onClick={handleSearchClick} />
         <div className="navbar-search">
           <Link to='/cart'>
             <img src={assests.basket} alt='basket' className='basketimg' />
