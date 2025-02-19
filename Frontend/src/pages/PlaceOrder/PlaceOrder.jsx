@@ -28,10 +28,14 @@ const PlaceOrder = () => {
       if (!window.Razorpay) {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => setRazorpayLoaded(true);
+        script.onload = () => {
+          console.log("Razorpay SDK loaded");
+          setRazorpayLoaded(true);
+        };
         script.onerror = () => console.error("Failed to load Razorpay SDK");
         document.body.appendChild(script);
       } else {
+        console.log("Razorpay SDK already loaded");
         setRazorpayLoaded(true);
       }
     };
@@ -156,6 +160,7 @@ const PlaceOrder = () => {
       description: "Complete your payment",
       order_id: order.id, // Razorpay order ID
       handler: async function (response) {
+        console.log("Razorpay Payment Response:", response);
         try {
           const verificationResponse = await fetch(`${url}/api/order/verify`, {
             method: "POST",
@@ -169,9 +174,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+      
           const verificationResult = await verificationResponse.json();
-  
+          console.log("Verification Result:", verificationResult);
+      
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
             navigate("/myorders");
