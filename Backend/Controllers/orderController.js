@@ -3,14 +3,22 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-import { Infobip, AuthType } from '@infobip-api/sdk';
+import nodemailer from "nodemailer";
 
 dotenv.config();
-
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_PUBLIC_KEY,
   key_secret: process.env.RAZORPAY_PRIVATE_KEY,
+});
+
+// Configure nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
 // Place Order
@@ -46,7 +54,6 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
-// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -64,21 +71,22 @@ const verifyOrder = async (req, res) => {
       // Fetch order details
       const order = await orderModel.findById(orderId);
       if (order) {
-        console.log(`Sending SMS to ${order.address.phone}`);
+        console.log(`Sending email to ${order.address.email}`);
 
-        try {
-          const smsResponse = await infobip.channels.sms.send({
-            messages: [{
-              destinations: [{ to: `+91${order.address.phone}` }], // Ensure international format
-              text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
-              from: 'GovardhanDairyFarm', // Your sender ID
-            }]
-          });
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: order.address.email,
+          subject: 'Order Confirmation - Govardhan Dairy Farm',
+          text: `Thank you for your order! Your order will be delivered in 2 to 5 days. Order ID: ${orderId}`,
+        };
 
-          console.log('SMS Response:', smsResponse);
-        } catch (error) {
-          console.error('Error sending SMS:', error.response?.data || error.message);
-        }
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Error sending email:', error);
+          } else {
+            console.log('Email sent:', info.response);
+          }
+        });
       } else {
         console.error('Order not found:', orderId);
       }
@@ -128,12 +136,5 @@ const updateStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating order status" });
   }
 };
-
-const infobip = new Infobip({
-  baseUrl: 'qdvymq.api.infobip.com', // e.g., 'https://api.infobip.com'
-  apiKey: '814b5c981a948eaf1e9b9e01713aba48-df3a633b-fe28-424c-94a6-81dbc99229ed',
-  authType: AuthType.ApiKey,
-});
-
 
 export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
