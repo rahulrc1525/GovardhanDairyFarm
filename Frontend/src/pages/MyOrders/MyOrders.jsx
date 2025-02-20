@@ -12,6 +12,7 @@ const MyOrders = () => {
 
   // Fetch and Sort Orders
 // MyOrders.jsx
+// MyOrders.jsx
 const fetchOrders = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -51,7 +52,6 @@ const fetchOrders = async () => {
     }
   }
 };
-
   useEffect(() => {
     fetchOrders();
   }, []);

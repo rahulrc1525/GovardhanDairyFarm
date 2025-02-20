@@ -14,40 +14,35 @@ const Verify = () => {
   const { url } = useContext(StoreContext);
   const navigate = useNavigate();
 
- const verifyPayment = async () => {
-  try {
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-      console.error("Invalid payment details");
-      alert("Payment verification failed. Redirecting to home...");
+  const verifyPayment = async () => {
+    try {
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+        console.error("Invalid payment details");
+        alert("Payment verification failed. Redirecting to home...");
+        navigate("/");
+        return;
+      }
+  
+      const response = await axios.post(`${url}/api/order/verify`, {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        orderId,
+      });
+  
+      if (response.data.success) {
+        alert("Payment verified successfully!");
+        navigate("/myorders");
+      } else {
+        alert("Payment verification failed.");
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error during payment verification:", error.response?.data || error.message);
+      alert("Error verifying payment.");
       navigate("/");
-      return;
     }
-
-    const response = await axios.post(`${url}/api/order/verify`, {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderData: { // Pass the order data to the backend
-        userId: localStorage.getItem("userId"), // Ensure you store userId in localStorage
-        items: JSON.parse(localStorage.getItem("cartItems")), // Ensure you store cart items in localStorage
-        amount: localStorage.getItem("totalAmount"), // Ensure you store total amount in localStorage
-        address: JSON.parse(localStorage.getItem("address")), // Ensure you store address in localStorage
-      },
-    });
-
-    if (response.data.success) {
-      alert("Payment verified successfully!");
-      navigate("/myorders");
-    } else {
-      alert("Payment verification failed.");
-      navigate("/");
-    }
-  } catch (error) {
-    console.error("Error during payment verification:", error.response?.data || error.message);
-    alert("Error verifying payment.");
-    navigate("/");
-  }
-};
+  };
 
   useEffect(() => {
     verifyPayment();
