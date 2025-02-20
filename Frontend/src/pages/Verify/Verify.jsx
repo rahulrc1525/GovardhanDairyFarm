@@ -27,7 +27,12 @@ const Verify = () => {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        orderId,
+        orderData: { // Pass the order data to the backend
+          userId: localStorage.getItem("userId"), // Ensure you store userId in localStorage
+          items: JSON.parse(localStorage.getItem("cartItems")), // Ensure you store cart items in localStorage
+          amount: localStorage.getItem("totalAmount"), // Ensure you store total amount in localStorage
+          address: JSON.parse(localStorage.getItem("address")), // Ensure you store address in localStorage
+        },
       });
   
       if (response.data.success) {

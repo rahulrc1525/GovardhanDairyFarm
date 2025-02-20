@@ -177,7 +177,12 @@ const PlaceOrder = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              orderId: order.receipt,
+              orderData: { // Pass the order data to the backend
+                userId: token,
+                items: order.items,
+                amount: order.amount,
+                address: data,
+              },
             }),
           });
   

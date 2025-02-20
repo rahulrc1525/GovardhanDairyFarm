@@ -16,27 +16,21 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
 
-    // Create new order in the database
-    const newOrder = await orderModel.create({
-      userId,
-      items,
-      amount,
-      address,
-      status: "Food Processing", // Set initial status to "Food Processing"
-    });
-
-    // Clear user's cart
-    await userModel.findByIdAndUpdate(userId, { cartData: {} });
-
-    // Create Razorpay order
+    // Create Razorpay order (do not save to database yet)
     const options = {
       amount: amount, // Amount is already in paise
       currency: "INR",
-      receipt: newOrder._id.toString(),
+      receipt: `order_rcptid_${Date.now()}`, // Temporary receipt ID
     };
+
     const razorpayOrder = await razorpay.orders.create(options);
 
-    res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
+    // Return Razorpay order details to the frontend
+    res.status(201).json({
+      success: true,
+      order: razorpayOrder,
+      orderData: { userId, items, amount, address }, // Pass order data to frontend
+    });
   } catch (error) {
     console.error("Error placing order:", error);
     res.status(500).json({ success: false, message: "Error placing order" });
@@ -44,10 +38,9 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
-// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = req.body;
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
@@ -56,14 +49,24 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      // Payment successful, update order status
-      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
-      console.log(`Order ${orderId} status updated to Food Processing`);
-      return res.status(200).json({ success: true, message: "Payment verified" });
+      // Payment successful, create the order in the database
+      const newOrder = await orderModel.create({
+        userId: orderData.userId,
+        items: orderData.items,
+        amount: orderData.amount,
+        address: orderData.address,
+        status: "Food Processing",
+        payment: true,
+      });
+
+      // Clear user's cart
+      await userModel.findByIdAndUpdate(orderData.userId, { cartData: {} });
+
+      console.log(`Order ${newOrder._id} created successfully`);
+      return res.status(200).json({ success: true, message: "Payment verified", orderId: newOrder._id });
     } else {
-      // Payment failed, delete the order
-      await orderModel.findByIdAndDelete(orderId);
-      console.log(`Order ${orderId} deleted due to payment verification failure`);
+      // Payment failed, do not create the order
+      console.log("Payment verification failed");
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
   } catch (error) {
@@ -71,9 +74,6 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
-
-
-// Get orders of a user
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
