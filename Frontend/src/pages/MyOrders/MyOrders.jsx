@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
-import { assets } from "../../assets/assets"; // Corrected the import path
+import { assets } from "../../../../Admin/src/assets/assets";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 
