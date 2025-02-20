@@ -21,23 +21,30 @@ const PlaceOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const loadRazorpay = async () => {
       if (!window.Razorpay) {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => setRazorpayLoaded(true);
-        script.onerror = () => console.error("Failed to load Razorpay SDK");
+        script.onload = () => {
+          console.log("Razorpay SDK loaded successfully");
+          setRazorpayLoaded(true);
+        };
+        script.onerror = () => {
+          console.error("Failed to load Razorpay SDK");
+          setRazorpayLoaded(false);
+        };
         document.body.appendChild(script);
       } else {
+        console.log("Razorpay SDK already loaded");
         setRazorpayLoaded(true);
       }
     };
     loadRazorpay();
   }, []);
 
-  // Calculate Subtotal & Total
   const subtotal = Object.keys(cart).reduce((acc, itemId) => {
     const itemInfo = foodList.find((product) => product._id === itemId);
     return itemInfo ? acc + itemInfo.price * cart[itemId] : acc;
@@ -48,12 +55,52 @@ const PlaceOrder = () => {
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "street",
+      "city",
+      "state",
+      "ZipCode",
+      "phone",
+    ];
+    const newErrors = {};
+
+    requiredFields.forEach((field) => {
+      if (!data[field]) {
+        newErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
+      }
+    });
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (data.phone && !/^\d{10}$/.test(data.phone)) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
+
+    if (!validateForm()) {
+      alert("Please fill all the required fields correctly.");
+      return;
+    }
+
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -62,45 +109,44 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total * 100, // Convert to paise for Razorpay
+      amount: total,
       address: data,
-      status: "Food Processing", // Set initial status to Food Processing
+      status: "Food Processing",
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
-      const response = await fetch(
-        "https://govardhandairyfarmbackend.onrender.com/api/order/place",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
-  
+
+      const response = await fetch(`${url}/api/order/place`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
       const result = await response.json();
+      console.log("Order Placement Response:", result);
+
       if (response.status === 201 && result.success) {
-        console.log("Order Placed Successfully. Initiating Razorpay Payment...");
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
       }
     } catch (error) {
       console.error("Error placing order:", error);
+      alert("An error occurred while placing the order.");
     } finally {
       setLoading(false);
     }
@@ -111,15 +157,16 @@ const PlaceOrder = () => {
       alert("Razorpay SDK not loaded. Try again.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_utnMkTXQCua8M4",
-      amount: order.amount, // Amount is already in paise
-      currency: order.currency,
+      amount: order.amount, // Convert to paise
+      currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
-      order_id: order.id,
+      order_id: order.id, // Razorpay order ID
       handler: async function (response) {
+        console.log("Razorpay Payment Response:", response);
         try {
           const verificationResponse = await fetch(`${url}/api/order/verify`, {
             method: "POST",
@@ -133,12 +180,13 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
-  
+          console.log("Verification Result:", verificationResult);
+
           if (verificationResponse.ok && verificationResult.success) {
             alert("Payment successful!");
-            navigate("/myorders"); // Redirect to MyOrders page after successful payment
+            navigate("/myorders");
           } else {
             alert("Payment verification failed!");
           }
@@ -156,7 +204,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
+    console.log("Razorpay Options:", options);
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
@@ -189,11 +239,11 @@ const PlaceOrder = () => {
                 required
                 placeholder={`Enter ${field}`}
               />
+              {errors[field] && (
+                <span className="error-message">{errors[field]}</span>
+              )}
             </div>
           ))}
-          <button type="submit" className="proceed-btn" disabled={loading}>
-            {loading ? "Processing..." : "Proceed to Payment"}
-          </button>
         </form>
       </div>
 
@@ -210,6 +260,14 @@ const PlaceOrder = () => {
           <p className="total-amount">
             Total: <span className="summary-value">Rs. {total}</span>
           </p>
+          <button
+            type="submit"
+            className="proceed-btn"
+            onClick={placeOrder}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Proceed to Payment"}
+          </button>
         </div>
       </div>
     </div>
