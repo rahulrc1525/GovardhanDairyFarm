@@ -161,7 +161,7 @@ const handleRazorpayPayment = async (order) => {
   }
 
   const options = {
-    key: "rzp_test_utnMkTXQCua8M4",
+    key: "rzp_test_K1augfcwb6fgUh",
     amount: order.amount, // Amount is already in paise
     currency: "INR",
     name: "Govardhan Dairy Farm",
