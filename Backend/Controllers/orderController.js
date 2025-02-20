@@ -25,9 +25,9 @@ const placeOrder = async (req, res) => {
     const newOrder = await orderModel.create({
       userId,
       items,
-      amount: amount * 100, // Convert to paise
+      amount: amount/100 , // Convert to paise
       address,
-      status: "Food Processing"
+      status: "Food Processingā"
     });
 
     // Clear user's cart
