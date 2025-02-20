@@ -189,9 +189,25 @@ const PlaceOrder = () => {
             navigate("/myorders");
           } else {
             console.error("Payment verification failed.");
+            // Delete the order if payment verification fails
+            await fetch(`${url}/api/order/delete`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ orderId: order.receipt }),
+            });
           }
         } catch (error) {
           console.error("Error verifying payment:", error);
+          // Delete the order if there's an error during verification
+          await fetch(`${url}/api/order/delete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ orderId: order.receipt }),
+          });
         }
       },
       prefill: {
@@ -204,9 +220,18 @@ const PlaceOrder = () => {
       },
     };
   
-    console.log("Razorpay Options:", options);
-  
     const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', async function (response) {
+      console.error("Payment failed:", response.error);
+      // Delete the order if payment fails
+      await fetch(`${url}/api/order/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId: order.receipt }),
+      });
+    });
     rzp.open();
   };
 

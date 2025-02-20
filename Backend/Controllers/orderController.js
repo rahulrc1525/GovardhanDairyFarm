@@ -44,8 +44,6 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
-// Verify Payment
-// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -57,7 +55,7 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      // Payment successful, update order status
+      // Payment successful, update order status and set payment to true
       await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
       console.log(`Order ${orderId} status updated to Food Processing`);
       return res.status(200).json({ success: true, message: "Payment verified" });
@@ -124,6 +122,17 @@ const handleWebhookEvent = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
+// Delete Order
+const deleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    await orderModel.findByIdAndDelete(orderId);
+    res.status(200).json({ success: true, message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ success: false, message: "Error deleting order" });
+  }
+};
 
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, handleWebhookEvent };
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, handleWebhookEvent, deleteOrder };

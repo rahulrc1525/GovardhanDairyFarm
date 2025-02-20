@@ -10,15 +10,18 @@ const Orders = ({ url }) => {
   // Fetch and Sort Orders
 // Orders.jsx
 // Orders.jsx
+// In Orders.jsx and MyOrders.jsx
 const fetchAllOrders = async () => {
   try {
     const response = await axios.get(url + '/api/order/list');
     if (response.data.success) {
-      const sortedOrders = response.data.data.filter((order) => order.status !== "Cancelled").sort((a, b) => {
-        if (a.status === "Delivered" && b.status !== "Delivered") return 1;
-        if (a.status !== "Delivered" && b.status === "Delivered") return -1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      const sortedOrders = response.data.data
+        .filter((order) => order.status !== "Cancelled" && order.payment === true)
+        .sort((a, b) => {
+          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
+          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
       setOrders(sortedOrders);
     } else {
