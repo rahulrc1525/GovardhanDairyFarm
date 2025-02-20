@@ -55,8 +55,8 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
-      console.log(`Order ${orderId} status updated to Paid`);
+      await orderModel.findByIdAndUpdate(orderId, { status: "Order Processing", payment: true });
+      console.log(`Order ${orderId} status updated to Order Processing`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
