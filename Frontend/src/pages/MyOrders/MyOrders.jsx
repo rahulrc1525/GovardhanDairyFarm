@@ -19,7 +19,7 @@ const MyOrders = () => {
         navigate("/login");
         return;
       }
-
+  
       const response = await axios.post(
         `${url}/api/order/userorders`,
         {},
@@ -27,17 +27,20 @@ const MyOrders = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
       if (response.data.success) {
         console.log("Fetched orders:", response.data.data);
-
+  
+        // Filter out orders with failed payments
+        const successfulOrders = response.data.data.filter(order => order.payment === true);
+  
         // Sorting: Newest first, "Arrived" at the bottom
-        const sortedOrders = response.data.data.sort((a, b) => {
+        const sortedOrders = successfulOrders.sort((a, b) => {
           if (a.status === "Arrived" && b.status !== "Arrived") return 1;
           if (a.status !== "Arrived" && b.status === "Arrived") return -1;
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
-
+  
         setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
       } else {
         console.error("Failed to fetch orders:", response.data.message);
@@ -53,7 +56,7 @@ const MyOrders = () => {
       }
     }
   };
-
+  
   useEffect(() => {
     fetchOrders();
   }, []);
