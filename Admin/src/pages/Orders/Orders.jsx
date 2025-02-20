@@ -8,8 +8,7 @@ const Orders = ({ url }) => {
   const [orders, setOrders] = useState([]);
 
   // Fetch and Sort Orders
-// Orders.jsx
-// Orders.jsx
+// Fetch and Sort Orders
 const fetchAllOrders = async () => {
   try {
     const response = await axios.get(url + '/api/order/list');
