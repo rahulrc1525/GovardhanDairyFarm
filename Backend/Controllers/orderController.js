@@ -136,4 +136,4 @@ const infobip = new Infobip({
 });
 
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus }; 
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
