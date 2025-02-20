@@ -44,6 +44,8 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
+// Verify Payment
+// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -70,7 +72,6 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
-
 
 // Get orders of a user
 // Get orders of a user

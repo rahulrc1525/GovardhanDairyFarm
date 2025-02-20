@@ -10,9 +10,9 @@ const MyOrders = () => {
   const { url } = useContext(StoreContext);
   const navigate = useNavigate();
 
-
+  // Fetch and Sort Orders
 // MyOrders.jsx
-// Fetch and Sort Orders
+// MyOrders.jsx
 const fetchOrders = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -31,13 +31,13 @@ const fetchOrders = async () => {
     );
 
     if (response.data.success) {
-      const sortedOrders = response.data.data.filter((order) => order.status !== "Cancelled").sort((a, b) => {
+      const sortedOrders = response.data.data.sort((a, b) => {
         if (a.status === "Arrived" && b.status !== "Arrived") return 1;
         if (a.status !== "Arrived" && b.status === "Arrived") return -1;
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
 
-      setData(sortedOrders);
+      setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
     } else {
       console.error("Failed to fetch orders:", response.data.message);
       alert("Failed to fetch orders. Please try again.");
@@ -52,7 +52,6 @@ const fetchOrders = async () => {
     }
   }
 };
-
   useEffect(() => {
     fetchOrders();
   }, []);
