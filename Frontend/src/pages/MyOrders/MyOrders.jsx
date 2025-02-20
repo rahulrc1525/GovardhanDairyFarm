@@ -12,7 +12,6 @@ const MyOrders = () => {
 
   // Fetch and Sort Orders
 // MyOrders.jsx
-// MyOrders.jsx
 const fetchOrders = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -31,8 +30,13 @@ const fetchOrders = async () => {
     );
 
     if (response.data.success) {
-      const filteredOrders = response.data.data.filter((order) => order.payment === true);
-      setData(filteredOrders);
+      const sortedOrders = response.data.data.sort((a, b) => {
+        if (a.status === "Arrived" && b.status !== "Arrived") return 1;
+        if (a.status !== "Arrived" && b.status === "Arrived") return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
     } else {
       console.error("Failed to fetch orders:", response.data.message);
       alert("Failed to fetch orders. Please try again.");
