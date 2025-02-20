@@ -93,14 +93,14 @@ const PlaceOrder = () => {
 
   const placeOrder = async (event) => {
     event.preventDefault();
-  
+
     if (!validateForm()) {
       alert("Please fill all the required fields correctly.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -109,7 +109,7 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
@@ -117,16 +117,16 @@ const PlaceOrder = () => {
       address: data,
       status: "Food Processing",
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
+
       const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
@@ -135,10 +135,10 @@ const PlaceOrder = () => {
         },
         body: JSON.stringify(orderData),
       });
-  
+
       const result = await response.json();
       console.log("Order Placement Response:", result);
-  
+
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {
@@ -157,9 +157,9 @@ const PlaceOrder = () => {
       console.error("Razorpay SDK not loaded.");
       return;
     }
-  
+
     const options = {
-      key: "rzp_test_K1augfcwb6fgUh",
+      key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
       amount: order.amount * 100, // Convert to paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
@@ -180,10 +180,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
             navigate("/myorders");
@@ -203,9 +203,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     console.log("Razorpay Options:", options);
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };

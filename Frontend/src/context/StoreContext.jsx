@@ -6,7 +6,6 @@ export const StoreContext = createContext(null);
 const StoreContextProvider = ({ children }) => {
   const url = "https://govardhandairyfarmbackend.onrender.com";
 
-  // Load cart from localStorage or initialize an empty object
   const [cart, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : {};
@@ -16,15 +15,13 @@ const StoreContextProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  // Fetch Cart Data from Backend
   const fetchCartData = async () => {
     if (!token || !userId) return;
-    
+
     try {
       const response = await axios.post(
         `${url}/api/cart/get`,
@@ -42,14 +39,12 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
-  // Auto-fetch cart on login or page refresh
   useEffect(() => {
     if (token && userId) {
       fetchCartData();
     }
   }, [token, userId]);
 
-  // Add Item to Cart
   const addToCart = async (itemId) => {
     if (!token || !userId) {
       alert("Please login to add items to the cart.");
@@ -66,7 +61,7 @@ const StoreContextProvider = ({ children }) => {
       if (response.data.success) {
         setCartItems((prevCart) => ({
           ...prevCart,
-          [itemId]: (prevCart[itemId] || 0) + 1
+          [itemId]: (prevCart[itemId] || 0) + 1,
         }));
       } else {
         console.error("Add to cart failed:", response.data.message);
@@ -76,7 +71,6 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
-  // Remove Item from Cart
   const removeFromCart = async (itemId) => {
     if (!token || !userId) {
       alert("Please login to remove items from cart.");
@@ -108,7 +102,6 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
-  // Fetch Food List
   const fetchFoodList = async () => {
     try {
       const response = await axios.get(`${url}/api/food/list`);
@@ -126,7 +119,6 @@ const StoreContextProvider = ({ children }) => {
     fetchFoodList();
   }, []);
 
-  // Calculate Total Cart Amount
   const getTotalCartAmount = () => {
     return Object.entries(cart).reduce((total, [itemId, quantity]) => {
       const item = foodList.find((product) => product._id === itemId);
@@ -134,14 +126,13 @@ const StoreContextProvider = ({ children }) => {
     }, 0);
   };
 
-  // Logout Function
   const logout = () => {
     setToken("");
     setUserId("");
     setCartItems({});
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
-    localStorage.removeItem("cart"); // Clear cart from localStorage
+    localStorage.removeItem("cart");
   };
 
   return (
