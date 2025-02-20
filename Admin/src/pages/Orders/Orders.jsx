@@ -8,25 +8,25 @@ const Orders = ({ url }) => {
   const [orders, setOrders] = useState([]);
 
   // Fetch and Sort Orders
-  const fetchAllOrders = async () => {
-    try {
-      const response = await axios.get(url + '/api/order/list');
-      if (response.data.success) {
-        // Sorting logic: Delivered orders go last, others sorted by createdAt
-        const sortedOrders = response.data.data.filter((order) => order.status !== "Cancelled").sort((a, b) => {
-          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
-          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
+// Orders.jsx
+const fetchAllOrders = async () => {
+  try {
+    const response = await axios.get(url + '/api/order/list');
+    if (response.data.success) {
+      const sortedOrders = response.data.data.filter((order) => order.status !== "Cancelled").sort((a, b) => {
+        if (a.status === "Delivered" && b.status !== "Delivered") return 1;
+        if (a.status !== "Delivered" && b.status === "Delivered") return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
 
-        setOrders(sortedOrders);
-      } else {
-        toast.error('Error fetching orders.');
-      }
-    } catch (error) {
-      toast.error('Failed to fetch orders.');
+      setOrders(sortedOrders);
+    } else {
+      toast.error('Error fetching orders.');
     }
-  };
+  } catch (error) {
+    toast.error('Failed to fetch orders.');
+  }
+};
 
   // Handle Status Change
   const statusHandler = async (event, orderId) => {

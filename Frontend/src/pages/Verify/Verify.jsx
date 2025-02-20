@@ -22,14 +22,14 @@ const Verify = () => {
         navigate("/");
         return;
       }
-
+  
       const response = await axios.post(`${url}/api/order/verify`, {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
         orderId,
       });
-
+  
       if (response.data.success) {
         alert("Payment verified successfully!");
         navigate("/myorders");

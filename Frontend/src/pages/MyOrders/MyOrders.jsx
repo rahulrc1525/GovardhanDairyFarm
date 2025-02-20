@@ -11,48 +11,46 @@ const MyOrders = () => {
   const navigate = useNavigate();
 
   // Fetch and Sort Orders
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found. Redirecting to login...");
-        navigate("/login");
-        return;
-      }
-
-      const response = await axios.post(
-        `${url}/api/order/userorders`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.success) {
-        console.log("Fetched orders:", response.data.data);
-
-        // Sorting: Newest first, "Arrived" at the bottom
-        const sortedOrders = response.data.data.sort((a, b) => {
-          if (a.status === "Arrived" && b.status !== "Arrived") return 1;
-          if (a.status !== "Arrived" && b.status === "Arrived") return -1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-
-        setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
-      } else {
-        console.error("Failed to fetch orders:", response.data.message);
-        alert("Failed to fetch orders. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      if (error.response?.status === 401) {
-        alert("Session expired. Please log in again.");
-        navigate("/login");
-      } else {
-        alert("An error occurred while fetching orders. Please try again.");
-      }
+// MyOrders.jsx
+const fetchOrders = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found. Redirecting to login...");
+      navigate("/login");
+      return;
     }
-  };
+
+    const response = await axios.post(
+      `${url}/api/order/userorders`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (response.data.success) {
+      const sortedOrders = response.data.data.sort((a, b) => {
+        if (a.status === "Arrived" && b.status !== "Arrived") return 1;
+        if (a.status !== "Arrived" && b.status === "Arrived") return -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
+    } else {
+      console.error("Failed to fetch orders:", response.data.message);
+      alert("Failed to fetch orders. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    if (error.response?.status === 401) {
+      alert("Session expired. Please log in again.");
+      navigate("/login");
+    } else {
+      alert("An error occurred while fetching orders. Please try again.");
+    }
+  }
+};
 
   useEffect(() => {
     fetchOrders();

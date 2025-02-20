@@ -44,6 +44,7 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
+// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -55,11 +56,13 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing ", payment: true });
+      // Payment successful, update order status
+      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
       console.log(`Order ${orderId} status updated to Food Processing`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
-      await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
+      // Payment failed, delete the order
+      await orderModel.findByIdAndDelete(orderId);
       console.log(`Order ${orderId} deleted due to payment verification failure`);
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }

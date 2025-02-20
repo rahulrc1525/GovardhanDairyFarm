@@ -157,7 +157,7 @@ const PlaceOrder = () => {
       console.error("Razorpay SDK not loaded.");
       return;
     }
-
+  
     const options = {
       key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
       amount: order.amount, // Amount is already in paise
@@ -180,10 +180,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-
+  
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-
+  
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
             navigate("/myorders");
@@ -203,9 +203,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-
+  
     console.log("Razorpay Options:", options);
-
+  
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
