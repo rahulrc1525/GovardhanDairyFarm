@@ -20,9 +20,9 @@ const placeOrder = async (req, res) => {
     const newOrder = await orderModel.create({
       userId,
       items,
-      amount, // Ensure this matches the amount sent to Razorpay
+      amount,
       address,
-      status: "Food Processing",
+      status: "Food Processing", // Set initial status to "Food Processing"
     });
 
     // Clear user's cart
@@ -30,7 +30,7 @@ const placeOrder = async (req, res) => {
 
     // Create Razorpay order
     const options = {
-      amount: amount * 100, // Convert to paise
+      amount: amount, // Amount is already in paise
       currency: "INR",
       receipt: newOrder._id.toString(),
     };
@@ -39,7 +39,7 @@ const placeOrder = async (req, res) => {
     res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
   } catch (error) {
     console.error("Error placing order:", error);
-    res.status(500).json({ success: false, message: "Error placing order", error: error.message });
+    res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
 
