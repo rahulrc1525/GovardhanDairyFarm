@@ -152,63 +152,68 @@ const PlaceOrder = () => {
     }
   };
 
-  const handleRazorpayPayment = async (order) => {
-    if (!razorpayLoaded || !window.Razorpay) {
-      console.error("Razorpay SDK not loaded.");
-      return;
-    }
-  
-    const options = {
-      key: "rzp_test_utnMkTXQCua8M4",
-      amount: order.amount, 
-      currency: "INR",
-      name: "Govardhan Dairy Farm",
-      description: "Complete your payment",
-      order_id: order.id, // Razorpay order ID
-      handler: async function (response) {
-        console.log("Razorpay Payment Response:", response);
-        try {
-          const verificationResponse = await fetch(`${url}/api/order/verify`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: order.receipt,
-            }),
-          });
-  
-          const verificationResult = await verificationResponse.json();
-          console.log("Verification Result:", verificationResult);
-  
-          if (verificationResponse.ok && verificationResult.success) {
-            console.log("Payment successful!");
-            navigate("/myorders");
-          } else {
-            console.error("Payment verification failed.");
-          }
-        } catch (error) {
-          console.error("Error verifying payment:", error);
+  // ...
+
+const handleRazorpayPayment = async (order) => {
+  if (!razorpayLoaded || !window.Razorpay) {
+    console.error("Razorpay SDK not loaded.");
+    return;
+  }
+
+  const options = {
+    key: "rzp_test_utnMkTXQCua8M4",
+    amount: order.amount, // Amount is already in paise
+    currency: "INR",
+    name: "Govardhan Dairy Farm",
+    description: "Complete your payment",
+    order_id: order.id, // Razorpay order ID
+    handler: async function (response) {
+      console.log("Razorpay Payment Response:", response);
+      try {
+        const verificationResponse = await fetch(`${url}/api/order/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId: order.receipt,
+          }),
+        });
+
+        const verificationResult = await verificationResponse.json();
+        console.log("Verification Result:", verificationResult);
+
+        if (verificationResponse.ok && verificationResult.success) {
+          console.log("Payment successful!");
+          navigate("/myorders");
+        } else {
+          console.error("Payment verification failed.");
         }
-      },
-      prefill: {
-        name: `${data.firstName} ${data.lastName}`,
-        email: data.email,
-        contact: data.phone,
-      },
-      theme: {
-        color: "#F37254",
-      },
-    };
-  
-    console.log("Razorpay Options:", options);
-  
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+      }
+    },
+    prefill: {
+      name: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      contact: data.phone,
+    },
+    theme: {
+      color: "#F37254",
+    },
   };
+
+  console.log("Razorpay Options:", options);
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+};
+
+// ...
+
   
 
   return (

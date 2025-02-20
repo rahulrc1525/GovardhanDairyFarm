@@ -14,6 +14,9 @@ const razorpay = new Razorpay({
 // ...
 
 // Place Order
+// ...
+
+// Place Order
 const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
@@ -22,7 +25,7 @@ const placeOrder = async (req, res) => {
     const newOrder = await orderModel.create({
       userId,
       items,
-      amount: amount , 
+      amount: amount * 100, // Convert to paise
       address,
       status: "Food Processing"
     });
@@ -44,6 +47,8 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
+
+// ...
 
 // Verify Payment
 const verifyOrder = async (req, res) => {
