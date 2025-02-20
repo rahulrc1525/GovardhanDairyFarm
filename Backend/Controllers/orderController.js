@@ -11,11 +11,6 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_PRIVATE_KEY,
 });
 
-// ...
-
-// Place Order
-// ...
-
 // Place Order
 const placeOrder = async (req, res) => {
   try {
@@ -25,9 +20,9 @@ const placeOrder = async (req, res) => {
     const newOrder = await orderModel.create({
       userId,
       items,
-      amount: amount , // Convert to paise
+      amount,
       address,
-      status: "Food Processingā"
+      status: "Food Processing", // Set initial status to "Food Processing"
     });
 
     // Clear user's cart
@@ -35,7 +30,7 @@ const placeOrder = async (req, res) => {
 
     // Create Razorpay order
     const options = {
-      amount: newOrder.amount, // Amount is already in paise
+      amount: amount, // Amount is already in paise
       currency: "INR",
       receipt: newOrder._id.toString(),
     };
@@ -47,8 +42,6 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
-
-// ...
 
 // Verify Payment
 const verifyOrder = async (req, res) => {
@@ -62,9 +55,8 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
-      console.log(`Order ${orderId} status updated to Food Processing`);
-
+      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
+      console.log(`Order ${orderId} status updated to Paid`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
@@ -77,12 +69,10 @@ const verifyOrder = async (req, res) => {
   }
 };
 
-// ...
-
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId, payment: true }); // Only fetch orders with payment true
+    const orders = await orderModel.find({ userId: req.body.userId });
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);
@@ -93,7 +83,7 @@ const userOrders = async (req, res) => {
 // Get all orders (Admin only)
 const listOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ payment: true }); // Only fetch orders with payment true
+    const orders = await orderModel.find({});
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching all orders:", error);
