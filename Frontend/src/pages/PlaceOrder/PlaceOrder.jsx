@@ -90,16 +90,17 @@ const PlaceOrder = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   const placeOrder = async (event) => {
     event.preventDefault();
-  
+
     if (!validateForm()) {
       alert("Please fill all the required fields correctly.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -108,7 +109,7 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
@@ -116,16 +117,16 @@ const PlaceOrder = () => {
       address: data,
       status: "Food Processing",
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
+
       const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
@@ -134,13 +135,12 @@ const PlaceOrder = () => {
         },
         body: JSON.stringify(orderData),
       });
-  
+
       const result = await response.json();
       console.log("Order Placement Response:", result);
-  
+
       if (response.status === 201 && result.success) {
-        // Pass orderItems to handleRazorpayPayment
-        handleRazorpayPayment(result.order, orderItems);
+        handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
       }
@@ -151,13 +151,13 @@ const PlaceOrder = () => {
       setLoading(false);
     }
   };
-  
-  const handleRazorpayPayment = async (order, orderItems) => {
+
+  const handleRazorpayPayment = async (order) => {
     if (!razorpayLoaded || !window.Razorpay) {
       console.error("Razorpay SDK not loaded.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
       amount: order.amount, // Amount is already in paise
@@ -178,16 +178,12 @@ const PlaceOrder = () => {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               orderId: order.receipt,
-              userId: token,
-              items: orderItems, // Use the passed orderItems
-              amount: total * 100,
-              address: data,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
             navigate("/myorders");
@@ -207,9 +203,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     console.log("Razorpay Options:", options);
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };
