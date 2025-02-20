@@ -55,8 +55,8 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      await orderModel.findByIdAndUpdate(orderId, { status: "Order Processing", payment: true });
-      console.log(`Order ${orderId} status updated to Order Processing`);
+      await orderModel.findByIdAndUpdate(orderId, { status: "Paid", payment: true });
+      console.log(`Order ${orderId} status updated to Paid`);
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails
@@ -69,6 +69,8 @@ const verifyOrder = async (req, res) => {
   }
 };
 
+
+// Get orders of a user
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
@@ -91,6 +93,7 @@ const listOrders = async (req, res) => {
   }
 };
 
+
 // Update order status
 const updateStatus = async (req, res) => {
   try {
@@ -109,8 +112,8 @@ const handleWebhookEvent = async (req, res) => {
     const event = req.body;
     if (event.event === "payment.failed" || event.event === "payment.cancelled") {
       const orderId = event.payload.payment.entity.order_id;
-      await orderModel.findByIdAndUpdate(orderId, { status: "Cancelled" });
-      // Delete order if necessary
+      await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails or is cancelled
+      console.log(`Order ${orderId} deleted due to payment failure or cancellation`);
     }
     res.status(200).json({ success: true });
   } catch (error) {
@@ -118,5 +121,6 @@ const handleWebhookEvent = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
+
 
 export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, handleWebhookEvent };
