@@ -160,7 +160,7 @@ const PlaceOrder = () => {
 
     const options = {
       key: "rzp_test_utnMkTXQCua8M4",
-      amount: order.amount, // Convert to paise
+      amount: order.amount, // Amount is already in paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
