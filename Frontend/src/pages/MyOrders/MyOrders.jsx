@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
-import { assests } from "../../assests/assests";
+import { assets } from "../../assets/assets"; // Corrected the import path
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 
@@ -11,47 +11,52 @@ const MyOrders = () => {
   const navigate = useNavigate();
 
   // Fetch and Sort Orders
-// MyOrders.jsx
-// MyOrders.jsx
-const fetchOrders = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No token found. Redirecting to login...");
-      navigate("/login");
-      return;
-    }
-
-    const response = await axios.post(
-      `${url}/api/order/userorders`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found. Redirecting to login...");
+        navigate("/login");
+        return;
       }
-    );
 
-    if (response.data.success) {
-      const sortedOrders = response.data.data.sort((a, b) => {
-        if (a.status === "Arrived" && b.status !== "Arrived") return 1;
-        if (a.status !== "Arrived" && b.status === "Arrived") return -1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      const response = await axios.post(
+        `${url}/api/order/userorders`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
-    } else {
-      console.error("Failed to fetch orders:", response.data.message);
-      alert("Failed to fetch orders. Please try again.");
+      if (response.data.success) {
+        // Filter out canceled orders and orders with incomplete payments
+        const filteredOrders = response.data.data.filter(
+          (order) => order.status !== "Cancelled" && order.payment === true
+        );
+
+        // Sort orders by status and creation date
+        const sortedOrders = filteredOrders.sort((a, b) => {
+          if (a.status === "Arrived" && b.status !== "Arrived") return 1;
+          if (a.status !== "Arrived" && b.status === "Arrived") return -1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        setData(sortedOrders);
+      } else {
+        console.error("Failed to fetch orders:", response.data.message);
+        alert("Failed to fetch orders. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please log in again.");
+        navigate("/login");
+      } else {
+        alert("An error occurred while fetching orders. Please try again.");
+      }
     }
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    if (error.response?.status === 401) {
-      alert("Session expired. Please log in again.");
-      navigate("/login");
-    } else {
-      alert("An error occurred while fetching orders. Please try again.");
-    }
-  }
-};
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -62,7 +67,7 @@ const fetchOrders = async () => {
       <div className="orders-container">
         {data.map((order, index) => (
           <div key={index} className="my-orders-order">
-            <img src={assests.parcel_icon} alt="Order Icon" />
+            <img src={assets.parcel_icon} alt="Order Icon" />
             <div className="order-details">
               <p className="order-food">
                 {order.items.map((item, index) => (
@@ -80,7 +85,9 @@ const fetchOrders = async () => {
                 </p>
               </div>
             </div>
-            <button className="track-btn" onClick={fetchOrders}>🚚 Track Order</button>
+            <button className="track-btn" onClick={fetchOrders}>
+              🚚 Track Order
+            </button>
           </div>
         ))}
       </div>
