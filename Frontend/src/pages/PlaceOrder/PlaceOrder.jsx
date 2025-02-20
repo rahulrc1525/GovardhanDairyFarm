@@ -113,7 +113,7 @@ const PlaceOrder = () => {
     const orderData = {
       userId: token,
       items: orderItems,
-      amount: total,
+      amount: total * 100, // Convert amount to paise
       address: data,
       status: "Food Processing",
     };
@@ -157,10 +157,10 @@ const PlaceOrder = () => {
       console.error("Razorpay SDK not loaded.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
-      amount: order.amount * 100, // Convert amount to paise
+      amount: order.amount, // Amount is already in paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
@@ -180,10 +180,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
             navigate("/myorders");
@@ -203,9 +203,9 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     console.log("Razorpay Options:", options);
-  
+
     const rzp = new window.Razorpay(options);
     rzp.open();
   };

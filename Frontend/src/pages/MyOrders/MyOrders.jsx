@@ -38,7 +38,7 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        setData(sortedOrders);
+        setData(sortedOrders.filter((order) => order.status !== "Cancelled"));
       } else {
         console.error("Failed to fetch orders:", response.data.message);
         alert("Failed to fetch orders. Please try again.");
@@ -75,7 +75,7 @@ const MyOrders = () => {
                 ))}
               </p>
               <div className="order-summary">
-                <p className="order-price">💰 Rs. {order.amount}</p>
+                <p className="order-price">💰 Rs. {order.amount / 100}</p>
                 <p className="order-items">🛒 Items: {order.items.length}</p>
                 <p className={`order-status ${order.status.toLowerCase()}`}>
                   <span>&#x25cf;</span> <b>{order.status}</b>

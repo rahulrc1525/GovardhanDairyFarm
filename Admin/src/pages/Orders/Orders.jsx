@@ -13,7 +13,7 @@ const Orders = ({ url }) => {
       const response = await axios.get(url + '/api/order/list');
       if (response.data.success) {
         // Sorting logic: Delivered orders go last, others sorted by createdAt
-        const sortedOrders = response.data.data.sort((a, b) => {
+        const sortedOrders = response.data.data.filter((order) => order.status !== "Cancelled").sort((a, b) => {
           if (a.status === "Delivered" && b.status !== "Delivered") return 1;
           if (a.status !== "Delivered" && b.status === "Delivered") return -1;
           return new Date(b.createdAt) - new Date(a.createdAt);

@@ -72,7 +72,7 @@ const verifyOrder = async (req, res) => {
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId });
+    const orders = await orderModel.find({ userId: req.body.userId, status: { $ne: "Cancelled" } });
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);
@@ -83,7 +83,7 @@ const userOrders = async (req, res) => {
 // Get all orders (Admin only)
 const listOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({});
+    const orders = await orderModel.find({ status: { $ne: "Cancelled" } });
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching all orders:", error);
@@ -103,4 +103,20 @@ const updateStatus = async (req, res) => {
   }
 };
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
+// Handle webhook events
+const handleWebhookEvent = async (req, res) => {
+  try {
+    const event = req.body;
+    if (event.event === "payment.failed" || event.event === "payment.cancelled") {
+      const orderId = event.payload.payment.entity.order_id;
+      await orderModel.findByIdAndUpdate(orderId, { status: "Cancelled" });
+      // Delete order if necessary
+    }
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error handling webhook event:", error);
+    res.status(500).json({ success: false });
+  }
+};
+
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, handleWebhookEvent };
