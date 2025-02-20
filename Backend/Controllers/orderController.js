@@ -11,6 +11,8 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_PRIVATE_KEY,
 });
 
+// ...
+
 // Place Order
 const placeOrder = async (req, res) => {
   try {
@@ -20,7 +22,7 @@ const placeOrder = async (req, res) => {
     const newOrder = await orderModel.create({
       userId,
       items,
-      amount,
+      amount: amount * 100, // Convert to paise
       address,
       status: "Food Processing"
     });
@@ -30,7 +32,7 @@ const placeOrder = async (req, res) => {
 
     // Create Razorpay order
     const options = {
-      amount: amount * 100, // Convert to paise
+      amount: newOrder.amount, // Amount is already in paise
       currency: "INR",
       receipt: newOrder._id.toString(),
     };
@@ -69,6 +71,8 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
+
+// ...
 
 // Get orders of a user
 const userOrders = async (req, res) => {
