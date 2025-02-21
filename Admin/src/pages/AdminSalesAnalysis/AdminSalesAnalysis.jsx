@@ -9,17 +9,8 @@ const AdminSalesAnalysis = ({ url }) => {
 
   const fetchSalesData = async () => {
     try {
-      const token = localStorage.getItem("token"); // Get the token from localStorage
-      if (!token) {
-        toast.error("You are not logged in. Please log in again.");
-        return;
-      }
-
       const response = await axios.get(`${url}/api/sales/analysis`, {
         params: { period },
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the request headers
-        },
       });
 
       if (response.data.success) {
@@ -29,13 +20,7 @@ const AdminSalesAnalysis = ({ url }) => {
       }
     } catch (error) {
       console.error("Error fetching sales data:", error);
-      if (error.response && error.response.status === 401) {
-        toast.error("Unauthorized. Please log in again.");
-      } else if (error.response && error.response.status === 403) {
-        toast.error("Admin access required.");
-      } else {
-        toast.error("Error fetching sales data");
-      }
+      toast.error("Error fetching sales data");
     }
   };
 
