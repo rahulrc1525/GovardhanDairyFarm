@@ -10,20 +10,28 @@ const getSalesAnalysis = async (req, res) => {
     };
 
     if (singleDate) {
-      // Filter for a single date
+      // Filter for a single date (ignore time component)
       const startOfDay = new Date(singleDate);
-      startOfDay.setHours(0, 0, 0, 0);
+      startOfDay.setUTCHours(0, 0, 0, 0); // Set to start of the day in UTC
 
       const endOfDay = new Date(singleDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      endOfDay.setUTCHours(23, 59, 59, 999); // Set to end of the day in UTC
 
       matchQuery.createdAt = { $gte: startOfDay, $lte: endOfDay };
     } else if (startDate && endDate) {
-      // Filter for a date range
-      matchQuery.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      // Filter for a date range (ignore time component)
+      const start = new Date(startDate);
+      start.setUTCHours(0, 0, 0, 0); // Set to start of the day in UTC
+
+      const end = new Date(endDate);
+      end.setUTCHours(23, 59, 59, 999); // Set to end of the day in UTC
+
+      matchQuery.createdAt = { $gte: start, $lte: end };
     } else {
       return res.status(400).json({ success: false, message: "Invalid date parameters" });
     }
+
+    console.log("Match Query:", matchQuery); // Debugging log
 
     // Aggregate sales data by category
     const salesData = await orderModel.aggregate([
@@ -47,6 +55,8 @@ const getSalesAnalysis = async (req, res) => {
         },
       },
     ]);
+
+    console.log("Sales Data:", salesData); // Debugging log
 
     res.status(200).json({ success: true, data: salesData });
   } catch (error) {

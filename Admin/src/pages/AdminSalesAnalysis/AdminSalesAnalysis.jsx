@@ -11,8 +11,21 @@ const AdminSalesAnalysis = ({ url }) => {
 
   const fetchSalesData = async () => {
     try {
+      const params = {};
+      if (singleDate) {
+        params.singleDate = singleDate;
+      } else if (startDate && endDate) {
+        params.startDate = startDate;
+        params.endDate = endDate;
+      } else {
+        toast.error("Please select a date range or a single date.");
+        return;
+      }
+
+      console.log("Fetching sales data with params:", params); // Debugging log
+
       const response = await axios.get(`${url}/api/sales/analysis`, {
-        params: { startDate, endDate, singleDate },
+        params,
       });
 
       if (response.data.success) {
