@@ -9,8 +9,12 @@ const SalesAnalysis = ({ url }) => {
 
   const fetchSalesData = async () => {
     try {
+      const token = localStorage.getItem("token"); // Get the token from localStorage
       const response = await axios.get(`${url}/api/sales/analysis`, {
         params: { period },
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the request headers
+        },
       });
       if (response.data.success) {
         setSalesData(response.data.data);

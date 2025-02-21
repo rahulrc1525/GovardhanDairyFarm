@@ -1,36 +1,79 @@
-import jwt from "jsonwebtoken";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "./SalesAnalysis.css";
 
-const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization; // Use authorization header
+const SalesAnalysis = ({ url }) => {
+  const [salesData, setSalesData] = useState([]);
+  const [period, setPeriod] = useState("week");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      success: false,
-      message: "Not authorized. Please login again.",
-    });
-  }
+  const fetchSalesData = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get the token from localStorage
+      if (!token) {
+        toast.error("You are not logged in. Please log in again.");
+        return;
+      }
 
-  const token = authHeader.split(" ")[1]; // Extract token after 'Bearer '
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.body.userId = decoded.id; // Attach user ID to request body
-    next();
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token has expired. Please login again.",
-        expiredAt: error.expiredAt,
+      const response = await axios.get(`${url}/api/sales/analysis`, {
+        params: { period },
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the request headers
+        },
       });
-    }
 
-    console.error("Error in token verification:", error);
-    res.status(401).json({
-      success: false,
-      message: "Invalid token or token expired.",
-    });
-  }
+      if (response.data.success) {
+        setSalesData(response.data.data);
+      } else {
+        toast.error("Error fetching sales data");
+      }
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+      if (error.response && error.response.status === 401) {
+        toast.error("Unauthorized. Please log in again.");
+      } else {
+        toast.error("Error fetching sales data");
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchSalesData();
+  }, [period]);
+
+  return (
+    <div className="sales-analysis">
+      <h2>Sales Analysis</h2>
+      <div className="period-selector">
+        <label>Select Period:</label>
+        <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+          <option value="week">Last Week</option>
+          <option value="month">Last Month</option>
+          <option value="year">Last Year</option>
+        </select>
+      </div>
+      <div className="sales-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Total Sales (₹)</th>
+              <th>Total Quantity Sold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {salesData.map((item, index) => (
+              <tr key={index}>
+                <td>{item._id}</td>
+                <td>{item.totalSales}</td>
+                <td>{item.totalQuantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
 
-export default authMiddleware;
+export default SalesAnalysis;
