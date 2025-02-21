@@ -1,6 +1,5 @@
 import orderModel from "../models/orderModel.js";
 
-// Get sales analysis by category and date range or single date
 const getSalesAnalysis = async (req, res) => {
   try {
     const { startDate, endDate, singleDate } = req.query;
@@ -28,29 +27,23 @@ const getSalesAnalysis = async (req, res) => {
 
     // Aggregate sales data by category
     const salesData = await orderModel.aggregate([
-      { $match: matchQuery },
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: "$items.name",
-          totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-          totalQuantity: { $sum: "$items.quantity" },
-        },
-      },
+      { $match: matchQuery }, // Match orders based on date and status
+      { $unwind: "$items" }, // Unwind the items array
       {
         $lookup: {
-          from: "foods",
-          localField: "_id",
-          foreignField: "name",
+          from: "foods", // Ensure this matches the collection name for food items
+          localField: "items._id", // Match the item's _id in orders with the food collection
+          foreignField: "_id",
           as: "foodDetails",
         },
       },
-      { $unwind: "$foodDetails" },
+      { $unwind: "$foodDetails" }, // Unwind the foodDetails array
+      { $unwind: "$foodDetails.categories" }, // Unwind the categories array
       {
         $group: {
-          _id: "$foodDetails.categories",
-          totalSales: { $sum: "$totalSales" },
-          totalQuantity: { $sum: "$totalQuantity" },
+          _id: "$foodDetails.categories", // Group by food category
+          totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
+          totalQuantity: { $sum: "$items.quantity" },
         },
       },
     ]);

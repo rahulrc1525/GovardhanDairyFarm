@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "./AdminSalesAnalysis.css";
@@ -16,6 +16,7 @@ const AdminSalesAnalysis = ({ url }) => {
       });
 
       if (response.data.success) {
+        console.log("Fetched Sales Data:", response.data.data); // Debugging log
         setSalesData(response.data.data);
       } else {
         toast.error("Error fetching sales data");
@@ -62,24 +63,28 @@ const AdminSalesAnalysis = ({ url }) => {
         </button>
       </form>
       <div className="sales-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Total Sales (₹)</th>
-              <th>Total Quantity Sold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {salesData.map((item, index) => (
-              <tr key={index}>
-                <td>{item._id}</td>
-                <td>₹{item.totalSales}</td>
-                <td>{item.totalQuantity}</td>
+        {salesData.length > 0 ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Total Sales (₹)</th>
+                <th>Total Quantity Sold</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {salesData.map((item, index) => (
+                <tr key={index}>
+                  <td>{item._id}</td>
+                  <td>₹{item.totalSales}</td>
+                  <td>{item.totalQuantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No sales data found for the selected date(s).</p>
+        )}
       </div>
     </div>
   );
