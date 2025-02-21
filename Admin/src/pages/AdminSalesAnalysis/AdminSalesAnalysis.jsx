@@ -5,12 +5,14 @@ import "./AdminSalesAnalysis.css";
 
 const AdminSalesAnalysis = ({ url }) => {
   const [salesData, setSalesData] = useState([]);
-  const [period, setPeriod] = useState("week");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [singleDate, setSingleDate] = useState("");
 
   const fetchSalesData = async () => {
     try {
       const response = await axios.get(`${url}/api/sales/analysis`, {
-        params: { period },
+        params: { startDate, endDate, singleDate },
       });
 
       if (response.data.success) {
@@ -24,21 +26,41 @@ const AdminSalesAnalysis = ({ url }) => {
     }
   };
 
-  useEffect(() => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     fetchSalesData();
-  }, [period]);
+  };
 
   return (
     <div className="admin-sales-analysis">
       <h2>Admin Sales Analysis</h2>
-      <div className="period-selector">
-        <label>Select Period:</label>
-        <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-          <option value="week">Last Week</option>
-          <option value="month">Last Month</option>
-          <option value="year">Last Year</option>
-        </select>
-      </div>
+      <form onSubmit={handleSubmit} className="date-selector">
+        <div className="date-range">
+          <label>Start Date:</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <label>End Date:</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+        <div className="single-date">
+          <label>Or Select a Single Date:</label>
+          <input
+            type="date"
+            value={singleDate}
+            onChange={(e) => setSingleDate(e.target.value)}
+          />
+        </div>
+        <button type="submit" className="fetch-button">
+          Fetch Data
+        </button>
+      </form>
       <div className="sales-table">
         <table>
           <thead>

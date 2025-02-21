@@ -1,35 +1,34 @@
 import orderModel from "../models/orderModel.js";
 
-// Get sales analysis by category and time period
+// Get sales analysis by category and date range or single date
 const getSalesAnalysis = async (req, res) => {
   try {
-    const { period } = req.query; // period can be 'week', 'month', or 'year'
-    const now = new Date();
-    let startDate;
+    const { startDate, endDate, singleDate } = req.query;
 
-    switch (period) {
-      case "week":
-        startDate = new Date(now.setDate(now.getDate() - 7));
-        break;
-      case "month":
-        startDate = new Date(now.setMonth(now.getMonth() - 1));
-        break;
-      case "year":
-        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
-        break;
-      default:
-        startDate = new Date(0); // All time
+    let matchQuery = {
+      status: "Delivered",
+      payment: true,
+    };
+
+    if (singleDate) {
+      // Filter for a single date
+      const startOfDay = new Date(singleDate);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(singleDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      matchQuery.createdAt = { $gte: startOfDay, $lte: endOfDay };
+    } else if (startDate && endDate) {
+      // Filter for a date range
+      matchQuery.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid date parameters" });
     }
 
     // Aggregate sales data by category
     const salesData = await orderModel.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startDate },
-          status: "Delivered",
-          payment: true,
-        },
-      },
+      { $match: matchQuery },
       { $unwind: "$items" },
       {
         $group: {
