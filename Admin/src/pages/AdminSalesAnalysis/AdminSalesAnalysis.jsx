@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import "./SalesAnalysis.css";
+import "./AdminSalesAnalysis.css";
 
-const SalesAnalysis = ({ url }) => {
+const AdminSalesAnalysis = ({ url }) => {
   const [salesData, setSalesData] = useState([]);
   const [period, setPeriod] = useState("week");
 
@@ -31,6 +31,8 @@ const SalesAnalysis = ({ url }) => {
       console.error("Error fetching sales data:", error);
       if (error.response && error.response.status === 401) {
         toast.error("Unauthorized. Please log in again.");
+      } else if (error.response && error.response.status === 403) {
+        toast.error("Admin access required.");
       } else {
         toast.error("Error fetching sales data");
       }
@@ -42,8 +44,8 @@ const SalesAnalysis = ({ url }) => {
   }, [period]);
 
   return (
-    <div className="sales-analysis">
-      <h2>Sales Analysis</h2>
+    <div className="admin-sales-analysis">
+      <h2>Admin Sales Analysis</h2>
       <div className="period-selector">
         <label>Select Period:</label>
         <select value={period} onChange={(e) => setPeriod(e.target.value)}>
@@ -65,7 +67,7 @@ const SalesAnalysis = ({ url }) => {
             {salesData.map((item, index) => (
               <tr key={index}>
                 <td>{item._id}</td>
-                <td>{item.totalSales}</td>
+                <td>₹{item.totalSales}</td>
                 <td>{item.totalQuantity}</td>
               </tr>
             ))}
@@ -76,4 +78,4 @@ const SalesAnalysis = ({ url }) => {
   );
 };
 
-export default SalesAnalysis;
+export default AdminSalesAnalysis;

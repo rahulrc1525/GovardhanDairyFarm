@@ -1,0 +1,27 @@
+.admin-sales-analysis {
+  padding: 20px;
+}
+
+.period-selector {
+  margin-bottom: 20px;
+}
+
+.period-selector label {
+  margin-right: 10px;
+}
+
+.sales-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sales-table th,
+.sales-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.sales-table th {
+  background-color: #f4f4f4;
+}

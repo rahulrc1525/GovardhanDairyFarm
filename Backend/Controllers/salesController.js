@@ -1,6 +1,7 @@
 import orderModel from "../models/orderModel.js";
+import userModel from "../models/userModel.js";
 
-// Get sales analysis by category and time period
+// Get sales analysis by category and time period (Admin only)
 const getSalesAnalysis = async (req, res) => {
   try {
     const { period } = req.query; // period can be 'week', 'month', or 'year'
@@ -19,6 +20,12 @@ const getSalesAnalysis = async (req, res) => {
         break;
       default:
         startDate = new Date(0); // All time
+    }
+
+    // Check if the user is an admin
+    const user = await userModel.findById(req.body.userId);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized. Admin access required." });
     }
 
     // Aggregate sales data by category
