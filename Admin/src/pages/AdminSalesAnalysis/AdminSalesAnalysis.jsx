@@ -1,7 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import "./AdminSalesAnalysis.css";
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const AdminSalesAnalysis = ({ url }) => {
   const [salesData, setSalesData] = useState([]);
@@ -45,6 +65,44 @@ const AdminSalesAnalysis = ({ url }) => {
     fetchSalesData();
   };
 
+  // Prepare data for the chart
+  const chartData = {
+    labels: salesData.map((item) => item._id), // Categories
+    datasets: [
+      {
+        label: "Total Sales (₹)",
+        data: salesData.map((item) => item.totalSales), // Sales data
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+      },
+      {
+        label: "Total Quantity Sold",
+        data: salesData.map((item) => item.totalQuantity), // Quantity data
+        backgroundColor: "rgba(153, 102, 255, 0.6)",
+        borderColor: "rgba(153, 102, 255, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Sales Analysis by Category",
+      },
+    },
+    animation: {
+      duration: 1000, // Animation duration
+      easing: "easeInOutQuart", // Smooth animation
+    },
+  };
+
   return (
     <div className="admin-sales-analysis">
       <h2>Admin Sales Analysis</h2>
@@ -75,28 +133,11 @@ const AdminSalesAnalysis = ({ url }) => {
           Fetch Data
         </button>
       </form>
-      <div className="sales-table">
+      <div className="sales-chart">
         {salesData.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Total Sales (₹)</th>
-                <th>Total Quantity Sold</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salesData.map((item, index) => (
-                <tr key={index}>
-                  <td>{item._id}</td>
-                  <td>₹{item.totalSales}</td>
-                  <td>{item.totalQuantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Bar data={chartData} options={chartOptions} />
         ) : (
-          <p>No sales data found for the selected date(s).</p>
+          <p className="no-data">No sales data found for the selected date(s).</p>
         )}
       </div>
     </div>

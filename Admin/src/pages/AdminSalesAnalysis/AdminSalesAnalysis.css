@@ -1,15 +1,31 @@
 .admin-sales-analysis {
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Poppins", sans-serif;
   background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 20px auto;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .admin-sales-analysis h2 {
   text-align: center;
   color: #333;
   margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 600;
 }
 
 .date-selector {
@@ -24,65 +40,76 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .date-range label,
 .single-date label {
-  font-weight: bold;
+  font-weight: 500;
   color: #555;
+  font-size: 1rem;
 }
 
 .date-range input,
 .single-date input {
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.date-range input:focus,
+.single-date input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  outline: none;
 }
 
 .fetch-button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .fetch-button:hover {
   background-color: #0056b3;
+  transform: translateY(-2px);
 }
 
-.sales-table {
-  overflow-x: auto;
+.fetch-button:active {
+  transform: translateY(0);
+}
+
+.sales-chart {
+  margin-top: 20px;
+  padding: 20px;
   background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  animation: slideUp 1s ease-in-out;
 }
 
-.sales-table table {
-  width: 100%;
-  border-collapse: collapse;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.sales-table th,
-.sales-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.sales-table th {
-  background-color: #007bff;
-  color: white;
-}
-
-.sales-table tr:hover {
-  background-color: #f1f1f1;
-}
-
-.sales-table td {
-  color: #555;
+.no-data {
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  margin-top: 20px;
 }
