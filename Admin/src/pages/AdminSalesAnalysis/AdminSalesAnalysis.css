@@ -115,3 +115,79 @@
   font-size: 1.3rem;
   margin-top: 30px;
 }
+
+/* Existing CSS remains the same */
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .admin-sales-analysis {
+    width: 90%; /* Reduce width for smaller screens */
+    padding: 15px; /* Reduce padding */
+  }
+
+  .admin-sales-analysis h2 {
+    font-size: 1.8rem; /* Reduce font size for heading */
+    margin-bottom: 20px; /* Reduce margin */
+  }
+
+  .date-selector {
+    gap: 10px; /* Reduce gap between elements */
+  }
+
+  .date-range,
+  .single-date {
+    flex-direction: column; /* Stack inputs vertically */
+    gap: 10px; /* Reduce gap */
+  }
+
+  .date-range label,
+  .single-date label {
+    font-size: 1rem; /* Reduce label font size */
+  }
+
+  .date-range input,
+  .single-date input {
+    width: 100%; /* Full width for inputs */
+    font-size: 14px; /* Reduce input font size */
+    padding: 10px; /* Adjust padding */
+    border-radius: 8px; /* Slightly reduce border radius */
+  }
+
+  .fetch-button {
+    width: 100%; /* Full width for button */
+    font-size: 16px; /* Reduce button font size */
+    padding: 12px 20px; /* Adjust padding */
+  }
+
+  .sales-chart {
+    padding: 15px; /* Reduce padding */
+  }
+
+  .no-data {
+    font-size: 1rem; /* Reduce font size for no data message */
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-sales-analysis h2 {
+    font-size: 1.5rem; /* Further reduce heading font size */
+  }
+
+  .date-range label,
+  .single-date label {
+    font-size: 0.9rem; /* Further reduce label font size */
+  }
+
+  .date-range input,
+  .single-date input {
+    font-size: 12px; /* Further reduce input font size */
+  }
+
+  .fetch-button {
+    font-size: 14px; /* Further reduce button font size */
+  }
+
+  .no-data {
+    font-size: 0.9rem; /* Further reduce font size for no data message */
+  }
+}
