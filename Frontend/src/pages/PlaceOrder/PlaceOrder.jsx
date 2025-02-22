@@ -58,7 +58,50 @@ const PlaceOrder = () => {
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
-  const validateForm = () => {
+  // Function to validate city, state, and pincode
+  const validateCityStatePincode = async () => {
+    const { ZipCode, city, state } = data;
+    let isValid = true;
+    const newErrors = {};
+
+    if (!ZipCode || !city || !state) {
+      newErrors.ZipCode = "Pincode, city, and state are required";
+      isValid = false;
+    }
+
+    if (isValid) {
+      try {
+        const response = await fetch(
+          `https://api.postalpincode.in/pincode/${ZipCode}`
+        );
+        const result = await response.json();
+
+        if (result[0].Status === "Error") {
+          newErrors.ZipCode = "Invalid pincode";
+          isValid = false;
+        } else {
+          const postOffice = result[0].PostOffice[0];
+          if (postOffice.District.toLowerCase() !== city.toLowerCase()) {
+            newErrors.city = "City does not match the pincode";
+            isValid = false;
+          }
+          if (postOffice.State.toLowerCase() !== state.toLowerCase()) {
+            newErrors.state = "State does not match the pincode";
+            isValid = false;
+          }
+        }
+      } catch (error) {
+        console.error("Error validating pincode:", error);
+        newErrors.ZipCode = "Error validating pincode";
+        isValid = false;
+      }
+    }
+
+    setErrors((prevErrors) => ({ ...prevErrors, ...newErrors }));
+    return isValid;
+  };
+
+  const validateForm = async () => {
     const requiredFields = [
       "firstName",
       "lastName",
@@ -88,13 +131,17 @@ const PlaceOrder = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    // Validate city, state, and pincode
+    const isCityStatePincodeValid = await validateCityStatePincode();
+    return Object.keys(newErrors).length === 0 && isCityStatePincodeValid;
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
 
-    if (!validateForm()) {
+    const isFormValid = await validateForm();
+    if (!isFormValid) {
       alert("Please fill all the required fields correctly.");
       return;
     }
@@ -157,7 +204,7 @@ const PlaceOrder = () => {
       console.error("Razorpay SDK not loaded.");
       return;
     }
-  
+
     const options = {
       key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
       amount: order.amount, // Amount is already in paise
@@ -180,10 +227,10 @@ const PlaceOrder = () => {
               orderId: order.receipt,
             }),
           });
-  
+
           const verificationResult = await verificationResponse.json();
           console.log("Verification Result:", verificationResult);
-  
+
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
             navigate("/myorders");
@@ -219,7 +266,7 @@ const PlaceOrder = () => {
         color: "#F37254",
       },
     };
-  
+
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', async function (response) {
       console.error("Payment failed:", response.error);
