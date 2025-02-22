@@ -33,6 +33,10 @@ const getSalesAnalysis = async (req, res) => {
 
     console.log("Match Query:", matchQuery); // Debugging log
 
+    // Fetch orders that match the criteria
+    const orders = await orderModel.find(matchQuery);
+    console.log("Matching Orders:", orders); // Debugging log
+
     // Aggregate sales data by category
     const salesData = await orderModel.aggregate([
       { $match: matchQuery }, // Match orders based on date and status
