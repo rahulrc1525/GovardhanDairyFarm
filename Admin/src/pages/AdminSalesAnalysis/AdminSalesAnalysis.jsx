@@ -1,27 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import ReactApexChart from "react-apexcharts";
 import "./AdminSalesAnalysis.css";
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const AdminSalesAnalysis = ({ url }) => {
   const [salesData, setSalesData] = useState([]);
@@ -65,60 +46,146 @@ const AdminSalesAnalysis = ({ url }) => {
     fetchSalesData();
   };
 
-  // Prepare data for the chart
-  const chartData = {
-    labels: salesData.map((item) => item._id), // Categories
-    datasets: [
-      {
-        label: "Total Sales (₹)",
-        data: salesData.map((item) => item.totalSales), // Sales data
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "rgba(75, 192, 192, 1)",
-        borderWidth: 1,
-      },
-      {
-        label: "Total Quantity Sold",
-        data: salesData.map((item) => item.totalQuantity), // Quantity data
-        backgroundColor: "rgba(153, 102, 255, 0.6)",
-        borderColor: "rgba(153, 102, 255, 1)",
-        borderWidth: 1,
-      },
-    ],
+  // Disable start/end date if single date is selected, and vice versa
+  const handleSingleDateChange = (e) => {
+    setSingleDate(e.target.value);
+    setStartDate("");
+    setEndDate("");
   };
 
+  const handleStartDateChange = (e) => {
+    setStartDate(e.target.value);
+    setSingleDate("");
+  };
+
+  const handleEndDateChange = (e) => {
+    setEndDate(e.target.value);
+    setSingleDate("");
+  };
+
+  // Prepare data for the chart
   const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Sales Analysis by Category",
+    chart: {
+      type: "bar",
+      height: 400,
+      animations: {
+        enabled: true,
+        easing: "easeinout",
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
       },
     },
-    animation: {
-      duration: 1000, // Animation duration
-      easing: "easeInOutQuart", // Smooth animation
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "55%",
+        endingShape: "rounded",
+        dataLabels: {
+          position: "top", // Show data labels on top of bars
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, { seriesIndex }) {
+        return seriesIndex === 0 ? `₹${val}` : `${val}`; // ₹ symbol for sales, plain number for quantity
+      },
+      offsetY: -20, // Adjust position of data labels
+      style: {
+        fontSize: "12px",
+        colors: ["#333"],
+      },
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ["transparent"],
+    },
+    xaxis: {
+      categories: salesData.map((item) => item._id), // Categories
+    },
+    yaxis: {
+      title: {
+        text: "Amount (₹) / Quantity", // Generic title for Y-axis
+      },
+      labels: {
+        formatter: function (value) {
+          return value; // No need to add ₹ symbol here since dataLabels handle it
+        },
+      },
+    },
+    fill: {
+      opacity: 1,
+      gradient: {
+        shade: "dark",
+        type: "vertical",
+        shadeIntensity: 0.5,
+        gradientToColors: ["#4CAF50", "#2196F3"],
+        inverseColors: true,
+        opacityFrom: 0.8,
+        opacityTo: 0.2,
+        stops: [0, 100],
+      },
+    },
+    tooltip: {
+      y: {
+        formatter: function (val, { seriesIndex }) {
+          return seriesIndex === 0 ? `₹${val}` : `${val}`; // ₹ symbol only for sales
+        },
+      },
+    },
+    colors: ["#4CAF50", "#2196F3"], // Gradient colors
+    title: {
+      text: `Sales Analysis for ${
+        singleDate
+          ? singleDate
+          : `${startDate} to ${endDate}`
+      }`, // Display selected date(s)
+      align: "center",
+      style: {
+        fontSize: "20px",
+        fontWeight: "bold",
+        color: "#333",
+      },
     },
   };
+
+  const chartSeries = [
+    {
+      name: "Total Sales (₹)",
+      data: salesData.map((item) => item.totalSales), // Sales data
+    },
+    {
+      name: "Total Quantity Sold",
+      data: salesData.map((item) => item.totalQuantity), // Quantity data
+    },
+  ];
 
   return (
     <div className="admin-sales-analysis">
-      <h2>Admin Sales Analysis</h2>
+      <h2>Sales Admin Analysis</h2>
       <form onSubmit={handleSubmit} className="date-selector">
         <div className="date-range">
           <label>Start Date:</label>
           <input
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={handleStartDateChange}
+            disabled={!!singleDate} // Disable if single date is selected
           />
           <label>End Date:</label>
           <input
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={handleEndDateChange}
+            disabled={!!singleDate} // Disable if single date is selected
           />
         </div>
         <div className="single-date">
@@ -126,7 +193,8 @@ const AdminSalesAnalysis = ({ url }) => {
           <input
             type="date"
             value={singleDate}
-            onChange={(e) => setSingleDate(e.target.value)}
+            onChange={handleSingleDateChange}
+            disabled={!!startDate || !!endDate} // Disable if start/end date is selected
           />
         </div>
         <button type="submit" className="fetch-button">
@@ -135,7 +203,12 @@ const AdminSalesAnalysis = ({ url }) => {
       </form>
       <div className="sales-chart">
         {salesData.length > 0 ? (
-          <Bar data={chartData} options={chartOptions} />
+          <ReactApexChart
+            options={chartOptions}
+            series={chartSeries}
+            type="bar"
+            height={400}
+          />
         ) : (
           <p className="no-data">No sales data found for the selected date(s).</p>
         )}

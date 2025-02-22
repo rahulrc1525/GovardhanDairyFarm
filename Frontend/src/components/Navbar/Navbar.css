@@ -3,12 +3,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 00px 20px;
   width: 100%;
   background-color: #fff;
   box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1000;
+  transition: all 0.3s ease; /* Smooth transition for sticky effect */
+}
+
+/* Sticky Navbar */
+.Navbar.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent background */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Enhanced shadow for sticky effect */
+  animation: slideDown 0.3s ease-in-out; /* Smooth slide-down animation */
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .logo {
@@ -138,7 +159,6 @@
 }
 
 /* Profile Dropdown */
-/* Profile Dropdown */
 .navbar-profile {
   position: relative;
   cursor: pointer;
@@ -223,6 +243,7 @@
     transform: translateY(0); /* End at normal position */
   }
 }
+
 /* Keyframe Animations */
 @keyframes pulse {
   0% { transform: scale(1); }
@@ -252,7 +273,6 @@
     padding: 20px 0;
     box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
     display: none;
-    
   }
 
   .navbar-menu.active {

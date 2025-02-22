@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import './Navbar.css';
 import { assests } from '../../assests/assests';
 import { Link as ScrollLink } from 'react-scroll';
@@ -8,8 +8,27 @@ import { StoreContext } from '../../context/StoreContext';
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
   const { getTotalCartAmount, token, logout } = useContext(StoreContext);
   const navigate = useNavigate();
+
+  // Handle scroll event
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    // Cleanup the event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -20,7 +39,7 @@ const Navbar = ({ setShowLogin }) => {
   };
 
   return (
-    <div className='Navbar'>
+    <div className={`Navbar ${isSticky ? 'sticky' : ''}`}>
       {/* Logo */}
       <Link to='/'>
         <img src={assests.logo} alt="Govardhan Dairy Farm" className='logo' />
