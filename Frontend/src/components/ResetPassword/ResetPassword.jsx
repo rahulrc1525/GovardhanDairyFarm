@@ -16,13 +16,13 @@ const ResetPassword = () => {
       setMessage("Passwords do not match.");
       return;
     }
-  
+
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
-        token,
-        password,
-      });
-  
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/user/reset-password`,
+        { token, password }
+      );
+
       if (response.data.success) {
         setMessage("Password reset successfully. You can now login.");
         setTimeout(() => {
