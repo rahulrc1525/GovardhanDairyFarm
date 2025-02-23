@@ -15,7 +15,15 @@ const razorpay = new Razorpay({
 // Place Order
 const placeOrder = async (req, res) => {
   try {
-    const { userId, items, amount, address } = req.body;
+    const { userId, items, amount, address, userEmail } = req.body;
+
+    console.log("Request Body:", req.body); // Debugging: Log request body
+
+    // Validate required fields
+    if (!userId || !items || !amount || !address || !userEmail) {
+      console.error("Missing required fields in request body");
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
 
     // Create new order in the database
     const newOrder = await orderModel.create({
@@ -23,8 +31,11 @@ const placeOrder = async (req, res) => {
       items,
       amount,
       address,
+      userEmail, // Include userEmail in the order
       status: "Food Processing", // Set initial status to "Food Processing"
     });
+
+    console.log("New Order Created:", newOrder); // Debugging: Log created order
 
     // Clear user's cart
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
@@ -37,14 +48,15 @@ const placeOrder = async (req, res) => {
     };
     const razorpayOrder = await razorpay.orders.create(options);
 
+    console.log("Razorpay Order Created:", razorpayOrder); // Debugging: Log Razorpay order
+
     res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
   } catch (error) {
-    console.error("Error placing order:", error);
+    console.error("Error placing order:", error); // Debugging: Log any errors
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
 
-// Verify Payment
 // Verify Payment
 const verifyOrder = async (req, res) => {
   try {

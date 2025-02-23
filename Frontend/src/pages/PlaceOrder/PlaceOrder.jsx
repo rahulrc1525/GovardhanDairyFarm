@@ -166,6 +166,8 @@ const PlaceOrder = () => {
       userEmail: data.email, // Include user's email in the order data
     };
   
+    console.log("Order Data being sent:", orderData); // Debugging: Log order data
+  
     try {
       const token = localStorage.getItem("token");
   
@@ -185,15 +187,16 @@ const PlaceOrder = () => {
       });
   
       const result = await response.json();
-      console.log("Order Placement Response:", result);
+      console.log("Order Placement Response:", result); // Debugging: Log API response
   
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
+        console.error("Order creation failed. Response:", result); // Debugging: Log failure details
       }
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error("Error placing order:", error); // Debugging: Log any errors
       alert("An error occurred while placing the order.");
     } finally {
       setLoading(false);
