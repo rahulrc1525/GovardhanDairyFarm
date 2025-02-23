@@ -13,18 +13,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Send verification email
-const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Verify Your Email",
-    html: `<p>Please click <a href="${verificationUrl}">here</a> to verify your email.</p>`,
-  };
-  await transporter.sendMail(mailOptions);
-};
-
 // Login user
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -77,7 +65,14 @@ const registerUser = async (req, res) => {
     await newUser.save();
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken);
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email",
+      html: `<p>Please click <a href="${verificationUrl}">here</a> to verify your email.</p>`,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({ success: true, message: "Registration successful. Please verify your email." });
   } catch (error) {
@@ -121,13 +116,12 @@ const forgotPassword = async (req, res) => {
 
     // Send reset email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-const mailOptions = {
-  from: process.env.EMAIL_USER,
-  to: email,
-  subject: "Reset Your Password",
-  html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
-};
-await transporter.sendMail(mailOptions);
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Reset Your Password",
+      html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
+    };
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({ success: true, message: "Password reset email sent" });
@@ -141,24 +135,32 @@ await transporter.sendMail(mailOptions);
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   try {
+    console.log("Reset Password Request Received. Token:", token);
+
+    // Find user by reset token and check expiry
     const user = await userModel.findOne({
       passwordResetToken: token,
       passwordResetExpires: { $gt: Date.now() },
     });
 
     if (!user) {
+      console.log("Invalid or expired token:", token);
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
+
+    console.log("User found:", user.email);
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Update user password and clear reset token
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
 
+    console.log("Password reset successful for user:", user.email);
     res.status(200).json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);

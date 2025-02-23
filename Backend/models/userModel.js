@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -6,10 +7,10 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },
     role: { type: String, default: "user" },
-    isEmailVerified: { type: Boolean, default: false }, // Email verification status
-    emailVerificationToken: { type: String }, // Token for email verification
-    passwordResetToken: { type: String }, // Token for password reset
-    passwordResetExpires: { type: Date }, // Expiry for password reset token
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   {
     timestamps: true,
