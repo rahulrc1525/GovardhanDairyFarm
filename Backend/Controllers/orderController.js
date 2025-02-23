@@ -203,7 +203,7 @@ const updateStatus = async (req, res) => {
       const html = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Order Status Updated</h2>
-          <p>Your order status has been updated. Below are the details:</p>
+          <p>Your order status has been updated to <strong>${status}</strong>. Below are the details:</p>
           <h3>Order Summary</h3>
           <ul>
             <li><strong>Order ID:</strong> ${updatedOrder._id}</li>
