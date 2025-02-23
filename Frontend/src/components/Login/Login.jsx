@@ -9,10 +9,7 @@ const Login = ({ setShowLogin }) => {
   const { url, setToken, setUserId } = useContext(StoreContext);
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [email, setEmail] = useState("");
   const [data, setData] = useState({
-    name: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -68,29 +65,7 @@ const Login = ({ setShowLogin }) => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!data.email) {
-      setErrorMessage("Please enter your email address.");
-      return;
-    }
-
-    try {
-      const response = await axios.post(`${url}/api/user/forgot-password`, { email: data.email });
-
-      if (response.data.success) {
-        setShowForgotPassword(false);
-        setShowResetPassword(true);
-        setErrorMessage("");
-      } else {
-        setErrorMessage(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error during forgot password:", error);
-      setErrorMessage("An error occurred. Please try again.");
-    }
-  };
-
-  const handleResetPassword = async (event) => {
+  const handleForgotPassword = async (event) => {
     event.preventDefault();
     if (data.password !== data.confirmPassword) {
       setErrorMessage("Passwords do not match.");
@@ -105,7 +80,7 @@ const Login = ({ setShowLogin }) => {
 
       if (response.data.success) {
         alert("Password reset successfully. You can now login.");
-        setShowResetPassword(false);
+        setShowForgotPassword(false);
         setErrorMessage("");
       } else {
         setErrorMessage(response.data.message);
@@ -130,7 +105,7 @@ const Login = ({ setShowLogin }) => {
         </button>
 
         {/* Login Form */}
-        {!isRegisterActive && !showForgotPassword && !showResetPassword && (
+        {!isRegisterActive && !showForgotPassword && (
           <div className="form-box login">
             <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
@@ -172,7 +147,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Register Form */}
-        {isRegisterActive && !showForgotPassword && !showResetPassword && (
+        {isRegisterActive && !showForgotPassword && (
           <div className="form-box register">
             <form onSubmit={handleRegister}>
               <h1>Register</h1>
@@ -222,10 +197,10 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Forgot Password Form */}
-        {showForgotPassword && !showResetPassword && (
+        {showForgotPassword && (
           <div className="form-box forgot-password">
             <form onSubmit={handleForgotPassword}>
-              <h1>Forgot Password</h1>
+              <h1>Reset Password</h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
                 <input
@@ -237,22 +212,6 @@ const Login = ({ setShowLogin }) => {
                   required
                 />
               </div>
-              <button className="btn-submit" type="submit">Submit</button>
-              {errorMessage && <p className="error-message">{errorMessage}</p>}
-              <div className="register-link">
-                <p>
-                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Reset Password Form */}
-        {showResetPassword && (
-          <div className="form-box reset-password">
-            <form onSubmit={handleResetPassword}>
-              <h1>Reset Password</h1>
               <div className="input-box">
                 <FaKey className="icon" />
                 <input
@@ -279,7 +238,7 @@ const Login = ({ setShowLogin }) => {
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>
-                  <a href="#" onClick={() => setShowResetPassword(false)}>Back to Login</a>
+                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
                 </p>
               </div>
             </form>
