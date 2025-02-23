@@ -31,7 +31,7 @@ const Login = ({ setShowLogin }) => {
         email: data.email,
         password: data.password,
       });
-  
+
       if (response.data.success) {
         const { token, userId } = response.data; // Ensure userId is returned
         setToken(token);
@@ -62,6 +62,20 @@ const Login = ({ setShowLogin }) => {
     } catch (error) {
       console.error("Error during registration:", error);
       setErrorMessage("An error occurred during registration. Please try again.");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      const response = await axios.post(`${url}/api/user/forgot-password`, { email: data.email });
+      if (response.data.success) {
+        alert("Password reset email sent. Please check your inbox.");
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error during forgot password:", error);
+      setErrorMessage("An error occurred. Please try again.");
     }
   };
 
@@ -113,6 +127,9 @@ const Login = ({ setShowLogin }) => {
                 />
               </div>
               <button className="btn-submit" type="submit">Login</button>
+              <p className="forgot-password-link">
+                <a href="#" onClick={handleForgotPassword}>Forgot Password?</a>
+              </p>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>

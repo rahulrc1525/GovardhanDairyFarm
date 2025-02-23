@@ -209,6 +209,20 @@ button {
   }
 }
 
+.forgot-password-link {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.forgot-password-link a {
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.forgot-password-link a:hover {
+  color: #5ed527;
+}
 /* Responsive Design */
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -273,6 +287,8 @@ button {
     text-decoration: underline; /* Underline on hover */
   }
 }
+
+
 
 @media (max-width: 480px) {
   .login-background {
