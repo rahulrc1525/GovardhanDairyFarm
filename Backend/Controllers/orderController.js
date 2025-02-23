@@ -182,7 +182,53 @@ const listOrders = async (req, res) => {
 const updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
-    await orderModel.findByIdAndUpdate(orderId, { status });
+
+    // Update the order status
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true } // Return the updated order
+    ).populate('userId');
+
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Send email to the user if the status is "Out for Delivery" or "Delivered"
+    if (status === "Out for delivery" || status === "Delivered") {
+      const userEmail = updatedOrder.userId.email; // User's email from the order
+
+      // Prepare email content
+      const subject = `Your Order Status Update`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Order Status Updated</h2>
+          <p>Your order status has been updated. Below are the details:</p>
+          <h3>Order Summary</h3>
+          <ul>
+            <li><strong>Order ID:</strong> ${updatedOrder._id}</li>
+            <li><strong>Status:</strong> ${status}</li>
+            <li><strong>Items:</strong></li>
+            <ul>
+              ${updatedOrder.items.map(item => `
+                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+              `).join('')}
+            </ul>
+            <li><strong>Total Amount:</strong> ₹${updatedOrder.amount / 100}</li>
+            <li><strong>Delivery Address:</strong></li>
+            <ul>
+              <li>${updatedOrder.address.street}, ${updatedOrder.address.city}, ${updatedOrder.address.state}, ${updatedOrder.address.ZipCode}</li>
+            </ul>
+          </ul>
+          <p>Thank you for shopping with us!</p>
+          <p>Best regards,<br/>Govardhan Dairy Farm</p>
+        </div>
+      `;
+
+      // Send email to the user
+      await sendEmail(userEmail, subject, null, html);
+    }
+
     res.status(200).json({ success: true, message: "Order status updated" });
   } catch (error) {
     console.error("Error updating order status:", error);

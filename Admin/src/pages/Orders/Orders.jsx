@@ -35,13 +35,18 @@ const fetchAllOrders = async () => {
   // Handle Status Change
   const statusHandler = async (event, orderId) => {
     try {
+      const status = event.target.value;
+  
       const response = await axios.post(url + '/api/order/status', {
         orderId,
-        status: event.target.value,
+        status,
       });
-
+  
       if (response.data.success) {
+        toast.success(`Order status updated to ${status}`);
         await fetchAllOrders(); // Refresh orders after status update
+      } else {
+        toast.error('Failed to update order status.');
       }
     } catch (error) {
       toast.error('Failed to update status.');
