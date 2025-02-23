@@ -79,15 +79,67 @@ const verifyOrder = async (req, res) => {
         const userEmail = order.userId.email; // User's email from the order
         const adminEmail = process.env.ADMIN_EMAIL; // Admin email from .env
 
-        // Send email to the user
+        // Prepare email content for the user
         const userSubject = 'Your Order Confirmation';
         const userText = `Thank you for your order! Your order ID is ${orderId}.`;
-        await sendEmail(userEmail, userSubject, userText);
+        const userHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Thank you for your order!</h2>
+            <p>Your order has been successfully placed. Below are the details:</p>
+            <h3>Order Summary</h3>
+            <ul>
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
+            </ul>
+            <p>We will notify you once your order is out for delivery.</p>
+            <p>Thank you for shopping with us!</p>
+            <p>Best regards,<br/>Govardhan Dairy Farm</p>
+          </div>
+        `;
 
-        // Send email to the admin
+        // Send email to the user
+        await sendEmail(userEmail, userSubject, userText, userHtml);
+
+        // Prepare email content for the admin
         const adminSubject = 'New Order Placed';
         const adminText = `A new order has been placed. Order ID: ${orderId}, User Email: ${userEmail}`;
-        await sendEmail(adminEmail, adminSubject, adminText);
+        const adminHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">New Order Placed</h2>
+            <p>A new order has been placed. Below are the details:</p>
+            <h3>Order Summary</h3>
+            <ul>
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>User Email:</strong> ${userEmail}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
+            </ul>
+            <p>Please process the order as soon as possible.</p>
+            <p>Best regards,<br/>Govardhan Dairy Farm</p>
+          </div>
+        `;
+
+        // Send email to the admin
+        await sendEmail(adminEmail, adminSubject, adminText, adminHtml);
       }
 
       return res.status(200).json({ success: true, message: "Payment verified" });
