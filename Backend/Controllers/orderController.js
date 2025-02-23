@@ -3,6 +3,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import { sendEmail } from "./emailService.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ const placeOrder = async (req, res) => {
 };
 
 // Verify Payment
+// Verify Payment
 const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
@@ -58,6 +60,24 @@ const verifyOrder = async (req, res) => {
       // Payment successful, update order status and set payment to true
       await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
       console.log(`Order ${orderId} status updated to Food Processing`);
+
+      // Fetch order details
+      const order = await orderModel.findById(orderId).populate('userId');
+      if (order && order.userId) {
+        const userEmail = order.userId.email; // User's email from the order
+        const adminEmail = process.env.ADMIN_EMAIL; // Admin email from .env
+
+        // Send email to the user
+        const userSubject = 'Your Order Confirmation';
+        const userText = `Thank you for your order! Your order ID is ${orderId}.`;
+        await sendEmail(userEmail, userSubject, userText);
+
+        // Send email to the admin
+        const adminSubject = 'New Order Placed';
+        const adminText = `A new order has been placed. Order ID: ${orderId}, User Email: ${userEmail}`;
+        await sendEmail(adminEmail, adminSubject, adminText);
+      }
+
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
       // Payment failed, delete the order
@@ -71,7 +91,6 @@ const verifyOrder = async (req, res) => {
   }
 };
 
-// Get orders of a user
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {

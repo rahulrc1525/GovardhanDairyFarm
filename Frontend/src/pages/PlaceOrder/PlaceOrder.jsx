@@ -139,15 +139,15 @@ const PlaceOrder = () => {
 
   const placeOrder = async (event) => {
     event.preventDefault();
-
+  
     const isFormValid = await validateForm();
     if (!isFormValid) {
       alert("Please fill all the required fields correctly.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -156,24 +156,25 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-
+  
     const orderData = {
       userId: token,
       items: orderItems,
       amount: total * 100, // Convert amount to paise
       address: data,
       status: "Food Processing",
+      userEmail: data.email, // Include user's email in the order data
     };
-
+  
     try {
       const token = localStorage.getItem("token");
-
+  
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-
+  
       const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
@@ -182,10 +183,10 @@ const PlaceOrder = () => {
         },
         body: JSON.stringify(orderData),
       });
-
+  
       const result = await response.json();
       console.log("Order Placement Response:", result);
-
+  
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {

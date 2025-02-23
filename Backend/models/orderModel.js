@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   items: [
@@ -14,6 +12,7 @@ const orderSchema = new mongoose.Schema({
   address: { type: Object, required: true },
   status: { type: String, default: "Food Processing" },
   payment: { type: Boolean, default: false },
+  userEmail: { type: String, required: true }, // Add userEmail field
   createdAt: { type: Date, default: Date.now },
 });
 
