@@ -24,7 +24,7 @@ const StoreContextProvider = ({ children }) => {
   // Fetch Cart Data from Backend
   const fetchCartData = async () => {
     if (!token || !userId) return;
-    
+
     try {
       const response = await axios.post(
         `${url}/api/cart/get`,
@@ -66,7 +66,7 @@ const StoreContextProvider = ({ children }) => {
       if (response.data.success) {
         setCartItems((prevCart) => ({
           ...prevCart,
-          [itemId]: (prevCart[itemId] || 0) + 1
+          [itemId]: (prevCart[itemId] || 0) + 1,
         }));
       } else {
         console.error("Add to cart failed:", response.data.message);
@@ -144,6 +144,28 @@ const StoreContextProvider = ({ children }) => {
     localStorage.removeItem("cart"); // Clear cart from localStorage
   };
 
+  // Function to clear the cart
+  const clearCart = async () => {
+    if (!token || !userId) return;
+
+    try {
+      const response = await axios.post(
+        `${url}/api/cart/clear`,
+        { userId },
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
+
+      if (response.data.success) {
+        setCartItems({}); // Clear the cart state
+        localStorage.removeItem("cart"); // Remove cart from localStorage
+      } else {
+        console.error("Clear cart failed:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Clear cart error:", error.response?.data || error);
+    }
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -158,6 +180,7 @@ const StoreContextProvider = ({ children }) => {
         userId,
         setUserId,
         logout,
+        clearCart,
       }}
     >
       {children}

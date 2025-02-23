@@ -85,4 +85,32 @@ const getCart = async (req, res) => {
   }
 };
 
-export { addToCart, removeFromCart, getCart };
+// Clear user cart
+const clearCart = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // Validate inputs
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "Missing userId" });
+    }
+
+    // Clear the cart by setting cartData to an empty object
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: { cartData: {} } }, // Set cartData to an empty object
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Cart cleared successfully", cartData: user.cartData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { addToCart, removeFromCart, getCart, clearCart };

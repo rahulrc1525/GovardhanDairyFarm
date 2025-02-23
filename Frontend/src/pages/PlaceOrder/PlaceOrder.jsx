@@ -2,9 +2,10 @@ import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // Import axios for API calls
 
 const PlaceOrder = () => {
-  const { cart, token, foodList, url } = useContext(StoreContext);
+  const { cart, token, foodList, url, clearCart, userId } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -139,15 +140,15 @@ const PlaceOrder = () => {
 
   const placeOrder = async (event) => {
     event.preventDefault();
-  
+
     const isFormValid = await validateForm();
     if (!isFormValid) {
       alert("Please fill all the required fields correctly.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     const orderItems = foodList
       .filter((item) => cart[item._id] > 0)
       .map((item) => ({
@@ -156,7 +157,7 @@ const PlaceOrder = () => {
         price: item.price,
         quantity: cart[item._id],
       }));
-  
+
     const orderData = {
       userId: token,
       items: orderItems,
@@ -165,18 +166,18 @@ const PlaceOrder = () => {
       status: "Food Processing",
       userEmail: data.email, // Include user's email in the order data
     };
-  
+
     console.log("Order Data being sent:", orderData); // Debugging: Log order data
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         alert("Session expired. Please log in again.");
         navigate("/login");
         return;
       }
-  
+
       const response = await fetch(`${url}/api/order/place`, {
         method: "POST",
         headers: {
@@ -185,10 +186,10 @@ const PlaceOrder = () => {
         },
         body: JSON.stringify(orderData),
       });
-  
+
       const result = await response.json();
       console.log("Order Placement Response:", result); // Debugging: Log API response
-  
+
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {
@@ -237,6 +238,24 @@ const PlaceOrder = () => {
 
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
+
+            // Clear the cart
+            await clearCart();
+
+            // Reset the form
+            setData({
+              firstName: "",
+              lastName: "",
+              email: "",
+              street: "",
+              city: "",
+              state: "",
+              ZipCode: "",
+              country: "",
+              phone: "",
+            });
+
+            // Navigate to My Orders
             navigate("/myorders");
           } else {
             console.error("Payment verification failed.");
