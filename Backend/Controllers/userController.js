@@ -114,17 +114,7 @@ const forgotPassword = async (req, res) => {
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Reset Your Password",
-      html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res.status(200).json({ success: true, message: "Password reset email sent" });
+    res.status(200).json({ success: true, message: "Password reset token generated", token: resetToken });
   } catch (error) {
     console.error("Error during forgot password:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -135,20 +125,14 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   try {
-    console.log("Reset Password Request Received. Token:", token);
-
-    // Find user by reset token and check expiry
     const user = await userModel.findOne({
       passwordResetToken: token,
       passwordResetExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      console.log("Invalid or expired token:", token);
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
-
-    console.log("User found:", user.email);
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
@@ -160,7 +144,6 @@ const resetPassword = async (req, res) => {
     user.passwordResetExpires = undefined;
     await user.save();
 
-    console.log("Password reset successful for user:", user.email);
     res.status(200).json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);

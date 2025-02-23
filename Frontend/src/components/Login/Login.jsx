@@ -9,10 +9,12 @@ import axios from "axios";
 const Login = ({ setShowLogin }) => {
   const { url, setToken, setUserId } = useContext(StoreContext);
   const [isRegisterActive, setIsRegisterActive] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [data, setData] = useState({
     name: "",
     email: "",
-    password: ""
+    password: "",
+    confirmPassword: ""
   });
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -33,12 +35,12 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        const { token, userId } = response.data; // Ensure userId is returned
+        const { token, userId } = response.data;
         setToken(token);
         setUserId(userId);
         localStorage.setItem("token", token);
-        localStorage.setItem("userId", userId); // Store userId
-        setShowLogin(false); // Close login modal
+        localStorage.setItem("userId", userId);
+        setShowLogin(false);
       } else {
         setErrorMessage(response.data.message);
       }
@@ -55,7 +57,7 @@ const Login = ({ setShowLogin }) => {
 
       if (response.data.success) {
         alert("Registration successful! Please log in.");
-        setIsRegisterActive(false); // Switch to login form
+        setIsRegisterActive(false);
       } else {
         setErrorMessage(response.data.message);
       }
@@ -65,22 +67,36 @@ const Login = ({ setShowLogin }) => {
     }
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = () => {
+    setShowResetPassword(true);
+  };
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
     try {
-      const response = await axios.post(`${url}/api/user/forgot-password`, { email: data.email });
+      const response = await axios.post(`${url}/api/user/reset-password`, {
+        token: "dummy-token", // You can pass a dummy token or handle it differently
+        password: data.password,
+      });
+
       if (response.data.success) {
-        alert("Password reset email sent. Please check your inbox.");
+        alert("Password reset successfully. You can now login.");
+        setShowResetPassword(false);
       } else {
         setErrorMessage(response.data.message);
       }
     } catch (error) {
-      console.error("Error during forgot password:", error);
+      console.error("Error resetting password:", error);
       setErrorMessage("An error occurred. Please try again.");
     }
   };
 
   const toggleForm = () => {
-    setErrorMessage(""); // Clear errors when toggling forms
+    setErrorMessage("");
     setIsRegisterActive(!isRegisterActive);
   };
 
@@ -100,7 +116,7 @@ const Login = ({ setShowLogin }) => {
         </button>
 
         {/* Login Form */}
-        {!isRegisterActive && (
+        {!isRegisterActive && !showResetPassword && (
           <div className="form-box login">
             <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
@@ -142,7 +158,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Register Form */}
-        {isRegisterActive && (
+        {isRegisterActive && !showResetPassword && (
           <div className="form-box register">
             <form onSubmit={handleRegister}>
               <h1>Register</h1>
@@ -185,6 +201,44 @@ const Login = ({ setShowLogin }) => {
                 <p>
                   Already have an account?{' '}
                   <a href="#" onClick={toggleForm}>Login</a>
+                </p>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Reset Password Form */}
+        {showResetPassword && (
+          <div className="form-box reset-password">
+            <form onSubmit={handleResetPassword}>
+              <h1>Reset Password</h1>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="password"
+                  value={data.password}
+                  placeholder="New Password"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={data.confirmPassword}
+                  placeholder="Confirm New Password"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <button className="btn-submit" type="submit">Reset Password</button>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
+              <div className="register-link">
+                <p>
+                  <a href="#" onClick={() => setShowResetPassword(false)}>Back to Login</a>
                 </p>
               </div>
             </form>
