@@ -145,6 +145,7 @@ const resetPassword = async (req, res) => {
       passwordResetToken: token,
       passwordResetExpires: { $gt: Date.now() },
     });
+
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
@@ -161,7 +162,7 @@ const resetPassword = async (req, res) => {
     res.status(200).json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 

@@ -16,20 +16,20 @@ const ResetPassword = () => {
       setMessage("Passwords do not match.");
       return;
     }
-
+  
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
-            token,
-            password,
-          });
-
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
+        token,
+        password,
+      });
+  
       if (response.data.success) {
         setMessage("Password reset successfully. You can now login.");
         setTimeout(() => {
           navigate("/login"); // Redirect to login page
         }, 3000);
       } else {
-        setMessage(response.datamessage || "Failed to reset password.");
+        setMessage(response.data.message || "Failed to reset password.");
       }
     } catch (error) {
       console.error("Error resetting password:", error);
