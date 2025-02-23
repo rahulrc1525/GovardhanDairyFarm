@@ -108,37 +108,32 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "User not found" });
     }
 
-    // Generate reset token
+    // Generate a reset token (optional, if you want to use tokens)
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    res.status(200).json({ success: true, message: "Password reset token generated", token: resetToken });
+    res.status(200).json({ success: true, message: "Proceed to reset password" });
   } catch (error) {
     console.error("Error during forgot password:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// Reset password
 const resetPassword = async (req, res) => {
-  const { token, password } = req.body;
+  const { email, password } = req.body;
   try {
-    const user = await userModel.findOne({
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() },
-    });
-
+    const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+      return res.status(400).json({ success: false, message: "User not found" });
     }
 
-    // Hash new password
+    // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update user password and clear reset token
+    // Update the user's password
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;

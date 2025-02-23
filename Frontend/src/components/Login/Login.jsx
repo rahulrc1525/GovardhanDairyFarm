@@ -1,5 +1,4 @@
 import React, { useContext, useState } from 'react';
-import { assests } from '../../assests/assests';
 import { FaUser, FaKey, FaEnvelope } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import './Login.css';
@@ -9,7 +8,9 @@ import axios from "axios";
 const Login = ({ setShowLogin }) => {
   const { url, setToken, setUserId } = useContext(StoreContext);
   const [isRegisterActive, setIsRegisterActive] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [email, setEmail] = useState("");
   const [data, setData] = useState({
     name: "",
     email: "",
@@ -67,8 +68,26 @@ const Login = ({ setShowLogin }) => {
     }
   };
 
-  const handleForgotPassword = () => {
-    setShowResetPassword(true);
+  const handleForgotPassword = async () => {
+    if (!data.email) {
+      setErrorMessage("Please enter your email address.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${url}/api/user/forgot-password`, { email: data.email });
+
+      if (response.data.success) {
+        setShowForgotPassword(false);
+        setShowResetPassword(true);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error during forgot password:", error);
+      setErrorMessage("An error occurred. Please try again.");
+    }
   };
 
   const handleResetPassword = async (event) => {
@@ -77,15 +96,17 @@ const Login = ({ setShowLogin }) => {
       setErrorMessage("Passwords do not match.");
       return;
     }
+
     try {
       const response = await axios.post(`${url}/api/user/reset-password`, {
-        token: "dummy-token", // You can pass a dummy token or handle it differently
+        email: data.email,
         password: data.password,
       });
 
       if (response.data.success) {
         alert("Password reset successfully. You can now login.");
         setShowResetPassword(false);
+        setErrorMessage("");
       } else {
         setErrorMessage(response.data.message);
       }
@@ -103,20 +124,13 @@ const Login = ({ setShowLogin }) => {
   return (
     <div className="login-modal">
       <div className="overlay" onClick={() => setShowLogin(false)}></div>
-      <div
-        className="login-background"
-        style={{
-          backgroundImage: `url(${assests.gheebg})`,
-          backgroundSize: 'cover',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
+      <div className="login-background">
         <button className="close-btn" onClick={() => setShowLogin(false)}>
           <IoMdClose size={24} />
         </button>
 
         {/* Login Form */}
-        {!isRegisterActive && !showResetPassword && (
+        {!isRegisterActive && !showForgotPassword && !showResetPassword && (
           <div className="form-box login">
             <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
@@ -144,7 +158,7 @@ const Login = ({ setShowLogin }) => {
               </div>
               <button className="btn-submit" type="submit">Login</button>
               <p className="forgot-password-link">
-                <a href="#" onClick={handleForgotPassword}>Forgot Password?</a>
+                <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
               </p>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
@@ -158,7 +172,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Register Form */}
-        {isRegisterActive && !showResetPassword && (
+        {isRegisterActive && !showForgotPassword && !showResetPassword && (
           <div className="form-box register">
             <form onSubmit={handleRegister}>
               <h1>Register</h1>
@@ -201,6 +215,33 @@ const Login = ({ setShowLogin }) => {
                 <p>
                   Already have an account?{' '}
                   <a href="#" onClick={toggleForm}>Login</a>
+                </p>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Forgot Password Form */}
+        {showForgotPassword && !showResetPassword && (
+          <div className="form-box forgot-password">
+            <form onSubmit={handleForgotPassword}>
+              <h1>Forgot Password</h1>
+              <div className="input-box">
+                <FaEnvelope className="icon" />
+                <input
+                  type="email"
+                  name="email"
+                  value={data.email}
+                  placeholder="Enter your email"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <button className="btn-submit" type="submit">Submit</button>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
+              <div className="register-link">
+                <p>
+                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
                 </p>
               </div>
             </form>
