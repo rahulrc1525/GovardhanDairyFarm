@@ -120,13 +120,14 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Reset Your Password",
-      html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
-    };
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+const mailOptions = {
+  from: process.env.EMAIL_USER,
+  to: email,
+  subject: "Reset Your Password",
+  html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
+};
+await transporter.sendMail(mailOptions);
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({ success: true, message: "Password reset email sent" });
