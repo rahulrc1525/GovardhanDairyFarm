@@ -57,7 +57,7 @@ import curd_product from './curd_product.png';
 import videobyvi from './videobyvi.mp4';
 import videobyme1 from './videobyme1.mp4';
 import FarmImage from './FarmImage.jpg';
-import buttermilk from './buttermilk.png';
+import buttermilk from './buttermilk.jpg';
 export const assests = {
     farmvideo,
     buttermilk,
@@ -166,7 +166,7 @@ export const foodList = [
     name: "Ghee 2kg",
     image: assests.GHEE,
     price: 6000,
-    description: " premium variant of GIR Cow Ghee, renowned for its unique flavor and exceptional Aquality.",
+    description: "premium variant of GIR Cow Ghee, renowned for its unique flavor and exceptional Aquality.",
     categories: ["Ghee"],
   },
   {
