@@ -57,8 +57,10 @@ import curd_product from './curd_product.png';
 import videobyvi from './videobyvi.mp4';
 import videobyme1 from './videobyme1.mp4';
 import FarmImage from './FarmImage.jpg';
+import buttermilk from './buttermilk.png';
 export const assests = {
     farmvideo,
+    buttermilk,
     FarmImage,
     videobyme1,
     videobyvi,
@@ -75,7 +77,6 @@ export const assests = {
     Blogmilk2,
     Blogmilk3,
     Blogmilk4,
-
     logo, 
     search,
     basket,
