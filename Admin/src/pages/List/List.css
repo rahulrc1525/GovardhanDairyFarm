@@ -1,144 +1,233 @@
 /* Reset basic elements */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* Container Styling */
-  .list {
-    max-width: 1000px;
-    margin: 2rem auto;
-    padding: 1.5rem;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
-  }
-  
-  .list p {
-    color: #333;
-    font-size: 1.5rem;
-    font-weight: 500;
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-  
-  /* Table Styling */
-  .list-table {
-    width: 100%;
-    overflow-x: auto;
-    border-spacing: 0;
-  }
-  
-  /* Default Grid Layout for Desktop */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Container Styling */
+.list {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.list p {
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Table Styling */
+.list-table {
+  width: 100%;
+  overflow-x: auto;
+  border-spacing: 0;
+}
+
+/* Default Grid Layout for Desktop */
+.list-table-format {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.list-table-format:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.title {
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Row and Column Styling */
+.list-table-format b,
+.list-table-format p {
+  text-align: center;
+  font-size: 1rem;
+}
+
+.list-table-format img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.list-table-format p {
+  color: #555;
+}
+
+.list-table-format p:last-child {
+  color: #e74c3c;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.list-table-format p:last-child:hover {
+  color: #c0392b;
+}
+
+.cursor {
+  cursor: pointer;
+}
+
+/* Edit Form Styling */
+.list-table-format form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.list-table-format form input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.list-table-format form input:focus {
+  border-color: #007bff;
+}
+
+.list-table-format form button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.list-table-format form button[type="submit"] {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.list-table-format form button[type="submit"]:hover {
+  background-color: #218838;
+}
+
+.list-table-format form button[type="button"] {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.list-table-format form button[type="button"]:hover {
+  background-color: #c82333;
+}
+
+/* Drag-and-Drop Styling */
+.draggable-item {
+  background-color: #fff;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
   .list-table-format {
-    display: grid;
-    grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .title {
-    background-color: #007bff;
-    color: #fff;
-    font-weight: bold;
-    border-radius: 4px 4px 0 0;
-  }
-  
-  /* Row and Column Styling */
-  .list-table-format b,
-  .list-table-format p {
     text-align: center;
-    font-size: 1rem;
-  }
-  
-  .list-table-format img {
-    width: 60px;
-    height: 60px;
+    padding: 0.8rem;
+    border-bottom: 1px solid #ddd;
+    gap: 0.6rem;
+    background-color: #fff;
     border-radius: 8px;
-    object-fit: cover;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
-  
+
+  /* Hide Title row on Mobile */
+  .title {
+    display: none;
+  }
+
+  /* Center Image and Content */
+  .list-table-format img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  /* Center Labels for Each Field */
   .list-table-format p {
-    color: #555;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 400;
+    justify-content: center;
+    width: 100%;
   }
-  
+
+  /* Styling for Labels */
+  .list-table-format p::before {
+    content: attr(data-label);
+    font-weight: bold;
+    margin-right: 5px;
+    color: #007bff;
+  }
+
   .list-table-format p:last-child {
+    font-size: 0.9rem;
+    align-self: center;
     color: #e74c3c;
     cursor: pointer;
-    font-weight: bold;
-    transition: color 0.2s ease;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    transition: color 0.2s ease, background-color 0.2s ease;
   }
-  
+
   .list-table-format p:last-child:hover {
-    color: #c0392b;
+    background-color: #f8d7da;
   }
-  
-  .cursor{
-    cursor: pointer;
+
+  /* Edit Form Styling for Mobile */
+  .list-table-format form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
   }
-  /* Responsive Design for Mobile */
-  @media (max-width: 768px) {
-    .list-table-format {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 0.8rem;
-      border-bottom: 1px solid #ddd;
-      gap: 0.6rem; /* Adds spacing between items */
-      background-color: #fff;
-      border-radius: 8px;
-      margin-bottom: 0.8rem;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-  
-    /* Hide Title row on Mobile */
-    .title {
-      display: none;
-    }
-  
-    /* Center Image and Content */
-    .list-table-format img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-  
-    /* Center Labels for Each Field */
-    .list-table-format p {
-      display: flex;
-      align-items: center;
-      font-size: 0.9rem;
-      color: #333;
-      font-weight: 400;
-      justify-content: center;
-      width: 100%;
-    }
-  
-    /* Styling for Labels */
-    .list-table-format p::before {
-      content: attr(data-label);
-      font-weight: bold;
-      margin-right: 5px;
-      color: #007bff;
-    }
-  
-    .list-table-format p:last-child {
-      font-size: 0.9rem;
-      align-self: center;
-      color: #e74c3c;
-      cursor: pointer;
-      padding: 0.2rem 0.5rem;
-      border-radius: 5px;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-  
-    .list-table-format p:last-child:hover {
-      background-color: #f8d7da;
-    }
+
+  .list-table-format form input {
+    width: 100%;
   }
-  
+
+  .list-table-format form button {
+    width: 100%;
+  }
+}
