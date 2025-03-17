@@ -75,15 +75,27 @@
   color: #555;
 }
 
+/* Advanced Styling for Remove Button (Cancel Sign) */
 .list-table-format p:last-child {
   color: #e74c3c;
   cursor: pointer;
   font-weight: bold;
-  transition: color 0.2s ease;
+  font-size: 1.2rem;
+  transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: rgba(231, 76, 60, 0.1);
 }
 
 .list-table-format p:last-child:hover {
-  color: #c0392b;
+  color: #fff;
+  background-color: #e74c3c;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
 }
 
 .cursor {
@@ -201,18 +213,23 @@
     color: #007bff;
   }
 
+  /* Advanced Styling for Remove Button (Cancel Sign) on Mobile */
   .list-table-format p:last-child {
-    font-size: 0.9rem;
+    font-size: 1rem;
     align-self: center;
     color: #e74c3c;
     cursor: pointer;
     padding: 0.2rem 0.5rem;
-    border-radius: 5px;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    border-radius: 50%;
+    background-color: rgba(231, 76, 60, 0.1);
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   }
 
   .list-table-format p:last-child:hover {
-    background-color: #f8d7da;
+    color: #fff;
+    background-color: #e74c3c;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
   }
 
   /* Edit Form Styling for Mobile */
