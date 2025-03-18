@@ -1,12 +1,15 @@
 import foodModel from "../models/foodModel.js";
-import fs from "fs";
-import path from "path";
+import cloudinary from "cloudinary";
+import dotenv from "dotenv";
 
-// Ensure the "Uploads" directory exists
-const uploadsDir = path.join(path.resolve(), "Uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+dotenv.config();
+
+// Configure Cloudinary
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const addFood = async (req, res) => {
   try {
@@ -14,7 +17,11 @@ const addFood = async (req, res) => {
       return res.status(400).json({ success: false, message: "Image is required" });
     }
 
-    let image_filename = req.file.filename;
+    // Upload image to Cloudinary
+    const result = await cloudinary.v2.uploader.upload(req.file.path, {
+      folder: "food_items", // Optional: Organize images into a folder
+    });
+
     const categories = req.body.categories.split(","); // Convert categories to an array
 
     const food = new foodModel({
@@ -22,7 +29,7 @@ const addFood = async (req, res) => {
       description: req.body.description,
       price: req.body.price,
       categories: categories,
-      image: image_filename,
+      image: result.secure_url, // Store the Cloudinary image URL
     });
 
     await food.save();
