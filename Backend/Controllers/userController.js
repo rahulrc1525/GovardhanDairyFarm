@@ -116,7 +116,7 @@ const forgotPassword = async (req, res) => {
 
     // Send reset password email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    const mailOptions = {
+        const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Password Reset Request",
@@ -135,7 +135,12 @@ const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findOne({ _id: decoded.id, passwordResetToken: token, passwordResetExpires: { $gt: Date.now() } });
+    const user = await userModel.findOne({
+      _id: decoded.id,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
