@@ -39,11 +39,11 @@ app.use("/api/sales", salesRouter);
 app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, "client/build")));
+app.use(express.static(path.join(__dirname, "Frontend/build")));
 
 // Handle React routing, return all requests to React app
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+  res.sendFile(path.join(__dirname, "Frontend/build", "index.html"));
 });
 
 // Error handling middleware
