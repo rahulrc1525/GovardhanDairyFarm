@@ -119,12 +119,12 @@ const forgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Reset Your Password",
+      subject: "Password Reset Request",
       html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
     };
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ success: true, message: "Reset password link sent to your email." });
+    res.status(200).json({ success: true, message: "Password reset link sent to your email." });
   } catch (error) {
     console.error("Error during forgot password:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -134,14 +134,8 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   try {
-    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findOne({
-      _id: decoded.id,
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() }, // Check if token is not expired
-    });
-
+    const user = await userModel.findOne({ _id: decoded.id, passwordResetToken: token, passwordResetExpires: { $gt: Date.now() } });
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
@@ -150,7 +144,7 @@ const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update the user's password and clear the reset token
+    // Update the user's password
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;

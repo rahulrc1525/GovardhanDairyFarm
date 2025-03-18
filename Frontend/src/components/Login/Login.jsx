@@ -73,7 +73,7 @@ const Login = ({ setShowLogin }) => {
       });
   
       if (response.data.success) {
-        alert("Reset password link sent to your email.");
+        alert("Password reset link sent to your email.");
         setShowForgotPassword(false);
         setErrorMessage("");
       } else {

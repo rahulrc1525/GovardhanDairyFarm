@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import "./ResetPassword.css";
+import "./ResetPassword.css"; // Add styles if needed
 
 const ResetPassword = () => {
   const { token } = useParams(); // Get the token from the URL
@@ -16,13 +16,13 @@ const ResetPassword = () => {
       setMessage("Passwords do not match.");
       return;
     }
-
+  
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
         token,
         password,
       });
-
+  
       if (response.data.success) {
         setMessage("Password reset successfully. You can now login.");
         setTimeout(() => {
