@@ -22,12 +22,12 @@ const FoodDisplay = ({ category }) => {
         {filteredFoodList.length > 0 ? (
           filteredFoodList.map((item) => (
             <FoodItem
-              key={item._id} 
-              id={item._id} 
+              key={item._id}
+              id={item._id}
               name={item.name}
               description={item.description}
               price={item.price}
-              image={item.image}
+              image={item.image} // Ensure this is the correct image filename
             />
           ))
         ) : (

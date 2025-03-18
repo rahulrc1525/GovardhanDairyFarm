@@ -2,6 +2,12 @@ import foodModel from "../models/foodModel.js";
 import fs from "fs";
 import path from "path";
 
+// Ensure the "Uploads" directory exists
+const uploadsDir = path.join(path.resolve(), "Uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const addFood = async (req, res) => {
   try {
     if (!req.file) {
@@ -26,6 +32,8 @@ const addFood = async (req, res) => {
     res.status(500).json({ success: false, message: "Error adding food", error: error.message });
   }
 };
+
+// Rest of the code remains the same...
 
 const listFood = async (req, res) => {
   try {

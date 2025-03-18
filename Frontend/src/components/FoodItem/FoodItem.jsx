@@ -9,6 +9,10 @@ const FoodItem = ({ id, name, price, description, image, showRating = true }) =>
   const [quantity, setQuantity] = useState(cart[id] || 0);
   const [showQuantity, setShowQuantity] = useState(false);
 
+  // Debug: Log the image URL
+  const imageUrl = `${url}/images/${image}`;
+  console.log("Image URL:", imageUrl);
+
   const handleIncrease = async () => {
     if (!token) {
       alert("Please login to add items to cart");
@@ -49,7 +53,7 @@ const FoodItem = ({ id, name, price, description, image, showRating = true }) =>
       <div className="food-item-img-container">
         <img
           className="food-item-image"
-          src={`https://govardhandairyfarmbackend.onrender.com/images/${image}`}
+          src={imageUrl} // Use the constructed image URL
           alt={name}
         />
       </div>

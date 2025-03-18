@@ -9,7 +9,7 @@ import contactRouter from "./Routes/contactRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
 import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
-
+import path from "path"; // Import path module
 
 dotenv.config();
 
@@ -23,16 +23,18 @@ app.use(cors({ origin: "*" }));
 // Connect to the database
 connectDB();
 
+// Serve static files from the "Uploads" directory
+const __dirname = path.resolve(); // Resolve the current directory
+app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
+
 // API endpoints
 app.use("/api/food", foodRouter);
-app.use("/images", express.static("Uploads"));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
 app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
