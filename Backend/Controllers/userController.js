@@ -108,23 +108,13 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "User not found" });
     }
 
-    // Generate a reset token
+    // Generate a reset token (optional, if you want to use tokens)
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Send reset password email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-        const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Password Reset Request",
-      html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res.status(200).json({ success: true, message: "Password reset link sent to your email." });
+    res.status(200).json({ success: true, message: "Proceed to reset password" });
   } catch (error) {
     console.error("Error during forgot password:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -132,17 +122,11 @@ const forgotPassword = async (req, res) => {
 };
 
 const resetPassword = async (req, res) => {
-  const { token, password } = req.body;
+  const { email, password } = req.body;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findOne({
-      _id: decoded.id,
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() },
-    });
-
+    const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+      return res.status(400).json({ success: false, message: "User not found" });
     }
 
     // Hash the new password
@@ -151,8 +135,6 @@ const resetPassword = async (req, res) => {
 
     // Update the user's password
     user.password = hashedPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
     await user.save();
 
     res.status(200).json({ success: true, message: "Password reset successful" });

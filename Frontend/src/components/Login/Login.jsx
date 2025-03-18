@@ -67,20 +67,26 @@ const Login = ({ setShowLogin }) => {
 
   const handleForgotPassword = async (event) => {
     event.preventDefault();
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
     try {
-      const response = await axios.post(`${url}/api/user/forgot-password`, {
+      const response = await axios.post(`${url}/api/user/reset-password`, {
         email: data.email,
+        password: data.password,
       });
-  
+
       if (response.data.success) {
-        alert("Password reset link sent to your email.");
+        alert("Password reset successfully. You can now login.");
         setShowForgotPassword(false);
         setErrorMessage("");
       } else {
         setErrorMessage(response.data.message);
       }
     } catch (error) {
-      console.error("Error during forgot password:", error);
+      console.error("Error resetting password:", error);
       setErrorMessage("An error occurred. Please try again.");
     }
   };
@@ -192,30 +198,52 @@ const Login = ({ setShowLogin }) => {
 
         {/* Forgot Password Form */}
         {showForgotPassword && (
-  <div className="form-box forgot-password">
-    <form onSubmit={handleForgotPassword}>
-      <h1>Forgot Password</h1>
-      <div className="input-box">
-        <FaEnvelope className="icon" />
-        <input
-          type="email"
-          name="email"
-          value={data.email}
-          placeholder="Enter your email"
-          onChange={onChangeHandler}
-          required
-        />
-      </div>
-      <button className="btn-submit" type="submit">Send Reset Link</button>
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-      <div className="register-link">
-        <p>
-          <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
-        </p>
-      </div>
-    </form>
-  </div>
-)}
+          <div className="form-box forgot-password">
+            <form onSubmit={handleForgotPassword}>
+              <h1>Reset Password</h1>
+              <div className="input-box">
+                <FaEnvelope className="icon" />
+                <input
+                  type="email"
+                  name="email"
+                  value={data.email}
+                  placeholder="Enter your email"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="password"
+                  value={data.password}
+                  placeholder="New Password"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={data.confirmPassword}
+                  placeholder="Confirm New Password"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <button className="btn-submit" type="submit">Reset Password</button>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
+              <div className="register-link">
+                <p>
+                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
+                </p>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import contactRouter from "./Routes/contactRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
 import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
-import path from "path";
+import path from "path"; // Import path module
 
 dotenv.config();
 
@@ -23,9 +23,9 @@ app.use(cors({ origin: "*" }));
 // Connect to the database
 connectDB();
 
-// Serve static files from the frontend build directory
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "Frontend", "build"))); // Update "frontend" to your frontend folder name
+// Serve static files from the "Uploads" directory
+const __dirname = path.resolve(); // Resolve the current directory
+//app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
 
 // API endpoints
 app.use("/api/food", foodRouter);
@@ -36,15 +36,15 @@ app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
 app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
 
-// Handle all other routes by serving the frontend index.html
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "Frontend", "build", "index.html")); // Update "frontend" to your frontend folder name
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: "Internal Server Error" });
+});
+
+// Root route
+app.get("/", (req, res) => {
+  res.send("API WORKING");
 });
 
 // Start the server
