@@ -108,13 +108,23 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "User not found" });
     }
 
-    // Generate a reset token (optional, if you want to use tokens)
+    // Generate a reset token
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    res.status(200).json({ success: true, message: "Proceed to reset password" });
+    // Send reset password email
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Reset Your Password",
+      html: `<p>Please click <a href="${resetUrl}">here</a> to reset your password.</p>`,
+    };
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ success: true, message: "Reset password link sent to your email." });
   } catch (error) {
     console.error("Error during forgot password:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -122,19 +132,28 @@ const forgotPassword = async (req, res) => {
 };
 
 const resetPassword = async (req, res) => {
-  const { email, password } = req.body;
+  const { token, password } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await userModel.findOne({
+      _id: decoded.id,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() }, // Check if token is not expired
+    });
+
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: "Invalid or expired token" });
     }
 
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update the user's password
+    // Update the user's password and clear the reset token
     user.password = hashedPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
     await user.save();
 
     res.status(200).json({ success: true, message: "Password reset successful" });
