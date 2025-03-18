@@ -32,15 +32,18 @@ const List = ({ url }) => {
   // Remove a food item
   const removeFood = async (foodId) => {
     try {
+      console.log("Deleting food item with ID:", foodId); // Debug log
       const response = await axios.post(`${url}/api/food/remove`, { id: foodId });
-      await fetchList();
+      console.log("Response from backend:", response.data); // Debug log
+
       if (response.data.success) {
         toast.success(response.data.message);
+        await fetchList(); // Refresh the list after deletion
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error removing food:", error);
+      console.error("Error removing food:", error); // Debug log
       toast.error("Error removing food");
     }
   };
@@ -118,7 +121,8 @@ const List = ({ url }) => {
                       {...provided.dragHandleProps}
                       className="list-table-format"
                     >
-<img src={item.image} alt={item.name} />                      {editingItem === item._id ? (
+                      <img src={item.image} alt={item.name} />
+                      {editingItem === item._id ? (
                         <form onSubmit={handleEditFormSubmit}>
                           <input
                             type="text"
