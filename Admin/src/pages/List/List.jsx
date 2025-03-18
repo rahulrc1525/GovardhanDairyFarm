@@ -121,7 +121,7 @@ const List = ({ url }) => {
                       {...provided.dragHandleProps}
                       className="list-table-format"
                     >
-                      <img src={item.image} alt={item.name} />
+                      <img src={item.image} alt={item.name} /> {/* Use the full Cloudinary URL */}
                       {editingItem === item._id ? (
                         <form onSubmit={handleEditFormSubmit}>
                           <input
