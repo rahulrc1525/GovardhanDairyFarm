@@ -69,7 +69,7 @@ const RecommendedFood = () => {
                         return (
                             <div key={item._id} className="recommended-food-item">
                                 <img
-                                    src={`https://govardhandairyfarmbackend.onrender.com/images/${item.image}`}
+                                    src={item.image} // Use the full Cloudinary URL directly
                                     alt={item.name}
                                 />
                                 <h3>{item.name}</h3>
