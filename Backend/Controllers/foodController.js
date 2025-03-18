@@ -1,21 +1,7 @@
 import foodModel from "../models/foodModel.js";
 import fs from "fs";
 import path from "path";
-import multer from "multer";
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "Uploads/"); // Ensure this folder exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}_${file.originalname}`);
-  },
-});
-
-const upload = multer({ storage: storage });
-
-// Add a new food item
 const addFood = async (req, res) => {
   try {
     if (!req.file) {
@@ -41,7 +27,6 @@ const addFood = async (req, res) => {
   }
 };
 
-// List all food items
 const listFood = async (req, res) => {
   try {
     const foods = await foodModel.find();
@@ -52,7 +37,6 @@ const listFood = async (req, res) => {
   }
 };
 
-// Remove a food item
 const removeFood = async (req, res) => {
   try {
     const food = await foodModel.findById(req.body.id);
@@ -73,7 +57,6 @@ const removeFood = async (req, res) => {
   }
 };
 
-// Update a food item
 const updateFood = async (req, res) => {
   try {
     const { id, name, description, price, categories } = req.body;
@@ -92,7 +75,6 @@ const updateFood = async (req, res) => {
   }
 };
 
-// Update clicks for a food item
 const updateClicks = async (req, res) => {
   try {
     const { id } = req.body;
@@ -109,7 +91,6 @@ const updateClicks = async (req, res) => {
   }
 };
 
-// Get recommended food items
 const getRecommendedFood = async (req, res) => {
   try {
     const foodItems = await foodModel.find();
@@ -127,4 +108,4 @@ const getRecommendedFood = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood, upload };
+export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood };
