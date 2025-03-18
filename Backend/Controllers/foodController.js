@@ -30,6 +30,7 @@ const addFood = async (req, res) => {
 const listFood = async (req, res) => {
   try {
     const foods = await foodModel.find();
+
     res.json({ success: true, data: foods });
   } catch (error) {
     console.log("Error fetching food items:", error);
@@ -50,28 +51,11 @@ const removeFood = async (req, res) => {
     });
 
     await foodModel.findByIdAndDelete(req.body.id);
+
     res.json({ success: true, message: "Food Removed" });
   } catch (error) {
     console.log("Error removing food:", error);
     res.status(500).json({ success: false, message: "Error removing food", error: error.message });
-  }
-};
-
-const updateFood = async (req, res) => {
-  try {
-    const { id, name, description, price, categories } = req.body;
-    const food = await foodModel.findByIdAndUpdate(
-      id,
-      { name, description, price, categories: categories.split(",") }, // Convert categories to array
-      { new: true }
-    );
-    if (!food) {
-      return res.status(404).json({ success: false, message: "Food item not found" });
-    }
-    res.json({ success: true, message: "Food updated successfully", data: food });
-  } catch (error) {
-    console.error("Error updating food:", error);
-    res.status(500).json({ success: false, message: "Error updating food", error: error.message });
   }
 };
 
@@ -90,17 +74,13 @@ const updateClicks = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating clicks" });
   }
 };
-
 const getRecommendedFood = async (req, res) => {
   try {
     const foodItems = await foodModel.find();
-    const recommendedFood = foodItems
-      .map((item) => {
-        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
-        return { ...item.toObject(), score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+    const recommendedFood = foodItems.map((item) => {
+      const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
+      return { ...item.toObject(), score };
+    }).sort((a, b) => b.score - a.score).slice(0, 10);
     res.json({ success: true, data: recommendedFood });
   } catch (error) {
     console.error("Error getting recommended food:", error);
@@ -108,4 +88,9 @@ const getRecommendedFood = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood };
+
+
+
+
+
+export { addFood, listFood, removeFood, updateClicks, getRecommendedFood  };
