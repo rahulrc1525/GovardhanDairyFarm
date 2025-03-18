@@ -118,8 +118,7 @@ const List = ({ url }) => {
                       {...provided.dragHandleProps}
                       className="list-table-format"
                     >
-                      <img src={`${url}/images/` + item.image} alt="" />
-                      {editingItem === item._id ? (
+<img src={item.image} alt={item.name} />                      {editingItem === item._id ? (
                         <form onSubmit={handleEditFormSubmit}>
                           <input
                             type="text"
