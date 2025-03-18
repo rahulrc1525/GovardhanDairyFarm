@@ -53,7 +53,7 @@ const FoodItem = ({ id, name, price, description, image, showRating = true }) =>
       <div className="food-item-img-container">
         <img
           className="food-item-image"
-          src={imageUrl} // Use the constructed image URL
+          src={image} // Use the constructed image URL imageUrl
           alt={name}
         />
       </div>
