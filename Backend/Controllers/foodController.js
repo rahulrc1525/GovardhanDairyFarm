@@ -54,20 +54,24 @@ const listFood = async (req, res) => {
 
 const removeFood = async (req, res) => {
   try {
-    const food = await foodModel.findById(req.body.id);
+    const { id } = req.body;
+    console.log("Deleting food item with ID:", id); // Debug log
+
+    const food = await foodModel.findById(id);
     if (!food) {
       return res.status(404).json({ success: false, message: "Food item not found" });
     }
 
-    const imagePath = path.resolve("Uploads", food.image);
-    fs.unlink(imagePath, (err) => {
-      if (err) console.error("Error deleting image file:", err);
-    });
+    // If using Cloudinary, delete the image from Cloudinary
+    if (food.image) {
+      const publicId = food.image.split("/").pop().split(".")[0]; // Extract public ID from URL
+      await cloudinary.v2.uploader.destroy(`food_items/${publicId}`);
+    }
 
-    await foodModel.findByIdAndDelete(req.body.id);
+    await foodModel.findByIdAndDelete(id);
     res.json({ success: true, message: "Food Removed" });
   } catch (error) {
-    console.log("Error removing food:", error);
+    console.error("Error removing food:", error);
     res.status(500).json({ success: false, message: "Error removing food", error: error.message });
   }
 };
