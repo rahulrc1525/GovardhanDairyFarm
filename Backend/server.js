@@ -9,17 +9,11 @@ import contactRouter from "./Routes/contactRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
 import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
-import path from "path";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
-
-// Convert the module URL to a directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,13 +32,7 @@ app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
 app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, "Frontend/build")));
 
-// Handle React routing, return all requests to React app
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "Frontend/build", "index.html"));
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
