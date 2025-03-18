@@ -5,4 +5,4 @@ const salesRouter = express.Router();
 
 salesRouter.get("/analysis", getSalesAnalysis);
 
-export default salesRouter;
+export default salesRouter ;
