@@ -27,7 +27,6 @@ Follow these simple steps to set up **Govardhan Dairy Farm** on your local syste
 ### 🌀 **Clone the Repository**  
 ```bash
 git clone https://github.com/rahulrc1525/GovardhanDairyFarm.git
-cd GDF
 ```
 
 ---
