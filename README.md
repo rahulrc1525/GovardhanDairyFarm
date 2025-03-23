@@ -1,4 +1,3 @@
-![Screenshot 2025-03-23 203758](https://github.com/user-attachments/assets/59391023-2b3f-4b35-a90a-4d4460bec082)Here is the updated and aesthetically enhanced version of your README file, incorporating all dependencies, symbols, a sleek theme, and the website link. Let me know if any further refinements are needed!
 
 ---
 
