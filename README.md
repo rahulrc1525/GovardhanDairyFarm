@@ -159,20 +159,28 @@ Let's build something amazing together! 🎉
 
 ### Homepage  
 ![Screenshot 2025-03-23 203240](https://github.com/user-attachments/assets/a44c0e2c-9535-49e5-a259-72cbb024f1f9)
-![Screenshot 2025-03-23 203412](https://github.com/user-attachments/assets/33625b82-f563-4ec7-85a5-a76ff4d1d5ab)
-![Screenshot 2025-03-23 203429](https://github.com/user-attachments/assets/f901b34d-8a0b-458d-8cbb-753f15259b5c)
+
+![Screenshot 2025-03-23 221402](https://github.com/user-attachments/assets/b693245a-41b4-4bb1-bb83-08cbe1f87080)
+
+![Screenshot 2025-03-23 221413](https://github.com/user-attachments/assets/338475bc-e146-4d0e-8d7b-e6207b3af535)
+
 ![Screenshot 2025-03-23 203451](https://github.com/user-attachments/assets/900edf76-b731-4a0a-aac1-ddc1497a335a)
+
 ![Screenshot 2025-03-23 203500](https://github.com/user-attachments/assets/38564586-38ae-4b60-acf9-8d719fa22cca)
 
 ![Screenshot 2025-03-23 203725](https://github.com/user-attachments/assets/f5fca057-c433-4d7f-92c8-6a6c6391ca1b)
+
 ![Screenshot 2025-03-23 203758](https://github.com/user-attachments/assets/d6b013c9-ff1e-4a20-9148-e3ea773725b0)
 
 
 
 ### Admin Panel  
 ![Screenshot 2025-03-23 203835](https://github.com/user-attachments/assets/508c4ad8-d954-44c8-af71-1582449f3856)
+
 ![Screenshot 2025-03-23 203851](https://github.com/user-attachments/assets/ef2c2480-22c2-4d05-bad1-87cc9e913f0f)
+
 ![Screenshot 2025-03-23 203902](https://github.com/user-attachments/assets/ef96a051-74b8-4c6d-9b12-3ccc24c4c713)
+
 ![Screenshot 2025-03-23 203928](https://github.com/user-attachments/assets/491dca26-9683-4d17-85d2-d4c58f1a504e)
 
 ---
