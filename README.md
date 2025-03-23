@@ -159,7 +159,7 @@ Let's build something amazing together! 🎉
 ## 📸 **Screenshots**  
 
 ### Homepage  
-A sleek interface welcoming customers with intuitive navigation.  
+
 
 ### Admin Panel  
 Comprehensive tools for managing products, users, and orders.  
