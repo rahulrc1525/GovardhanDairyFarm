@@ -207,6 +207,16 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
+  const updateFoodRatings = (foodId, newAverage) => {
+    setFoodRatings((prev) => ({
+      ...prev,
+      [foodId]: {
+        ...prev[foodId],
+        averageRating: newAverage,
+      },
+    }));
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -225,6 +235,7 @@ const StoreContextProvider = ({ children }) => {
         fetchFoodRatings,
         foodRatings,
         userRatings,
+        updateFoodRatings,
       }}
     >
       {children}

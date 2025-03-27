@@ -13,7 +13,8 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     cart, 
     url,
     fetchFoodRatings,
-    foodRatings
+    foodRatings,
+    updateFoodRatings
   } = useContext(StoreContext);
   
   const [quantity, setQuantity] = useState(cart[id] || 0);
@@ -195,6 +196,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           orderId={orderId}
           onClose={() => setShowRatingModal(false)}
           onRatingSubmit={handleRatingSubmit}
+          updateFoodRatings={updateFoodRatings}
           url={url}
           token={token}
         />

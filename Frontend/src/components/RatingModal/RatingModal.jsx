@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './RatingModal.css';
 
-const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) => {
+const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token, updateFoodRatings }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +43,7 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       setSuccess(true);
       setTimeout(() => {
         onRatingSubmit(response.data.data.averageRating);
+        updateFoodRatings(foodId, response.data.data.averageRating); // Update food ratings
         onClose();
       }, 1500);
     } catch (err) {
