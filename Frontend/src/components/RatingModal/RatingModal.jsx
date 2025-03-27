@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './RatingModal.css';
 
@@ -17,6 +17,28 @@ const RatingModal = ({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [review, setReview] = useState('');
+  const [existingRating, setExistingRating] = useState(null);
+
+  useEffect(() => {
+    const fetchUserRating = async () => {
+      try {
+        const response = await axios.get(`${url}/api/rating/user-rating`, {
+          params: { foodId, orderId },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data.success && response.data.data) {
+          setExistingRating(response.data.data);
+          setRating(response.data.data.rating);
+          setReview(response.data.data.review || '');
+        }
+      } catch (error) {
+        console.error("Error fetching user rating:", error);
+      }
+    };
+
+    fetchUserRating();
+  }, [foodId, orderId, token, url]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -89,11 +111,11 @@ const RatingModal = ({
           <div className="success-message">
             <div className="success-icon">✓</div>
             <h3>Thank You!</h3>
-            <p>Your rating was submitted successfully.</p>
+            <p>{existingRating ? "Your rating was updated successfully." : "Your rating was submitted successfully."}</p>
           </div>
         ) : (
           <>
-            <h2>Rate This Product</h2>
+            <h2>{existingRating ? "Update Your Rating" : "Rate This Product"}</h2>
             <p>How would you rate your experience with this item?</p>
             
             <div className="stars-container">
@@ -122,7 +144,7 @@ const RatingModal = ({
             </div>
             
             <div className="review-section">
-              <label htmlFor="review">Optional Review:</label>
+              <label htmlFor="review">Your Review:</label>
               <textarea
                 id="review"
                 value={review}
@@ -155,9 +177,9 @@ const RatingModal = ({
               {isSubmitting ? (
                 <>
                   <span className="spinner"></span>
-                  Submitting...
+                  {existingRating ? "Updating..." : "Submitting..."}
                 </>
-              ) : "Submit Rating"}
+              ) : existingRating ? "Update Rating" : "Submit Rating"}
             </button>
           </>
         )}

@@ -2,7 +2,7 @@ import foodModel from "../models/foodModel.js";
 import orderModel from "../models/orderModel.js";
 import mongoose from "mongoose";
 
-const addRating = async (req, res) => {
+const addOrUpdateRating = async (req, res) => {
   try {
     const { foodId, orderId, rating, review } = req.body;
     const userId = req.user.id;
@@ -68,46 +68,46 @@ const addRating = async (req, res) => {
     }
 
     // Check for existing rating
-    const existingRating = food.ratings.find(
+    const existingRatingIndex = food.ratings.findIndex(
       r => r.userId.toString() === userId && r.orderId.toString() === orderId
     );
 
-    if (existingRating) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already rated this item from this order",
-      });
-    }
-
-    // Add new rating
     const newRating = {
       userId,
       orderId,
       rating,
       review: review || "",
-      createdAt: new Date(),
+      createdAt: existingRatingIndex === -1 ? new Date() : food.ratings[existingRatingIndex].createdAt,
+      updatedAt: new Date()
     };
 
-    food.ratings.push(newRating);
+    if (existingRatingIndex === -1) {
+      // Add new rating
+      food.ratings.push(newRating);
+    } else {
+      // Update existing rating
+      food.ratings[existingRatingIndex] = newRating;
+    }
 
     // Calculate new average rating
     const totalRatings = food.ratings.length;
     const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
-    food.averageRating = sumRatings / totalRatings;
+    food.averageRating = parseFloat((sumRatings / totalRatings).toFixed(1));
 
     await food.save();
 
     return res.status(201).json({
       success: true,
-      message: "Rating submitted successfully",
+      message: existingRatingIndex === -1 ? "Rating submitted successfully" : "Rating updated successfully",
       data: {
         averageRating: food.averageRating,
         totalRatings: food.ratings.length,
-        newRating
+        userRating: newRating,
+        isUpdate: existingRatingIndex !== -1
       },
     });
   } catch (error) {
-    console.error("Error in addRating:", error);
+    console.error("Error in addOrUpdateRating:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -115,6 +115,52 @@ const addRating = async (req, res) => {
     });
   }
 };
+
+const getUserRating = async (req, res) => {
+  try {
+    const { foodId, orderId } = req.query;
+    const userId = req.user.id;
+
+    if (!foodId || !orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Food ID and Order ID are required"
+      });
+    }
+
+    const food = await foodModel.findOne({
+      _id: foodId,
+      'ratings.userId': userId,
+      'ratings.orderId': orderId
+    });
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: "Rating not found",
+      });
+    }
+
+    const userRating = food.ratings.find(
+      r => r.userId.toString() === userId && r.orderId.toString() === orderId
+    );
+
+    res.status(200).json({ 
+      success: true, 
+      data: userRating
+    });
+  } catch (error) {
+    console.error("Error getting user rating:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error getting user rating",
+      error: error.message 
+    });
+  }
+};
+
+
+export { addOrUpdateRating as addRating, getFoodRatings, getUserRating };
 
 const getFoodRatings = async (req, res) => {
   try {
@@ -200,4 +246,4 @@ const checkRating = async (req, res) => {
   }
 };
 
-export { addRating, getFoodRatings, checkRating };
+export { addOrUpdateRating as addRating, getFoodRatings, getUserRating };

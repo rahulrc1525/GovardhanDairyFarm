@@ -120,17 +120,12 @@ const checkRatingEligibility = async (foodId, orderId) => {
 
 const handleRateItem = async (foodId, orderId) => {
   try {
-    const canRate = await checkRatingEligibility(foodId, orderId);
-    if (canRate) {
-      setSelectedFood(foodId);
-      setSelectedOrder(orderId);
-      setShowRatingModal(true);
-    } else {
-      alert("You've already rated this item or the order isn't eligible for rating");
-    }
+    setSelectedFood(foodId);
+    setSelectedOrder(orderId);
+    setShowRatingModal(true);
   } catch (error) {
     console.error("Error in handleRateItem:", error);
-    alert("Error checking rating eligibility");
+    alert("Error preparing rating form");
   }
 };
 
@@ -206,14 +201,14 @@ const handleRateItem = async (foodId, orderId) => {
                       </div>
 
                       // Update your rating button in the items map:
-{order.status === "Delivered" && (
+                      {order.status === "Delivered" && (
   <div className="order-item-rating">
     <button
       className="rate-btn"
       onClick={() => handleRateItem(item._id, order._id)}
     >
       <FaRegEdit size={14} />
-      Rate Item
+      {item.userRating ? "Update Rating" : "Rate Item"}
     </button>
   </div>
 )}
