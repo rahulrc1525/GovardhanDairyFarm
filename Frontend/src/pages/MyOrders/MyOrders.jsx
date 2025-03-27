@@ -4,27 +4,32 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 import { assests } from './../../assests/assests';
+import FoodItem from "../../components/FoodItem/FoodItem.jsx";
+import RatingModal from "../../components/RatingModal/RatingModal.jsx";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
-  const { url } = useContext(StoreContext);
+  const { url, token } = useContext(StoreContext);
   const navigate = useNavigate();
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Fetch and Sort Orders
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      const localToken = localStorage.getItem("token");
+      if (!localToken) {
         console.error("No token found. Redirecting to login...");
         navigate("/login");
         return;
       }
 
       const response = await axios.post(
-        `${url}/api/order/userorders`,
+        `${url}/api/order/userOrders`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${localToken}` },
         }
       );
 
@@ -36,8 +41,8 @@ const MyOrders = () => {
 
         // Sort orders by status and creation date
         const sortedOrders = filteredOrders.sort((a, b) => {
-          if (a.status === "Arrived" && b.status !== "Arrived") return 1;
-          if (a.status !== "Arrived" && b.status === "Arrived") return -1;
+          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
+          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
@@ -54,6 +59,36 @@ const MyOrders = () => {
       } else {
         alert("An error occurred while fetching orders. Please try again.");
       }
+    }
+  };
+
+  const handleRateItem = (foodId, orderId) => {
+    setSelectedFood(foodId);
+    setSelectedOrder(orderId);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = async () => {
+    await fetchOrders(); // Refresh orders after rating submission
+    setShowRatingModal(false);
+  };
+
+  const checkIfRated = async (foodId) => {
+    try {
+      const response = await axios.get(`${url}/api/rating/${foodId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        const userId = localStorage.getItem("userId");
+        return response.data.ratings.some(rating => 
+          rating.userId._id === userId
+        );
+      }
+      return false;
+    } catch (error) {
+      console.error("Error checking rating:", error);
+      return false;
     }
   };
 
@@ -84,6 +119,36 @@ const MyOrders = () => {
                   <span>&#x25cf;</span> <b>{order.status}</b>
                 </p>
               </div>
+              
+              {/* Expanded order details with items */}
+              <div className="order-items-details">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="order-item-container">
+                    <FoodItem
+                      id={item._id}
+                      name={item.name}
+                      price={item.price}
+                      description={item.description}
+                      image={item.image}
+                      showRating={order.status === "Delivered"}
+                      orderId={order._id}
+                    />
+                    {order.status === "Delivered" && (
+                      <button 
+                        className="rate-item-btn"
+                        onClick={async () => {
+                          const alreadyRated = await checkIfRated(item._id);
+                          if (!alreadyRated) {
+                            handleRateItem(item._id, order._id);
+                          }
+                        }}
+                      >
+                        Rate This Item
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
             <button className="track-btn" onClick={fetchOrders}>
               🚚 Track Order
@@ -91,6 +156,18 @@ const MyOrders = () => {
           </div>
         ))}
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <RatingModal
+          foodId={selectedFood}
+          orderId={selectedOrder}
+          onClose={() => setShowRatingModal(false)}
+          onRatingSubmit={handleRatingSubmit}
+          url={url}
+          token={token}
+        />
+      )}
     </div>
   );
 };

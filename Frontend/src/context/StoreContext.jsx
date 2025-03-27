@@ -15,6 +15,8 @@ const StoreContextProvider = ({ children }) => {
   const [foodList, setFoodList] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
+  const [userRatings, setUserRatings] = useState({});
+  const [foodRatings, setFoodRatings] = useState({});
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -166,6 +168,25 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
+  const fetchFoodRatings = async (foodId) => {
+    if (!token) return;
+    
+    try {
+      const response = await axios.get(`${url}/api/rating/${foodId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setFoodRatings(prev => ({
+          ...prev,
+          [foodId]: response.data
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+    }
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -181,6 +202,9 @@ const StoreContextProvider = ({ children }) => {
         setUserId,
         logout,
         clearCart,
+        fetchFoodRatings,
+        foodRatings,
+        userRatings
       }}
     >
       {children}

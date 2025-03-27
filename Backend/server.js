@@ -10,6 +10,8 @@ import orderRouter from "./Routes/orderRoute.js";
 import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
 import path from "path"; // Import path module
+import ratingRouter from "./Routes/ratingRoute.js";
+
 
 dotenv.config();
 
@@ -34,6 +36,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
+app.use("/api/rating", ratingRouter);
 app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
 
 // Error handling middleware
