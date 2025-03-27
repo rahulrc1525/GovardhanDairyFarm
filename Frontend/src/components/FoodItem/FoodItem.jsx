@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
+import axios from 'axios'; // Add this import
 import { StoreContext } from '../../context/StoreContext';
 import './FoodItem.css';
 import RatingModal from '../RatingModal/RatingModal';
