@@ -3,9 +3,22 @@ import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
-import { assests } from '../../assests/assests';
-import FoodItem from "../../components/FoodItem/FoodItem";
 import RatingModal from "../../components/RatingModal/RatingModal";
+
+// Import icon components (assuming you're using a library like react-icons)
+import { 
+  FaBoxOpen, 
+  FaShippingFast, 
+  FaUtensils, 
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaRupeeSign,
+  FaBox,
+  FaStar,
+  FaStarHalfAlt,
+  FaRegStar,
+  FaRegEdit
+} from "react-icons/fa";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
@@ -84,12 +97,12 @@ const MyOrders = () => {
 
   return (
     <div className="my-orders">
-      <h2><img src={assests.parcel_icon} alt="" className="title-icon" /> My Orders</h2>
+      <h2><FaBox className="title-icon" /> My Orders</h2>
       
       <div className="orders-container">
         {data.length === 0 ? (
           <div className="empty-orders">
-            <img src={assests.empty_order} alt="No orders" />
+            <FaBoxOpen size={60} style={{ opacity: 0.7, marginBottom: "1rem" }} />
             <p>You haven't placed any orders yet</p>
           </div>
         ) : (
@@ -101,19 +114,18 @@ const MyOrders = () => {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </span>
                   <span className={`order-status ${order.status.toLowerCase()}`}>
-                    <img 
-                      src={
-                        order.status === "Delivered" ? assests.delivered_icon :
-                        order.status === "Preparing" ? assests.preparing_icon :
-                        assests.arrived_icon
-                      } 
-                      alt={order.status}
-                    />
+                    {order.status === "Delivered" ? (
+                      <FaCheckCircle size={16} />
+                    ) : order.status === "Preparing" ? (
+                      <FaUtensils size={16} />
+                    ) : (
+                      <FaShippingFast size={16} />
+                    )}
                     {order.status}
                   </span>
                 </div>
                 <button className="track-btn" onClick={fetchOrders}>
-                  <img src={assests.track_icon} alt="Track" />
+                  <FaMapMarkerAlt size={14} />
                   Track Order
                 </button>
               </div>
@@ -130,11 +142,11 @@ const MyOrders = () => {
                       <h4>{item.name}</h4>
                       <div className="item-meta">
                         <span className="item-price">
-                          <img src={assests.rupee_icon} alt="Price" />
+                          <FaRupeeSign size={14} />
                           {item.price}
                         </span>
                         <span className="item-quantity">
-                          <img src={assests.quantity_icon} alt="Quantity" />
+                          <span style={{ fontSize: "14px" }}>×</span>
                           {item.quantity}
                         </span>
                       </div>
@@ -143,16 +155,14 @@ const MyOrders = () => {
                         <div className="order-item-rating">
                           <div className="rating-stars">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <img
-                                key={star}
-                                src={
-                                  star <= Math.floor(item.averageRating || 0) ? assests.star_filled :
-                                  star === Math.ceil(item.averageRating || 0) && (item.averageRating || 0) % 1 >= 0.5 ? 
-                                    assests.star_half : assests.star_empty
-                                }
-                                alt={`${star} star`}
-                                className="rating-star"
-                              />
+                              star <= Math.floor(item.averageRating || 0) ? (
+                                <FaStar key={star} size={16} />
+                              ) : star === Math.ceil(item.averageRating || 0) && 
+                                 (item.averageRating || 0) % 1 >= 0.5 ? (
+                                <FaStarHalfAlt key={star} size={16} />
+                              ) : (
+                                <FaRegStar key={star} size={16} />
+                              )
                             ))}
                             <span className="rating-text">
                               ({item.ratings?.length || 0} ratings)
@@ -165,7 +175,7 @@ const MyOrders = () => {
                               if (!alreadyRated) handleRateItem(item._id, order._id);
                             }}
                           >
-                            <img src={assests.rate_icon} alt="Rate" />
+                            <FaRegEdit size={14} />
                             Rate Item
                           </button>
                         </div>
@@ -179,7 +189,7 @@ const MyOrders = () => {
                 <div className="order-total">
                   <span>Total:</span>
                   <span>
-                    <img src={assests.rupee_icon} alt="Total" />
+                    <FaRupeeSign size={16} />
                     {order.amount / 100}
                   </span>
                 </div>
