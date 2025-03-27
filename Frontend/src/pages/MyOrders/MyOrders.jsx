@@ -4,10 +4,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 import RatingModal from "../../components/RatingModal/RatingModal";
-import { 
-  FaBoxOpen, 
-  FaShippingFast, 
-  FaUtensils, 
+import {
+  FaBoxOpen,
+  FaShippingFast,
+  FaUtensils,
   FaCheckCircle,
   FaMapMarkerAlt,
   FaRupeeSign,
@@ -75,7 +75,7 @@ const MyOrders = () => {
           ...order,
           items: order.items.map(item => {
             if (item._id === foodId) {
-              return { 
+              return {
                 ...item,
                 // This will be updated properly when we refetch
                 ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
@@ -98,10 +98,10 @@ const MyOrders = () => {
       const response = await axios.get(`${url}/api/rating/${foodId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.data.success) {
         const userId = localStorage.getItem("userId");
-        return response.data.ratings.some(rating => 
+        return response.data.ratings.some(rating =>
           rating.userId._id === userId
         );
       }
@@ -113,8 +113,8 @@ const MyOrders = () => {
 
   const renderStars = (rating) => {
     return [1, 2, 3, 4, 5].map((star) => (
-      <span 
-        key={star} 
+      <span
+        key={star}
         className={`star ${
           star <= Math.floor(rating || 0) ? 'full' :
           (star === Math.ceil(rating || 0) && (rating || 0) % 1 >= 0.5) ? 'half' : 'empty'
@@ -132,7 +132,7 @@ const MyOrders = () => {
   return (
     <div className="my-orders animate">
       <h2><FaBox className="title-icon" /> My Orders</h2>
-      
+
       <div className="orders-container">
         {loading ? (
           <div className="loading-spinner">
@@ -172,10 +172,10 @@ const MyOrders = () => {
                 {order.items.map((item) => (
                   <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className="food-item-image" 
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="food-item-image"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/60?text=No+Image';
@@ -203,7 +203,7 @@ const MyOrders = () => {
                               ({item.ratings?.length || 0} ratings)
                             </span>
                           </div>
-                          <button 
+                          <button
                             className="rate-btn"
                             onClick={async () => {
                               const alreadyRated = await checkIfRated(item._id);

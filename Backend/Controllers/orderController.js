@@ -33,7 +33,6 @@ const placeOrder = async (req, res) => {
       address,
       userEmail, // Include userEmail in the order
       status: "Food Processing", // Set initial status to "Food Processing"
-      
     });
 
     console.log("New Order Created:", newOrder); // Debugging: Log created order
@@ -178,7 +177,6 @@ const listOrders = async (req, res) => {
   }
 };
 
-
 // Update order status
 const updateStatus = async (req, res) => {
   try {
@@ -252,6 +250,7 @@ const handleWebhookEvent = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
+
 // Delete Order
 const deleteOrder = async (req, res) => {
   try {
@@ -264,5 +263,12 @@ const deleteOrder = async (req, res) => {
   }
 };
 
-
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, handleWebhookEvent, deleteOrder };
+export {
+  placeOrder,
+  verifyOrder,
+  userOrders,
+  listOrders,
+  updateStatus,
+  handleWebhookEvent,
+  deleteOrder
+};
