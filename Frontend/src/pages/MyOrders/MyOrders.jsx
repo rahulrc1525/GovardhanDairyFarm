@@ -200,7 +200,6 @@ const handleRateItem = async (foodId, orderId) => {
                         </span>
                       </div>
 
-                      // Update your rating button in the items map:
                       {order.status === "Delivered" && (
   <div className="order-item-rating">
     <button
