@@ -28,17 +28,12 @@ const placeOrder = async (req, res) => {
     // Create new order in the database
     const newOrder = await orderModel.create({
       userId,
-      items: items.map((item) => ({
-        _id: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image, // Populate the image property
-      })),
+      items,
       amount,
       address,
-      userEmail,
-      status: "Food Processing",
+      userEmail, // Include userEmail in the order
+      status: "Food Processing", // Set initial status to "Food Processing"
+      
     });
 
     console.log("New Order Created:", newOrder); // Debugging: Log created order

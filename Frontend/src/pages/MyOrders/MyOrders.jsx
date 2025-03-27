@@ -131,10 +131,8 @@ const MyOrders = () => {
 
   return (
     <div className="my-orders animate">
-      <h2>
-        <FaBox className="title-icon" /> My Orders
-      </h2>
-
+      <h2><FaBox className="title-icon" /> My Orders</h2>
+      
       <div className="orders-container">
         {loading ? (
           <div className="loading-spinner">
@@ -174,13 +172,13 @@ const MyOrders = () => {
                 {order.items.map((item) => (
                   <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="food-item-image"
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="food-item-image" 
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/60?text=No+Image";
+                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
                         }}
                       />
                     </div>
@@ -196,6 +194,27 @@ const MyOrders = () => {
                           {item.quantity}
                         </span>
                       </div>
+
+                      {order.status === "Delivered" && (
+                        <div className="order-item-rating">
+                          <div className="rating-stars">
+                            {renderStars(item.averageRating)}
+                            <span className="rating-text">
+                              ({item.ratings?.length || 0} ratings)
+                            </span>
+                          </div>
+                          <button 
+                            className="rate-btn"
+                            onClick={async () => {
+                              const alreadyRated = await checkIfRated(item._id);
+                              if (!alreadyRated) handleRateItem(item._id, order._id);
+                            }}
+                          >
+                            <FaRegEdit size={14} />
+                            Rate Item
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -214,6 +233,17 @@ const MyOrders = () => {
           ))
         )}
       </div>
+
+      {showRatingModal && (
+        <RatingModal
+          foodId={selectedFood}
+          orderId={selectedOrder}
+          onClose={() => setShowRatingModal(false)}
+          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
+          url={url}
+          token={token}
+        />
+      )}
     </div>
   );
 };
