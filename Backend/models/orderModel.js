@@ -26,6 +26,10 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        image: {
+          type: String,
+          required: true
+        }
       },
     ],
     amount: {
@@ -54,7 +58,7 @@ const orderSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // This adds createdAt and updatedAt automatically
+    timestamps: true,
   }
 );
 

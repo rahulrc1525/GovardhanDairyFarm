@@ -3,6 +3,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import foodModel from "../models/foodModel.js";
 import { sendEmail } from "./emailService.js";
 
 dotenv.config();
@@ -17,42 +18,46 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address, userEmail } = req.body;
 
-    console.log("Request Body:", req.body); // Debugging: Log request body
+    console.log("Request Body:", req.body);
 
-    // Validate required fields
     if (!userId || !items || !amount || !address || !userEmail) {
       console.error("Missing required fields in request body");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Create new order in the database
+    // Create items array with full food details
+    const orderItems = await Promise.all(items.map(async (item) => {
+      const foodItem = await foodModel.findById(item._id);
+      return {
+        _id: item._id,
+        name: item.name || foodItem.name,
+        price: item.price || foodItem.price,
+        quantity: item.quantity,
+        image: foodItem.image // Include the image path
+      };
+    }));
+
     const newOrder = await orderModel.create({
       userId,
-      items,
+      items: orderItems,
       amount,
       address,
-      userEmail, // Include userEmail in the order
-      status: "Food Processing", // Set initial status to "Food Processing"
+      userEmail,
+      status: "Food Processing",
     });
 
-    console.log("New Order Created:", newOrder); // Debugging: Log created order
-
-    // Clear user's cart
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    // Create Razorpay order
     const options = {
-      amount: amount, // Amount is already in paise
+      amount: amount,
       currency: "INR",
       receipt: newOrder._id.toString(),
     };
     const razorpayOrder = await razorpay.orders.create(options);
 
-    console.log("Razorpay Order Created:", razorpayOrder); // Debugging: Log Razorpay order
-
     res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
   } catch (error) {
-    console.error("Error placing order:", error); // Debugging: Log any errors
+    console.error("Error placing order:", error);
     res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
@@ -69,19 +74,15 @@ const verifyOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-      // Payment successful, update order status and set payment to true
       await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
-      console.log(`Order ${orderId} status updated to Food Processing`);
-
-      // Fetch order details
+      
       const order = await orderModel.findById(orderId).populate('userId');
       if (order && order.userId) {
-        const userEmail = order.userId.email; // User's email from the order
-        const adminEmail = process.env.ADMIN_EMAIL; // Admin email from .env
+        const userEmail = order.userId.email;
+        const adminEmail = process.env.ADMIN_EMAIL;
 
-        // Prepare email content for the user
+        // Send email to user
         const userSubject = 'Your Order Confirmation';
-        const userText = `Thank you for your order! Your order ID is ${orderId}.`;
         const userHtml = `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">Thank you for your order!</h2>
@@ -103,16 +104,13 @@ const verifyOrder = async (req, res) => {
             </ul>
             <p>We will notify you once your order is out for delivery.</p>
             <p>Thank you for shopping with us!</p>
-            <p>Best regards,<br/>Govardhan Dairy Farm</p>
           </div>
         `;
 
-        // Send email to the user
-        await sendEmail(userEmail, userSubject, userText, userHtml);
+        await sendEmail(userEmail, userSubject, null, userHtml);
 
-        // Prepare email content for the admin
+        // Send email to admin
         const adminSubject = 'New Order Placed';
-        const adminText = `A new order has been placed. Order ID: ${orderId}, User Email: ${userEmail}`;
         const adminHtml = `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">New Order Placed</h2>
@@ -134,19 +132,15 @@ const verifyOrder = async (req, res) => {
               </ul>
             </ul>
             <p>Please process the order as soon as possible.</p>
-            <p>Best regards,<br/>Govardhan Dairy Farm</p>
           </div>
         `;
 
-        // Send email to the admin
-        await sendEmail(adminEmail, adminSubject, adminText, adminHtml);
+        await sendEmail(adminEmail, adminSubject, null, adminHtml);
       }
 
       return res.status(200).json({ success: true, message: "Payment verified" });
     } else {
-      // Payment failed, delete the order
       await orderModel.findByIdAndDelete(orderId);
-      console.log(`Order ${orderId} deleted due to payment verification failure`);
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
   } catch (error) {
@@ -182,22 +176,19 @@ const updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
 
-    // Update the order status
     const updatedOrder = await orderModel.findByIdAndUpdate(
       orderId,
       { status },
-      { new: true } // Return the updated order
+      { new: true }
     ).populate('userId');
 
     if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Send email to the user if the status is "Out for Delivery" or "Delivered"
     if (status === "Out for delivery" || status === "Delivered") {
-      const userEmail = updatedOrder.userId.email; // User's email from the order
+      const userEmail = updatedOrder.userId.email;
 
-      // Prepare email content
       const subject = `Your Order Status Update`;
       const html = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
@@ -214,17 +205,11 @@ const updateStatus = async (req, res) => {
               `).join('')}
             </ul>
             <li><strong>Total Amount:</strong> ₹${updatedOrder.amount / 100}</li>
-            <li><strong>Delivery Address:</strong></li>
-            <ul>
-              <li>${updatedOrder.address.street}, ${updatedOrder.address.city}, ${updatedOrder.address.state}, ${updatedOrder.address.ZipCode}</li>
-            </ul>
           </ul>
           <p>Thank you for shopping with us!</p>
-          <p>Best regards,<br/>Govardhan Dairy Farm</p>
         </div>
       `;
 
-      // Send email to the user
       await sendEmail(userEmail, subject, null, html);
     }
 
@@ -241,8 +226,7 @@ const handleWebhookEvent = async (req, res) => {
     const event = req.body;
     if (event.event === "payment.failed" || event.event === "payment.cancelled") {
       const orderId = event.payload.payment.entity.order_id;
-      await orderModel.findByIdAndDelete(orderId); // Delete order if payment fails or is cancelled
-      console.log(`Order ${orderId} deleted due to payment failure or cancellation`);
+      await orderModel.findByIdAndDelete(orderId);
     }
     res.status(200).json({ success: true });
   } catch (error) {
@@ -271,4 +255,4 @@ export {
   updateStatus,
   handleWebhookEvent,
   deleteOrder
-}; 
+};

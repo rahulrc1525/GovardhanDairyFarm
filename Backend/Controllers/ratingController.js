@@ -4,83 +4,52 @@ import mongoose from "mongoose";
 
 const addRating = async (req, res) => {
   try {
-    const { userId, foodId, orderId, rating } = req.body;
+    const { foodId, orderId, rating, review } = req.body;
+    const userId = req.user.id;
 
-    // Validate required fields
-    if (!userId || !foodId || !orderId || rating === undefined) {
+    if (!foodId || !orderId || rating === undefined) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
-        missingFields: {
-          userId: !userId,
-          foodId: !foodId,
-          orderId: !orderId,
-          rating: rating === undefined,
-        },
       });
     }
 
-    // Validate ObjectId formats
-    if (
-      !mongoose.Types.ObjectId.isValid(userId) ||
-      !mongoose.Types.ObjectId.isValid(foodId) ||
-      !mongoose.Types.ObjectId.isValid(orderId)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid ID format",
-        invalidIds: {
-          userId: !mongoose.Types.ObjectId.isValid(userId),
-          foodId: !mongoose.Types.ObjectId.isValid(foodId),
-          orderId: !mongoose.Types.ObjectId.isValid(orderId),
-        },
       });
     }
 
-    // Convert to ObjectIds for consistent comparison
-    const userIdObj = new mongoose.Types.ObjectId(userId);
-    const foodIdObj = new mongoose.Types.ObjectId(foodId);
-    const orderIdObj = new mongoose.Types.ObjectId(orderId);
-
-    // Validate rating value
     if (isNaN(rating) || rating < 1 || rating > 5) {
       return res.status(400).json({
         success: false,
-        message: "Rating must be a number between 1 and 5",
-        received: rating,
+        message: "Rating must be between 1 and 5",
       });
     }
 
-    // Verify the order exists, is delivered, and belongs to user
     const order = await orderModel.findOne({
-      _id: orderIdObj,
-      userId: userIdObj,
+      _id: orderId,
+      userId,
       status: "Delivered",
-    }).lean();
+    });
 
     if (!order) {
       return res.status(400).json({
         success: false,
-        message: "Order not found, not delivered, or doesn't belong to user",
+        message: "Order not found or not delivered",
       });
     }
 
-    // Verify the food item exists in the order with safe comparison
-    const foodItemInOrder = order.items.some(
-      (item) => item && item._id && item._id.toString() === foodIdObj.toString()
-    );
-
+    const foodItemInOrder = order.items.some(item => item._id.toString() === foodId);
     if (!foodItemInOrder) {
       return res.status(400).json({
         success: false,
         message: "Food item not found in this order",
-        orderItems: order.items.map((item) => item._id.toString()),
       });
     }
 
-    // Check for existing rating with safe comparison
-    const food = await foodModel.findById(foodIdObj);
-
+    const food = await foodModel.findById(foodId);
     if (!food) {
       return res.status(404).json({
         success: false,
@@ -89,31 +58,24 @@ const addRating = async (req, res) => {
     }
 
     const existingRating = food.ratings.find(
-      (r) =>
-        r.userId && r.userId.equals(userIdObj) && r.orderId && r.orderId.equals(orderIdObj)
+      r => r.userId.toString() === userId && r.orderId.toString() === orderId
     );
 
     if (existingRating) {
       return res.status(400).json({
         success: false,
-        message: "You have already rated this item from this order",
-        existingRating: {
-          rating: existingRating.rating,
-          createdAt: existingRating.createdAt,
-        },
+        message: "You have already rated this item",
       });
     }
 
-    // Add the new rating with proper ObjectIds
     food.ratings.push({
-      userId: userIdObj,
-      orderId: orderIdObj,
+      userId,
+      orderId,
       rating,
-      review: req.body.review || "",
+      review: review || "",
       createdAt: new Date(),
     });
 
-    // Recalculate average
     const totalRatings = food.ratings.length;
     const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
     food.averageRating = sumRatings / totalRatings;
@@ -126,20 +88,13 @@ const addRating = async (req, res) => {
       data: {
         averageRating: food.averageRating,
         totalRatings: food.ratings.length,
-        yourRating: rating,
       },
     });
   } catch (error) {
-    console.error("Error in addRating:", {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params,
-    });
+    console.error("Error in addRating:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 };
@@ -155,9 +110,8 @@ const getFoodRatings = async (req, res) => {
       });
     }
 
-    const food = await foodModel
-      .findById(foodId)
-      .populate("ratings.userId", "name email")
+    const food = await foodModel.findById(foodId)
+      .populate("ratings.userId", "name")
       .populate("ratings.orderId", "createdAt");
 
     if (!food) {
@@ -180,9 +134,32 @@ const getFoodRatings = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message,
     });
   }
 };
 
-export { addRating, getFoodRatings };
+const checkRating = async (req, res) => {
+  try {
+    const { foodId, orderId } = req.query;
+    const userId = req.user.id;
+
+    const food = await foodModel.findById(foodId);
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: "Food item not found",
+      });
+    }
+
+    const alreadyRated = food.ratings.some(
+      r => r.userId.toString() === userId && r.orderId.toString() === orderId
+    );
+
+    res.status(200).json({ success: true, alreadyRated });
+  } catch (error) {
+    console.error("Error checking rating:", error);
+    res.status(500).json({ success: false, message: "Error checking rating" });
+  }
+};
+
+export { addRating, getFoodRatings, checkRating };

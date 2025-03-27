@@ -68,44 +68,17 @@ const MyOrders = () => {
   };
 
   const handleRatingSubmit = async (foodId) => {
-    // Optimistic update
-    setData(prevData => prevData.map(order => {
-      if (order._id === selectedOrder) {
-        return {
-          ...order,
-          items: order.items.map(item => {
-            if (item._id === foodId) {
-              return {
-                ...item,
-                // This will be updated properly when we refetch
-                ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
-              };
-            }
-            return item;
-          })
-        };
-      }
-      return order;
-    }));
-
-    // Then refetch to get accurate average rating
     await fetchOrders();
     setShowRatingModal(false);
   };
 
-  const checkIfRated = async (foodId) => {
+  const checkIfRated = async (foodId, orderId) => {
     try {
-      const response = await axios.get(`${url}/api/rating/${foodId}`, {
+      const response = await axios.get(`${url}/api/rating/check`, {
+        params: { foodId, orderId },
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (response.data.success) {
-        const userId = localStorage.getItem("userId");
-        return response.data.ratings.some(rating =>
-          rating.userId._id === userId
-        );
-      }
-      return false;
+      return response.data.alreadyRated;
     } catch (error) {
       return false;
     }
@@ -173,7 +146,7 @@ const MyOrders = () => {
                   <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
                       <img
-                        src={item.image}
+                        src={item.image || 'https://via.placeholder.com/60?text=No+Image'}
                         alt={item.name}
                         className="food-item-image"
                         onError={(e) => {
@@ -197,13 +170,10 @@ const MyOrders = () => {
 
                       {order.status === "Delivered" && (
                         <div className="order-item-rating">
-                          <div className="rating-stars">
-                          
-                          </div>
                           <button
                             className="rate-btn"
                             onClick={async () => {
-                              const alreadyRated = await checkIfRated(item._id);
+                              const alreadyRated = await checkIfRated(item._id, order._id);
                               if (!alreadyRated) handleRateItem(item._id, order._id);
                             }}
                           >
@@ -245,4 +215,4 @@ const MyOrders = () => {
   );
 };
 
-export default MyOrders; 
+export default MyOrders;
