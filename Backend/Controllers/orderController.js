@@ -19,14 +19,11 @@ const placeOrder = async (req, res) => {
 
     console.log("Request Body:", req.body); // Debugging: Log request body
 
-
     // Validate required fields
     if (!userId || !items || !amount || !address || !userEmail) {
       console.error("Missing required fields in request body");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
-
-    
 
     // Create new order in the database
     const newOrder = await orderModel.create({
@@ -274,4 +271,4 @@ export {
   updateStatus,
   handleWebhookEvent,
   deleteOrder
-};
+}; 
