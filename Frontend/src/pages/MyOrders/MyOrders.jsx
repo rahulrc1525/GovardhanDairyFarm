@@ -27,9 +27,17 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${url}/api/order/userOrders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const localToken = localStorage.getItem("token");
+      if (!localToken) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.post(
+        `${url}/api/order/userOrders`,
+        {},
+        { headers: { Authorization: `Bearer ${localToken}` } }
+      );
 
       if (response.data.success) {
         const filteredOrders = response.data.data.filter(
@@ -237,4 +245,4 @@ const MyOrders = () => {
   );
 };
 
-export default MyOrders;
+export default MyOrders; 
