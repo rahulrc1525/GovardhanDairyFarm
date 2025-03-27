@@ -158,7 +158,10 @@ const verifyOrder = async (req, res) => {
 // Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId, status: { $ne: "Cancelled" } });
+    const orders = await orderModel.find({ 
+      userId: req.body.userId, 
+      status: { $ne: "Cancelled" } 
+    }).populate('items._id'); // Add this populate
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);
