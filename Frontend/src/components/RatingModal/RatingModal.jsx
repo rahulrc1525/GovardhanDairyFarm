@@ -2,14 +2,25 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './RatingModal.css';
 
-const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) => {
+const RatingModal = ({ 
+  foodId, 
+  orderId, 
+  onClose, 
+  onRatingSubmit, 
+  url, 
+  token,
+  updateFoodRatings 
+}) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [review, setReview] = useState('');
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     if (rating === 0) {
       setError("Please select a rating");
       return;
@@ -22,11 +33,10 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       const response = await axios.post(
         `${url}/api/rating/add`,
         {
-          userId: localStorage.getItem('userId'),
           foodId,
           orderId,
           rating,
-          review: "",
+          review,
         },
         {
           headers: {
@@ -41,13 +51,23 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       }
 
       setSuccess(true);
+      
+      // Update the food ratings in parent component
+      if (updateFoodRatings) {
+        await updateFoodRatings(foodId);
+      }
+
       setTimeout(() => {
-        onRatingSubmit(response.data.data); // Pass the entire rating data
+        onRatingSubmit(response.data.data);
         onClose();
       }, 1500);
     } catch (error) {
       console.error("Rating submission error:", error);
-      setError(error.response?.data?.message || "Failed to submit rating");
+      setError(
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to submit rating. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -56,9 +76,15 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
   return (
     <div className="rating-modal-overlay">
       <div className="rating-modal">
-        <button className="close-modal" onClick={onClose} disabled={isSubmitting}>
+        <button 
+          className="close-modal" 
+          onClick={onClose} 
+          disabled={isSubmitting}
+          aria-label="Close rating modal"
+        >
           ×
         </button>
+        
         {success ? (
           <div className="success-message">
             <div className="success-icon">✓</div>
@@ -69,20 +95,24 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
           <>
             <h2>Rate This Product</h2>
             <p>How would you rate your experience with this item?</p>
+            
             <div className="stars-container">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
+                  type="button"
                   className={`star ${star <= (hover || rating) ? 'filled' : ''}`}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHover(star)}
                   onMouseLeave={() => setHover(0)}
                   disabled={isSubmitting}
+                  aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
                 >
                   ★
                 </button>
               ))}
             </div>
+            
             <div className="rating-labels">
               <span>Poor</span>
               <span>Fair</span>
@@ -90,20 +120,44 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
               <span>Very Good</span>
               <span>Excellent</span>
             </div>
+            
+            <div className="review-section">
+              <label htmlFor="review">Optional Review:</label>
+              <textarea
+                id="review"
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                rows="3"
+                placeholder="Share your experience with this food item..."
+                disabled={isSubmitting}
+              />
+            </div>
+            
             {error && (
               <div className="error-message">
                 <p>{error}</p>
-                <button onClick={() => setError(null)} className="retry-button">
+                <button 
+                  onClick={() => setError(null)} 
+                  className="retry-button"
+                  disabled={isSubmitting}
+                >
                   Try Again
                 </button>
               </div>
             )}
+            
             <button
+              type="submit"
               className="submit-button"
               onClick={handleSubmit}
               disabled={isSubmitting || rating === 0}
             >
-              {isSubmitting ? "Submitting..." : "Submit Rating"}
+              {isSubmitting ? (
+                <>
+                  <span className="spinner"></span>
+                  Submitting...
+                </>
+              ) : "Submit Rating"}
             </button>
           </>
         )}

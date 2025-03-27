@@ -84,11 +84,7 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-  const handleRateItem = (foodId, orderId) => {
-    setSelectedFood(foodId);
-    setSelectedOrder(orderId);
-    setShowRatingModal(true);
-  };
+
 
   const handleRatingSubmit = async (foodId) => {
     await fetchOrders();
@@ -106,6 +102,38 @@ const MyOrders = () => {
       return false;
     }
   };
+
+  // Add these functions to your MyOrders component
+
+const checkRatingEligibility = async (foodId, orderId) => {
+  try {
+    const response = await axios.get(`${url}/api/rating/check/eligibility`, {
+      params: { foodId, orderId },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data.canRate;
+  } catch (error) {
+    console.error("Error checking rating eligibility:", error);
+    return false;
+  }
+};
+
+const handleRateItem = async (foodId, orderId) => {
+  try {
+    const canRate = await checkRatingEligibility(foodId, orderId);
+    if (canRate) {
+      setSelectedFood(foodId);
+      setSelectedOrder(orderId);
+      setShowRatingModal(true);
+    } else {
+      alert("You've already rated this item or the order isn't eligible for rating");
+    }
+  } catch (error) {
+    console.error("Error in handleRateItem:", error);
+    alert("Error checking rating eligibility");
+  }
+};
+
 
   useEffect(() => {
     fetchOrders();
@@ -177,20 +205,18 @@ const MyOrders = () => {
                         </span>
                       </div>
 
-                      {order.status === "Delivered" && (
-                        <div className="order-item-rating">
-                          <button
-                            className="rate-btn"
-                            onClick={async () => {
-                              const alreadyRated = await checkIfRated(item._id, order._id);
-                              if (!alreadyRated) handleRateItem(item._id, order._id);
-                            }}
-                          >
-                            <FaRegEdit size={14} />
-                            Rate Item
-                          </button>
-                        </div>
-                      )}
+                      // Update your rating button in the items map:
+{order.status === "Delivered" && (
+  <div className="order-item-rating">
+    <button
+      className="rate-btn"
+      onClick={() => handleRateItem(item._id, order._id)}
+    >
+      <FaRegEdit size={14} />
+      Rate Item
+    </button>
+  </div>
+)}
                     </div>
                   </div>
                 ))}

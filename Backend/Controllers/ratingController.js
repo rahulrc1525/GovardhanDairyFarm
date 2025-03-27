@@ -7,13 +7,15 @@ const addRating = async (req, res) => {
     const { foodId, orderId, rating, review } = req.body;
     const userId = req.user.id;
 
+    // Validate input
     if (!foodId || !orderId || rating === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields",
+        message: "Missing required fields: foodId, orderId, and rating are required",
       });
     }
 
+    // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({
         success: false,
@@ -21,6 +23,7 @@ const addRating = async (req, res) => {
       });
     }
 
+    // Validate rating value
     if (isNaN(rating) || rating < 1 || rating > 5) {
       return res.status(400).json({
         success: false,
@@ -28,6 +31,7 @@ const addRating = async (req, res) => {
       });
     }
 
+    // Check if order exists and is delivered
     const order = await orderModel.findOne({
       _id: orderId,
       userId,
@@ -41,7 +45,12 @@ const addRating = async (req, res) => {
       });
     }
 
-    const foodItemInOrder = order.items.some(item => item._id.toString() === foodId);
+    // Check if food item exists in the order
+    const foodItemInOrder = order.items.some(item => 
+      item._id.toString() === foodId || 
+      (item._id && item._id.toString() === foodId)
+    );
+
     if (!foodItemInOrder) {
       return res.status(400).json({
         success: false,
@@ -49,6 +58,7 @@ const addRating = async (req, res) => {
       });
     }
 
+    // Find the food item
     const food = await foodModel.findById(foodId);
     if (!food) {
       return res.status(404).json({
@@ -57,6 +67,7 @@ const addRating = async (req, res) => {
       });
     }
 
+    // Check for existing rating
     const existingRating = food.ratings.find(
       r => r.userId.toString() === userId && r.orderId.toString() === orderId
     );
@@ -64,18 +75,22 @@ const addRating = async (req, res) => {
     if (existingRating) {
       return res.status(400).json({
         success: false,
-        message: "You have already rated this item",
+        message: "You have already rated this item from this order",
       });
     }
 
-    food.ratings.push({
+    // Add new rating
+    const newRating = {
       userId,
       orderId,
       rating,
       review: review || "",
       createdAt: new Date(),
-    });
+    };
 
+    food.ratings.push(newRating);
+
+    // Calculate new average rating
     const totalRatings = food.ratings.length;
     const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
     food.averageRating = sumRatings / totalRatings;
@@ -88,6 +103,7 @@ const addRating = async (req, res) => {
       data: {
         averageRating: food.averageRating,
         totalRatings: food.ratings.length,
+        newRating
       },
     });
   } catch (error) {
@@ -95,6 +111,7 @@ const addRating = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -111,7 +128,7 @@ const getFoodRatings = async (req, res) => {
     }
 
     const food = await foodModel.findById(foodId)
-      .populate("ratings.userId", "name")
+      .populate("ratings.userId", "name email")
       .populate("ratings.orderId", "createdAt");
 
     if (!food) {
@@ -121,10 +138,15 @@ const getFoodRatings = async (req, res) => {
       });
     }
 
+    // Sort ratings by date (newest first)
+    const sortedRatings = food.ratings.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
     return res.status(200).json({
       success: true,
       data: {
-        ratings: food.ratings,
+        ratings: sortedRatings,
         averageRating: food.averageRating,
         totalRatings: food.ratings.length,
       },
@@ -134,6 +156,7 @@ const getFoodRatings = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -142,6 +165,13 @@ const checkRating = async (req, res) => {
   try {
     const { foodId, orderId } = req.query;
     const userId = req.user.id;
+
+    if (!foodId || !orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Food ID and Order ID are required"
+      });
+    }
 
     const food = await foodModel.findById(foodId);
     if (!food) {
@@ -155,10 +185,18 @@ const checkRating = async (req, res) => {
       r => r.userId.toString() === userId && r.orderId.toString() === orderId
     );
 
-    res.status(200).json({ success: true, alreadyRated });
+    res.status(200).json({ 
+      success: true, 
+      alreadyRated,
+      canRate: !alreadyRated
+    });
   } catch (error) {
     console.error("Error checking rating:", error);
-    res.status(500).json({ success: false, message: "Error checking rating" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Error checking rating",
+      error: error.message 
+    });
   }
 };
 

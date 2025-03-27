@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import axios from 'axios'; // Add this import
+import axios from 'axios';
 import { StoreContext } from '../../context/StoreContext';
 import './FoodItem.css';
 import RatingModal from '../RatingModal/RatingModal';
@@ -21,6 +21,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userCanRate, setUserCanRate] = useState(false);
   const [loadingRating, setLoadingRating] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const ratingData = foodRatings[id] || {};
   const averageRating = ratingData.averageRating || 0;
@@ -133,7 +134,13 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   return (
     <div className="food-item">
       <div className="food-item-img-container">
-        <img className="food-item-image" src={image} alt={name} />
+        <img 
+          className={`food-item-image ${imageLoaded ? 'loaded' : ''}`}
+          src={image} 
+          alt={name}
+          onLoad={() => setImageLoaded(true)}
+        />
+        {!imageLoaded && <div className="image-placeholder"></div>}
       </div>
       <div className="food-item-info">
         <div className="food-item-name-rating">
