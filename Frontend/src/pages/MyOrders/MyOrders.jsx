@@ -4,7 +4,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
 import RatingModal from "../../components/RatingModal/RatingModal";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaBoxOpen, 
   FaShippingFast, 
@@ -24,21 +23,19 @@ const MyOrders = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const localToken = localStorage.getItem("token") || token;
-      
+      const localToken = localStorage.getItem("token");
       if (!localToken) {
         navigate("/login");
         return;
       }
 
-      const response = await axios.get(
+      const response = await axios.post(
         `${url}/api/order/userOrders`,
+        {},
         { headers: { Authorization: `Bearer ${localToken}` } }
       );
 
@@ -58,8 +55,6 @@ const MyOrders = () => {
     } catch (error) {
       if (error.response?.status === 401) {
         navigate("/login");
-      } else {
-        setError("Failed to load orders. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -72,7 +67,28 @@ const MyOrders = () => {
     setShowRatingModal(true);
   };
 
-  const handleRatingSubmit = async () => {
+  const handleRatingSubmit = async (foodId) => {
+    // Optimistic update
+    setData(prevData => prevData.map(order => {
+      if (order._id === selectedOrder) {
+        return {
+          ...order,
+          items: order.items.map(item => {
+            if (item._id === foodId) {
+              return { 
+                ...item,
+                // This will be updated properly when we refetch
+                ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
+              };
+            }
+            return item;
+          })
+        };
+      }
+      return order;
+    }));
+
+    // Then refetch to get accurate average rating
     await fetchOrders();
     setShowRatingModal(false);
   };
@@ -95,35 +111,26 @@ const MyOrders = () => {
     }
   };
 
+  const renderStars = (rating) => {
+    return [1, 2, 3, 4, 5].map((star) => (
+      <span 
+        key={star} 
+        className={`star ${
+          star <= Math.floor(rating || 0) ? 'full' :
+          (star === Math.ceil(rating || 0) && (rating || 0) % 1 >= 0.5) ? 'half' : 'empty'
+        }`}
+      >
+        ★
+      </span>
+    ));
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(<span key={i} className="star full">★</span>);
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(<span key={i} className="star half">★</span>);
-      } else {
-        stars.push(<span key={i} className="star empty">★</span>);
-      }
-    }
-
-    return stars;
-  };
-
   return (
-    <motion.div 
-      className="my-orders"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="my-orders animate">
       <h2><FaBox className="title-icon" /> My Orders</h2>
       
       <div className="orders-container">
@@ -131,146 +138,113 @@ const MyOrders = () => {
           <div className="loading-spinner">
             <div className="spinner"></div>
           </div>
-        ) : error ? (
-          <div className="error-message">
-            {error}
-            <button onClick={fetchOrders}>Retry</button>
-          </div>
         ) : data.length === 0 ? (
-          <motion.div 
-            className="empty-orders"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="empty-orders animate">
             <FaBoxOpen size={60} style={{ opacity: 0.7, marginBottom: "1rem" }} />
             <p>You haven't placed any orders yet</p>
-          </motion.div>
+          </div>
         ) : (
-          <AnimatePresence>
-            {data.map((order) => (
-              <motion.div 
-                key={order._id} 
-                className="order-card"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -20, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                layout
-              >
-                <div className="order-header">
-                  <div className="order-meta">
-                    <span className="order-date">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </span>
-                    <span className={`order-status ${order.status.toLowerCase()}`}>
-                      {order.status === "Delivered" ? (
-                        <FaCheckCircle size={16} />
-                      ) : order.status === "Preparing" ? (
-                        <FaUtensils size={16} />
-                      ) : (
-                        <FaShippingFast size={16} />
-                      )}
-                      {order.status}
-                    </span>
-                  </div>
-                  <motion.button 
-                    className="track-btn" 
-                    onClick={fetchOrders}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <FaMapMarkerAlt size={14} />
-                    Refresh Orders
-                  </motion.button>
+          data.map((order) => (
+            <div key={order._id} className="order-card animate">
+              <div className="order-header">
+                <div className="order-meta">
+                  <span className="order-date">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </span>
+                  <span className={`order-status ${order.status.toLowerCase()}`}>
+                    {order.status === "Delivered" ? (
+                      <FaCheckCircle size={16} />
+                    ) : order.status === "Preparing" ? (
+                      <FaUtensils size={16} />
+                    ) : (
+                      <FaShippingFast size={16} />
+                    )}
+                    {order.status}
+                  </span>
                 </div>
+                <button className="track-btn" onClick={fetchOrders}>
+                  <FaMapMarkerAlt size={14} />
+                  Track Order
+                </button>
+              </div>
 
-                <div className="order-items">
-                  {order.items.map((item) => (
-                    <motion.div 
-                      key={item._id} 
-                      className="order-item"
-                      whileHover={{ scale: 1.01 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="food-item-img-container">
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="food-item-image" 
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/60?text=No+Image';
-                          }}
-                        />
+              <div className="order-items">
+                {order.items.map((item) => (
+                  <div key={item._id} className="order-item">
+                    <div className="food-item-img-container">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="food-item-image" 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
+                        }}
+                      />
+                    </div>
+                    <div className="order-item-details">
+                      <h4>{item.name}</h4>
+                      <div className="item-meta">
+                        <span className="item-price">
+                          <FaRupeeSign size={14} />
+                          {item.price}
+                        </span>
+                        <span className="item-quantity">
+                          <span style={{ fontSize: "14px" }}>×</span>
+                          {item.quantity}
+                        </span>
                       </div>
-                      <div className="order-item-details">
-                        <h4>{item.name}</h4>
-                        <div className="item-meta">
-                          <span className="item-price">
-                            <FaRupeeSign size={14} />
-                            {item.price}
-                          </span>
-                          <span className="item-quantity">
-                            × {item.quantity}
-                          </span>
-                        </div>
 
-                        {order.status === "Delivered" && (
-                          <div className="order-item-rating">
-                            <div className="rating-stars">
-                              {renderStars(item.averageRating || 0)}
-                              <span className="rating-text">
-                                ({item.ratings?.length || 0} ratings)
-                              </span>
-                            </div>
-                            <motion.button 
-                              className="rate-btn"
-                              onClick={async () => {
-                                const alreadyRated = await checkIfRated(item._id);
-                                if (!alreadyRated) handleRateItem(item._id, order._id);
-                              }}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <FaRegEdit size={14} />
-                              Rate Item
-                            </motion.button>
+                      {order.status === "Delivered" && (
+                        <div className="order-item-rating">
+                          <div className="rating-stars">
+                            {renderStars(item.averageRating)}
+                            <span className="rating-text">
+                              ({item.ratings?.length || 0} ratings)
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="order-footer">
-                  <div className="order-total">
-                    <span>Total:</span>
-                    <span>
-                      <FaRupeeSign size={16} />
-                      {order.amount / 100}
-                    </span>
+                          <button 
+                            className="rate-btn"
+                            onClick={async () => {
+                              const alreadyRated = await checkIfRated(item._id);
+                              if (!alreadyRated) handleRateItem(item._id, order._id);
+                            }}
+                          >
+                            <FaRegEdit size={14} />
+                            Rate Item
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              <div className="order-footer">
+                <div className="order-total">
+                  <span>Total:</span>
+                  <span>
+                    <FaRupeeSign size={16} />
+                    {order.amount / 100}
+                  </span>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              </div>
+            </div>
+          ))
         )}
       </div>
 
-      <AnimatePresence>
-        {showRatingModal && (
-          <RatingModal
-            foodId={selectedFood}
-            orderId={selectedOrder}
-            onClose={() => setShowRatingModal(false)}
-            onRatingSubmit={handleRatingSubmit}
-            url={url}
-            token={token}
-          />
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {showRatingModal && (
+        <RatingModal
+          foodId={selectedFood}
+          orderId={selectedOrder}
+          onClose={() => setShowRatingModal(false)}
+          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
+          url={url}
+          token={token}
+        />
+      )}
+    </div>
   );
 };
 
