@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { StoreContext } from '../../context/StoreContext';
 import './FoodItem.css';
-import axios from 'axios';
 import RatingModal from '../RatingModal/RatingModal';
 import { assests } from '../../assests/assests';
 
@@ -21,76 +20,61 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userCanRate, setUserCanRate] = useState(false);
   const [loadingRating, setLoadingRating] = useState(false);
-  const [ratingError, setRatingError] = useState(null);
 
   const ratingData = foodRatings[id] || {};
   const averageRating = ratingData.averageRating || 0;
+  const totalRatings = ratingData.totalRatings || 0;
 
   useEffect(() => {
-    const checkRatingEligibility = async () => {
-      if (!token || !orderId) return;
-      
-      try {
-        setLoadingRating(true);
-        setRatingError(null);
-        
-        // First check if order is delivered
-        const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const order = orderResponse.data.data.find(o => o._id === orderId);
-        
-        if (!order) {
-          setUserCanRate(false);
-          return;
-        }
-
-        if (order.status === "Delivered" && 
-            order.items.some(item => item._id.toString() === id)) {
-          
-          // Then check if already rated
-          await fetchFoodRatings(id);
-          const userId = localStorage.getItem('userId');
-          const alreadyRated = ratingData.ratings?.some(r => 
-            (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
-            r.orderId.toString() === orderId
-          );
-          
-          setUserCanRate(!alreadyRated);
-        } else {
-          setUserCanRate(false);
-        }
-      } catch (error) {
-        console.error("Rating eligibility check failed:", error);
-        setRatingError("Failed to check rating eligibility");
-        setUserCanRate(false);
-      } finally {
-        setLoadingRating(false);
-      }
-    };
-
     if (showRating) {
       // Always fetch ratings if not already loaded
       if (!ratingData.ratings) {
-        fetchFoodRatings(id).catch(console.error);
+        fetchFoodRatings(id);
       }
       
       // Check eligibility if we have an orderId
-      if (orderId) {
+      if (orderId && token) {
         checkRatingEligibility();
       }
     }
-  }, [id, token, orderId, showRating, fetchFoodRatings, ratingData.ratings]);
+  }, [id, token, orderId, showRating, ratingData.ratings]);
 
-  const handleRatingSubmit = async (newAverage) => {
+  const checkRatingEligibility = async () => {
     try {
-      // Refresh the ratings data
-      await fetchFoodRatings(id);
-      setShowRatingModal(false);
+      setLoadingRating(true);
+      
+      // First check if order is delivered
+      const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const order = orderResponse.data.data.find(o => o._id === orderId);
+      
+      if (order?.status === "Delivered" && 
+          order.items.some(item => item._id.toString() === id)) {
+        
+        // Then check if already rated
+        const userId = localStorage.getItem('userId');
+        const alreadyRated = ratingData.ratings?.some(r => 
+          (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
+          r.orderId.toString() === orderId
+        );
+        
+        setUserCanRate(!alreadyRated);
+      } else {
+        setUserCanRate(false);
+      }
     } catch (error) {
-      console.error("Error refreshing ratings:", error);
+      console.error("Rating eligibility check failed:", error);
+      setUserCanRate(false);
+    } finally {
+      setLoadingRating(false);
     }
+  };
+
+  const handleRatingSubmit = (newRatingData) => {
+    updateFoodRatings(id, newRatingData);
+    setShowRatingModal(false);
   };
 
   const renderStars = () => {
@@ -113,7 +97,15 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       );
     }
 
-    return stars;
+    return (
+      <div className="stars-display">
+        {stars}
+        <span className="rating-text">
+          {averageRating ? averageRating.toFixed(1) : 'No ratings'} 
+          {totalRatings > 0 && ` (${totalRatings})`}
+        </span>
+      </div>
+    );
   };
 
   const handleIncrease = async () => {
@@ -149,17 +141,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       <div className="food-item-info">
         <div className="food-item-name-rating">
           <h3>{name}</h3>
-          {showRating && (
-            <div className="food-item-rating">
-              <div className="stars-display">
-                {renderStars()}
-                <span className="rating-text">
-                  {averageRating ? averageRating.toFixed(1) : 'No ratings'} 
-                  {ratingData.ratings?.length > 0 && ` (${ratingData.ratings.length})`}
-                </span>
-              </div>
-            </div>
-          )}
+          {showRating && renderStars()}
         </div>
         <p className="food-item-desc">{description}</p>
         <div className="food-item-bottom">
@@ -187,7 +169,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
             {loadingRating ? "Checking..." : "Rate this item"}
           </button>
         )}
-        {ratingError && <p className="rating-error">{ratingError}</p>}
       </div>
 
       {showRatingModal && (

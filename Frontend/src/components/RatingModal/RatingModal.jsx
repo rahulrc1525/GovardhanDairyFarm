@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './RatingModal.css';
 
-const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token, updateFoodRatings }) => {
+const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,39 +42,12 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token, upd
 
       setSuccess(true);
       setTimeout(() => {
-        onRatingSubmit(response.data.data.averageRating);
-        updateFoodRatings(foodId, response.data.data.averageRating); // Update food ratings
+        onRatingSubmit(response.data.data); // Pass the entire rating data
         onClose();
       }, 1500);
-    } catch (err) {
-      console.error("Rating submission error:", {
-        error: err,
-        response: err.response?.data,
-        config: err.config,
-      });
-
-      let errorMessage = "Failed to submit rating";
-
-      if (err.response) {
-        if (err.response.data?.missingFields) {
-          errorMessage = `Missing fields: ${Object.keys(err.response.data.missingFields)
-            .filter((f) => err.response.data.missingFields[f])
-            .join(', ')}`;
-        } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message;
-          if (err.response.data.details) {
-            errorMessage += ` (Details: ${JSON.stringify(err.response.data.details)})`;
-          }
-        } else {
-          errorMessage = `Server error: ${err.response.status}`;
-        }
-      } else if (err.request) {
-        errorMessage = "No response from server - please try again later";
-      } else {
-        errorMessage = err.message || "An unknown error occurred";
-      }
-
-      setError(errorMessage);
+    } catch (error) {
+      console.error("Rating submission error:", error);
+      setError(error.response?.data?.message || "Failed to submit rating");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,13 +103,7 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token, upd
               onClick={handleSubmit}
               disabled={isSubmitting || rating === 0}
             >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner"></span> Submitting...
-                </>
-              ) : (
-                "Submit Rating"
-              )}
+              {isSubmitting ? "Submitting..." : "Submit Rating"}
             </button>
           </>
         )}
