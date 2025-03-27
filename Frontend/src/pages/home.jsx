@@ -6,6 +6,7 @@ import GirCowGheeBenefits from '../components/GirCowGheeBenefits/GirCowGheeBenef
 import FoodDisplay from '../components/foodDisplay/FoodDisplay';
 import RecommendedFood from '../components/RecommendedFood/RecommendedFood';
 
+
 const Homepage = () => {
   const [category, setCategory] = useState("All");
 
