@@ -28,9 +28,9 @@ const RatingModal = ({
         });
 
         if (response.data.success && response.data.data) {
-          setExistingRating(response.data.data.rating);
-          setRating(response.data.data.rating.rating);
-          setReview(response.data.data.rating.review || '');
+          setExistingRating(response.data.data);
+          setRating(response.data.data.rating);
+          setReview(response.data.data.review || '');
         }
       } catch (error) {
         console.error("Error fetching user rating:", error);
@@ -74,6 +74,7 @@ const RatingModal = ({
 
       setSuccess(true);
       
+      // Update the food ratings in parent component
       if (updateFoodRatings) {
         await updateFoodRatings(foodId);
       }
