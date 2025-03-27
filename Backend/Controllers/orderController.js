@@ -18,22 +18,22 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address, userEmail } = req.body;
 
-    console.log("Request Body:", req.body);
-
-    if (!userId || !items || !amount || !address || !userEmail) {
-      console.error("Missing required fields in request body");
-      return res.status(400).json({ success: false, message: "Missing required fields" });
-    }
-
-    // Create items array with full food details
+    // Create items array with full image URLs
     const orderItems = await Promise.all(items.map(async (item) => {
       const foodItem = await foodModel.findById(item._id);
+      let imageUrl = foodItem.image;
+      
+      // Ensure the image URL is complete (add base URL if it's just a path)
+      if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+        imageUrl = `${process.env.BASE_URL}/uploads/${imageUrl}`;
+      }
+
       return {
         _id: item._id,
         name: item.name || foodItem.name,
         price: item.price || foodItem.price,
         quantity: item.quantity,
-        image: foodItem.image // Include the image path
+        image: imageUrl // Store complete image URL
       };
     }));
 

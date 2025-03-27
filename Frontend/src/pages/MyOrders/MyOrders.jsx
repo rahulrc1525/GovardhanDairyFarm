@@ -44,7 +44,16 @@ const MyOrders = () => {
           order => order.status !== "Cancelled" && order.payment === true
         );
 
-        const sortedOrders = filteredOrders.sort((a, b) => {
+        // Process image URLs before setting state
+        const processedOrders = filteredOrders.map(order => ({
+          ...order,
+          items: order.items.map(item => ({
+            ...item,
+            image: processImageUrl(item.image, url)
+          }))
+        }));
+
+        const sortedOrders = processedOrders.sort((a, b) => {
           if (a.status === "Delivered" && b.status !== "Delivered") return 1;
           if (a.status !== "Delivered" && b.status === "Delivered") return -1;
           return new Date(b.createdAt) - new Date(a.createdAt);
@@ -59,6 +68,20 @@ const MyOrders = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to process image URLs
+  const processImageUrl = (imageUrl, baseUrl) => {
+    if (!imageUrl) return 'https://via.placeholder.com/80?text=No+Image';
+    
+    // If already a full URL, return as is
+    if (imageUrl.startsWith('http')) return imageUrl;
+    
+    // If starts with /, prepend base URL
+    if (imageUrl.startsWith('/')) return `${baseUrl}${imageUrl}`;
+    
+    // Otherwise, assume it's in the uploads directory
+    return `${baseUrl}/uploads/${imageUrl}`;
   };
 
   const handleRateItem = (foodId, orderId) => {
@@ -82,20 +105,6 @@ const MyOrders = () => {
     } catch (error) {
       return false;
     }
-  };
-
-  const renderStars = (rating) => {
-    return [1, 2, 3, 4, 5].map((star) => (
-      <span
-        key={star}
-        className={`star ${
-          star <= Math.floor(rating || 0) ? 'full' :
-          (star === Math.ceil(rating || 0) && (rating || 0) % 1 >= 0.5) ? 'half' : 'empty'
-        }`}
-      >
-        ★
-      </span>
-    ));
   };
 
   useEffect(() => {
@@ -146,12 +155,12 @@ const MyOrders = () => {
                   <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
                       <img
-                        src={item.image || 'https://via.placeholder.com/60?text=No+Image'}
+                        src={item.image}
                         alt={item.name}
                         className="food-item-image"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
+                          e.target.src = 'https://via.placeholder.com/80?text=No+Image';
                         }}
                       />
                     </div>
