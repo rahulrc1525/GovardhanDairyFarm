@@ -32,6 +32,7 @@
   cursor: pointer;
   color: #666;
   transition: color 0.2s;
+  margin-left: 68px;
 }
 
 .close-modal:hover {
