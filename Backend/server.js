@@ -27,7 +27,7 @@ connectDB();
 
 // Serve static files from the "Uploads" directory
 const __dirname = path.resolve(); // Resolve the current directory
-//app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
+app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
 
 // Add this before your routes
 app.use((req, res, next) => {

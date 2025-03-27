@@ -19,20 +19,33 @@ const placeOrder = async (req, res) => {
 
     console.log("Request Body:", req.body); // Debugging: Log request body
 
+
     // Validate required fields
     if (!userId || !items || !amount || !address || !userEmail) {
       console.error("Missing required fields in request body");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Create new order in the database
+    const foodItems = await foodModel.find({ 
+      _id: { $in: items.map(item => item._id) } 
+    });
+
+    // Map items with their images
+    const itemsWithImages = items.map(item => {
+      const foodItem = foodItems.find(f => f._id.toString() === item._id);
+      return {
+        ...item,
+        image: foodItem.image // Include the image from the food item
+      };
+    });
+
     const newOrder = await orderModel.create({
       userId,
-      items,
+      items: itemsWithImages, // Use items with images
       amount,
       address,
-      userEmail, // Include userEmail in the order
-      status: "Food Processing", // Set initial status to "Food Processing"
+      userEmail,
+      status: "Food Processing",
     });
 
     console.log("New Order Created:", newOrder); // Debugging: Log created order

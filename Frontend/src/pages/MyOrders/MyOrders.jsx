@@ -50,16 +50,7 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        // Ensure image URLs are properly formatted
-        const ordersWithImages = sortedOrders.map(order => ({
-          ...order,
-          items: order.items.map(item => ({
-            ...item,
-            image: item.image.startsWith('http') ? item.image : `${url}/images/${item.image}`
-          }))
-        }));
-
-        setData(ordersWithImages);
+        setData(sortedOrders);
       }
     } catch (error) {
       if (error.response?.status === 401) {
@@ -77,7 +68,6 @@ const MyOrders = () => {
   };
 
   const handleRatingSubmit = async (foodId) => {
-    // Optimistic update
     setData(prevData => prevData.map(order => {
       if (order._id === selectedOrder) {
         return {
@@ -86,7 +76,6 @@ const MyOrders = () => {
             if (item._id === foodId) {
               return {
                 ...item,
-                // This will be updated properly when we refetch
                 ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
               };
             }
@@ -97,7 +86,6 @@ const MyOrders = () => {
       return order;
     }));
 
-    // Then refetch to get accurate average rating
     await fetchOrders();
     setShowRatingModal(false);
   };
@@ -182,7 +170,7 @@ const MyOrders = () => {
                   <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
                       <img
-                        src={item.image}
+                        src={`${url}/images/${item.image}`}
                         alt={item.name}
                         className="food-item-image"
                         onError={(e) => {
