@@ -28,12 +28,10 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
 
   useEffect(() => {
     if (showRating) {
-      // Always fetch ratings if not already loaded
       if (!ratingData.ratings) {
         fetchFoodRatings(id);
       }
       
-      // Check eligibility if we have an orderId
       if (orderId && token) {
         checkRatingEligibility();
       }
@@ -44,7 +42,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     try {
       setLoadingRating(true);
       
-      // First check if order is delivered
       const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -54,7 +51,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       if (order?.status === "Delivered" && 
           order.items.some(item => item._id.toString() === id)) {
         
-        // Then check if already rated
         const userId = localStorage.getItem('userId');
         const alreadyRated = ratingData.ratings?.some(r => 
           (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&

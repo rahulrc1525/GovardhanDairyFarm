@@ -4,12 +4,12 @@
     flex-direction: column;
     align-items: center;
     background-color: #f9f9f9;
-    border-radius: 15px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin: 20px;
-    padding: 20px;
+    padding: 30px;
     width: 350px;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .food-item:hover {
@@ -19,21 +19,16 @@
 /* Image container styling */
 .food-item-img-container {
     width: 100%;
-    height: 280px; /* Increased height */
+    height: 250px;
     overflow: hidden;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+;
 }
 
 .food-item-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.food-item-image:hover {
-    transform: scale(1.1);
 }
 
 /* Information section for food item */
@@ -41,7 +36,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 15px;
     text-align: center;
 }
 
@@ -53,35 +48,15 @@
     width: 100%;
 }
 
-.food-item-name-rating h3 {
-    font-size: 1.4rem;
+.food-item-name-rating p {
+    font-size: 1.2rem;
     font-weight: bold;
     color: #333;
 }
 
-.stars-display {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.star {
-    font-size: 1.2rem;
-    color: #ddd;
-}
-
-.star.full {
-    color: #ffc107;
-}
-
-.star.half {
-    color: #ffc107;
-}
-
-.rating-text {
-    margin-left: 5px;
-    font-size: 0.9rem;
-    color: #555;
+.food-item-name-rating img {
+    width: 80px;
+    height: auto;
 }
 
 /* Description and price styling */
@@ -92,7 +67,7 @@
 }
 
 .food-item-price {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: bold;
     color: #27ae60;
     margin-bottom: 10px;
@@ -104,86 +79,73 @@
     align-items: center;
     justify-content: center;
     margin-top: 10px;
-    gap: 10px;
 }
 
-.food-item-action img {
-    width: 35px;
-    height: 35px;
+/* Add/Remove icons */
+.food-item-action-icon {
+    width: 30px;
+    height: 30px;
     cursor: pointer;
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-.food-item-action img:hover {
+.food-item-action-icon:hover {
     transform: scale(1.2);
     filter: brightness(1.2);
 }
 
-.food-item-action span {
+/* Quantity display styling */
+.quantity-display {
     font-size: 1.2rem;
     font-weight: bold;
-    padding: 5px 12px;
+    margin: 0 15px;
+    color: rgb(11, 0, 0);
+    
+    padding: 5px 10px;
     border-radius: 5px;
-    background-color: #f1f1f1;
-    color: #000;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1; /* Show the quantity display */
 }
 
-/* Rate button */
-.rate-button {
-    margin-top: 12px;
-    padding: 8px 16px;
-    background-color: #ff9800;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
+/* Temporary message styling */
+.quantity-message {
     font-size: 1rem;
-    transition: background-color 0.2s ease;
+    color: #333;
+    margin-top: 10px;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0; /* Start hidden */
+    visibility: hidden;
 }
 
-.rate-button:hover {
-    background-color: #e68900;
+/* Class to show the quantity message */
+.show-quantity {
+    opacity: 1;
+    visibility: visible;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .food-item {
-        width: 90%;
-    }
-
-    .food-item-img-container {
-        height: 250px;
-    }
-
-    .food-item-desc, .food-item-price {
-        font-size: 0.9rem;
-    }
-
-    .food-item-action img {
-        width: 30px;
-        height: 30px;
-    }
-
-    .food-item-action span {
-        font-size: 1rem;
-    }
-}
-
+/* Responsive design for smaller screens */
 @media (max-width: 480px) {
     .food-item {
         width: 95%;
         padding: 15px;
     }
 
-    .food-item-img-container {
-        height: 200px;
+    .food-item-desc, .food-item-price {
+        font-size: 0.85rem;
     }
 
-    .food-item-name-rating h3 {
-        font-size: 1.1rem;
+    .food-item-action-icon {
+        width: 25px;
+        height: 25px;
     }
 
-    .star {
+    .quantity-display {
         font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .food-item {
+        width: 90%;
     }
 }
