@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import './FoodItem.css';
 import { StoreContext } from '../../context/StoreContext';
 import axios from 'axios';
 import RatingModal from '../RatingModal/RatingModal';
+import { assests } from '../../assests/assests';
 
 const FoodItem = ({ id, name, price, description, image, orderId, showRating = true }) => {
   const { 
@@ -19,62 +20,38 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const [showQuantity, setShowQuantity] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userCanRate, setUserCanRate] = useState(false);
-  const [ratingData, setRatingData] = useState(foodRatings[id] || {});
+
+  // Get rating data from context or fetch if needed
+  const ratingData = foodRatings[id] || {};
+  const averageRating = ratingData.averageRating || 0;
 
   useEffect(() => {
-    if (foodRatings[id]) {
-      setRatingData(foodRatings[id]);
-    }
-  }, [foodRatings, id]);
-
-  const checkRatingEligibility = async () => {
-    if (!token || !orderId) return;
-    
-    try {
-      const orderResponse = await axios.get(`${url}/api/order/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    const checkRatingEligibility = async () => {
+      if (!token || !orderId) return;
       
-      if (orderResponse.data.success && 
-          orderResponse.data.status === "Delivered" &&
-          orderResponse.data.items.some(item => item._id === id)) {
+      try {
+        // Check if order is delivered and contains this item
+        const orderResponse = await axios.get(`${url}/api/order/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
-        await fetchFoodRatings(id);
-        const userId = localStorage.getItem('userId');
-        const alreadyRated = ratingData.ratings?.some(r => r.userId._id === userId);
-        
-        setUserCanRate(!alreadyRated);
+        if (orderResponse.data.success && 
+            orderResponse.data.status === "Delivered" &&
+            orderResponse.data.items.some(item => item._id === id)) {
+          
+          // Check if already rated
+          await fetchFoodRatings(id);
+          const userId = localStorage.getItem('userId');
+          const alreadyRated = ratingData.ratings?.some(r => r.userId._id === userId);
+          
+          setUserCanRate(!alreadyRated);
+        }
+      } catch (error) {
+        console.error("Rating eligibility check failed:", error);
       }
-    } catch (error) {
-      console.error("Rating eligibility check failed:", error);
-    }
-  };
+    };
 
-  const handleRatingSubmit = async (newAverage) => {
-    setRatingData(prev => ({
-      ...prev,
-      averageRating: newAverage,
-      ratings: [...(prev.ratings || []), { userId: localStorage.getItem("userId") }]
-    }));
-    setUserCanRate(false);
-    await fetchFoodRatings(id);
-  };
-
-  const renderStars = () => {
-    return [1, 2, 3, 4, 5].map((star) => (
-      <span 
-        key={star} 
-        className={`star ${
-          star <= Math.floor(ratingData.averageRating || 0) ? 'full' :
-          (star === Math.ceil(ratingData.averageRating || 0) && (ratingData.averageRating || 0) % 1 >= 0.5 ? 'half' : 'empty')
-        }`}
-      >
-        ★
-      </span>
-    ));
-  };
-
-  useEffect(() => {
+    // Initial fetch if no rating data
     if (showRating && !ratingData.ratings) {
       fetchFoodRatings(id);
     }
@@ -82,7 +59,27 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     if (showRating && orderId) {
       checkRatingEligibility();
     }
-  }, [id, token, orderId, showRating]);
+  }, [id, token, orderId, showRating, fetchFoodRatings, ratingData.ratings]);
+
+  const handleRatingSubmit = (newAverage) => {
+    // Refresh ratings after submission
+    fetchFoodRatings(id);
+    setShowRatingModal(false);
+  };
+
+  const renderStars = () => {
+    return [1, 2, 3, 4, 5].map((star) => (
+      <span 
+        key={star} 
+        className={`star ${
+          star <= Math.floor(averageRating) ? 'full' :
+          (star === Math.ceil(averageRating) && averageRating % 1 >= 0.5 ? 'half' : 'empty')
+        }`}
+      >
+        ★
+      </span>
+    ));
+  };
 
   const handleIncrease = async () => {
     if (!token) {
@@ -91,10 +88,11 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     }
 
     addToCart(id);
-    setQuantity(prev => prev + 1);
+    setQuantity((prev) => prev + 1);
     setShowQuantity(true);
     setTimeout(() => setShowQuantity(false), 2000);
 
+    // Update clicks
     try {
       await axios.post(`${url}/api/food/updateclicks`, { id }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -107,7 +105,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const handleDecrease = () => {
     if (quantity > 0) {
       removeFromCart(id);
-      setQuantity(prev => prev - 1);
+      setQuantity((prev) => prev - 1);
     }
   };
 
@@ -124,8 +122,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
               <div className="stars-display">
                 {renderStars()}
                 <span className="rating-text">
-                  {ratingData.averageRating ? ratingData.averageRating.toFixed(1) : 'No ratings'} 
-                  ({ratingData.ratings?.length || 0})
+                  {averageRating ? averageRating.toFixed(1) : 'No ratings'}
                 </span>
               </div>
             </div>
@@ -134,13 +131,19 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
         <p className="food-item-desc">{description}</p>
         <p className="food-item-price">Rs. {price}</p>
         <div className="food-item-action">
-          <button onClick={handleDecrease} className="food-item-action-btn">
-            -
-          </button>
+          <img
+            src={assests.remove_icon_red}
+            alt="Remove"
+            className="food-item-action-icon"
+            onClick={handleDecrease}
+          />
           <span className="quantity-display">{quantity}</span>
-          <button onClick={handleIncrease} className="food-item-action-btn">
-            +
-          </button>
+          <img
+            src={assests.add_icon_green}
+            alt="Add"
+            className="food-item-action-icon"
+            onClick={handleIncrease}
+          />
         </div>
         {userCanRate && (
           <button 
