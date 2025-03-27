@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
+import userModel from "../models/userModel.js";
 
 const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization; // Use authorization header
+  const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
@@ -10,11 +11,27 @@ const authMiddleware = async (req, res, next) => {
     });
   }
 
-  const token = authHeader.split(" ")[1]; // Extract token after 'Bearer '
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.body.userId = decoded.id; // Attach user ID to request body
+    
+    // Verify user exists in database
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found. Please login again.",
+      });
+    }
+
+    // Attach user to request object
+    req.user = {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    };
+    
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
