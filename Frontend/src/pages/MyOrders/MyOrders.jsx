@@ -17,7 +17,7 @@ import {
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
-  const { url, token, fetchFoodRatings, foodRatings } = useContext(StoreContext);
+  const { url, token } = useContext(StoreContext);
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
@@ -51,15 +51,6 @@ const MyOrders = () => {
         });
 
         setData(sortedOrders);
-
-        // Pre-fetch ratings for all food items in orders
-        sortedOrders.forEach(order => {
-          order.items.forEach(item => {
-            if (!foodRatings[item._id]) {
-              fetchFoodRatings(item._id);
-            }
-          });
-        });
       }
     } catch (error) {
       if (error.response?.status === 401) {
@@ -77,53 +68,61 @@ const MyOrders = () => {
   };
 
   const handleRatingSubmit = async (foodId) => {
-    await fetchFoodRatings(foodId); // Refresh the ratings
+    // Optimistic update
+    setData(prevData => prevData.map(order => {
+      if (order._id === selectedOrder) {
+        return {
+          ...order,
+          items: order.items.map(item => {
+            if (item._id === foodId) {
+              return { 
+                ...item,
+                // This will be updated properly when we refetch
+                ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
+              };
+            }
+            return item;
+          })
+        };
+      }
+      return order;
+    }));
+
+    // Then refetch to get accurate average rating
+    await fetchOrders();
     setShowRatingModal(false);
-    fetchOrders(); // Refresh the orders to show updated ratings
   };
 
-  const checkIfRated = (foodId) => {
-    const ratingData = foodRatings[foodId] || {};
-    const userId = localStorage.getItem("userId");
-    return ratingData.ratings?.some(rating => 
-      (rating.userId._id === userId || rating.userId === userId)
-    );
+  const checkIfRated = async (foodId) => {
+    try {
+      const response = await axios.get(`${url}/api/rating/${foodId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        const userId = localStorage.getItem("userId");
+        return response.data.ratings.some(rating => 
+          rating.userId._id === userId
+        );
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
   };
 
   const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating || 0);
-    const hasHalfStar = (rating || 0) % 1 >= 0.5;
-
-    for (let i = 1; i <= 5; i++) {
-      let starClass = 'empty';
-      if (i <= fullStars) {
-        starClass = 'full';
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        starClass = 'half';
-      }
-
-      stars.push(
-        <span 
-          key={i} 
-          className={`star ${starClass}`}
-        >
-          ★
-        </span>
-      );
-    }
-
-    return stars;
-  };
-
-  const getAverageRating = (foodId) => {
-    const ratingData = foodRatings[foodId] || {};
-    return ratingData.averageRating || 0;
-  };
-
-  const getRatingCount = (foodId) => {
-    const ratingData = foodRatings[foodId] || {};
-    return ratingData.totalRatings || 0;
+    return [1, 2, 3, 4, 5].map((star) => (
+      <span 
+        key={star} 
+        className={`star ${
+          star <= Math.floor(rating || 0) ? 'full' :
+          (star === Math.ceil(rating || 0) && (rating || 0) % 1 >= 0.5) ? 'half' : 'empty'
+        }`}
+      >
+        ★
+      </span>
+    ));
   };
 
   useEffect(() => {
@@ -170,60 +169,55 @@ const MyOrders = () => {
               </div>
 
               <div className="order-items">
-                {order.items.map((item) => {
-                  const averageRating = getAverageRating(item._id);
-                  const ratingCount = getRatingCount(item._id);
-                  const alreadyRated = checkIfRated(item._id);
-
-                  return (
-                    <div key={item._id} className="order-item">
-                      <div className="food-item-img-container">
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="food-item-image" 
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/60?text=No+Image';
-                          }}
-                        />
-                      </div>
-                      <div className="order-item-details">
-                        <h4>{item.name}</h4>
-                        <div className="item-meta">
-                          <span className="item-price">
-                            <FaRupeeSign size={14} />
-                            {item.price}
-                          </span>
-                          <span className="item-quantity">
-                            <span style={{ fontSize: "14px" }}>×</span>
-                            {item.quantity}
-                          </span>
-                        </div>
-
-                        {order.status === "Delivered" && (
-                          <div className="order-item-rating">
-                            <div className="rating-stars">
-                              {renderStars(averageRating)}
-                              <span className="rating-text">
-                                ({ratingCount} ratings)
-                              </span>
-                            </div>
-                            {!alreadyRated && (
-                              <button 
-                                className="rate-btn"
-                                onClick={() => handleRateItem(item._id, order._id)}
-                              >
-                                <FaRegEdit size={14} />
-                                Rate Item
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                {order.items.map((item) => (
+                  <div key={item._id} className="order-item">
+                    <div className="food-item-img-container">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="food-item-image" 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
+                        }}
+                      />
                     </div>
-                  );
-                })}
+                    <div className="order-item-details">
+                      <h4>{item.name}</h4>
+                      <div className="item-meta">
+                        <span className="item-price">
+                          <FaRupeeSign size={14} />
+                          {item.price}
+                        </span>
+                        <span className="item-quantity">
+                          <span style={{ fontSize: "14px" }}>×</span>
+                          {item.quantity}
+                        </span>
+                      </div>
+
+                      {order.status === "Delivered" && (
+                        <div className="order-item-rating">
+                          <div className="rating-stars">
+                            {renderStars(item.averageRating)}
+                            <span className="rating-text">
+                              ({item.ratings?.length || 0} ratings)
+                            </span>
+                          </div>
+                          <button 
+                            className="rate-btn"
+                            onClick={async () => {
+                              const alreadyRated = await checkIfRated(item._id);
+                              if (!alreadyRated) handleRateItem(item._id, order._id);
+                            }}
+                          >
+                            <FaRegEdit size={14} />
+                            Rate Item
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="order-footer">
@@ -245,7 +239,7 @@ const MyOrders = () => {
           foodId={selectedFood}
           orderId={selectedOrder}
           onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={handleRatingSubmit}
+          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
           url={url}
           token={token}
         />
