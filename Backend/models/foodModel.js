@@ -1,12 +1,5 @@
 import mongoose from "mongoose";
 
-const ratingSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  rating: { type: Number, required: true, min: 1, max: 5 },
-  review: { type: String },
-  createdAt: { type: Date, default: Date.now }
-});
-
 const foodSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
@@ -15,7 +8,13 @@ const foodSchema = new mongoose.Schema({
   image: { type: String, required: true },
   sales: { type: Number, default: 0 },
   clicks: { type: Number, default: 0 },
-  ratings: [ratingSchema],
+  ratings: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    review: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now }
+  }],
   averageRating: { type: Number, default: 0 }
 });
 

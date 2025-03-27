@@ -33,45 +33,58 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
         setLoadingRating(true);
         setRatingError(null);
         
-        // Check if order is delivered and contains this item
+        // First check if order is delivered
         const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
         const order = orderResponse.data.data.find(o => o._id === orderId);
         
-        if (order && 
-            order.status === "Delivered" &&
-            order.items.some(item => item._id === id)) {
+        if (!order) {
+          setUserCanRate(false);
+          return;
+        }
+
+        if (order.status === "Delivered" && 
+            order.items.some(item => item._id.toString() === id)) {
           
-          // Check if already rated
+          // Then check if already rated
           await fetchFoodRatings(id);
           const userId = localStorage.getItem('userId');
           const alreadyRated = ratingData.ratings?.some(r => 
-            r.userId._id === userId || r.userId.toString() === userId
+            (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
+            r.orderId.toString() === orderId
           );
           
           setUserCanRate(!alreadyRated);
+        } else {
+          setUserCanRate(false);
         }
       } catch (error) {
         console.error("Rating eligibility check failed:", error);
         setRatingError("Failed to check rating eligibility");
+        setUserCanRate(false);
       } finally {
         setLoadingRating(false);
       }
     };
 
-    if (showRating && !ratingData.ratings) {
-      fetchFoodRatings(id);
-    }
-
-    if (showRating && orderId) {
-      checkRatingEligibility();
+    if (showRating) {
+      // Always fetch ratings if not already loaded
+      if (!ratingData.ratings) {
+        fetchFoodRatings(id).catch(console.error);
+      }
+      
+      // Check eligibility if we have an orderId
+      if (orderId) {
+        checkRatingEligibility();
+      }
     }
   }, [id, token, orderId, showRating, fetchFoodRatings, ratingData.ratings]);
 
-  const handleRatingSubmit = async (newRating) => {
+  const handleRatingSubmit = async (newAverage) => {
     try {
+      // Refresh the ratings data
       await fetchFoodRatings(id);
       setShowRatingModal(false);
     } catch (error) {
@@ -80,17 +93,26 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   };
 
   const renderStars = () => {
-    return [1, 2, 3, 4, 5].map((star) => (
-      <span 
-        key={star} 
-        className={`star ${
-          star <= Math.floor(averageRating) ? 'full' :
-          (star === Math.ceil(averageRating) && averageRating % 1 >= 0.5 ? 'half' : 'empty')
-        }`}
-      >
-        ★
-      </span>
-    ));
+    const stars = [];
+    const fullStars = Math.floor(averageRating);
+    const hasHalfStar = averageRating % 1 >= 0.5;
+
+    for (let i = 1; i <= 5; i++) {
+      let starClass = 'empty';
+      if (i <= fullStars) {
+        starClass = 'full';
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        starClass = 'half';
+      }
+
+      stars.push(
+        <span key={i} className={`star ${starClass}`}>
+          ★
+        </span>
+      );
+    }
+
+    return stars;
   };
 
   const handleIncrease = async () => {
@@ -131,7 +153,8 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
               <div className="stars-display">
                 {renderStars()}
                 <span className="rating-text">
-                  {averageRating ? averageRating.toFixed(1) : 'No ratings'}
+                  {averageRating ? averageRating.toFixed(1) : 'No ratings'} 
+                  {ratingData.ratings?.length > 0 && ` (${ratingData.ratings.length})`}
                 </span>
               </div>
             </div>

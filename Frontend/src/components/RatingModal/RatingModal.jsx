@@ -5,7 +5,7 @@ import './RatingModal.css';
 const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
@@ -15,71 +15,95 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       return;
     }
 
-    setSubmitting(true);
+    setIsSubmitting(true);
     setError(null);
 
     try {
-      const userId = localStorage.getItem("userId");
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
       const response = await axios.post(
         `${url}/api/rating/add`,
-        { 
+        {
           userId,
-          foodId, 
-          orderId, 
+          foodId,
+          orderId,
           rating,
-          review: "" 
+          review: ""
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
 
       if (response.data.success) {
         setSuccess(true);
         setTimeout(() => {
-          onRatingSubmit(response.data.averageRating);
+          onRatingSubmit(response.data.data.averageRating);
           onClose();
         }, 1500);
       } else {
-        setError(response.data.message || "Failed to submit rating");
+        throw new Error(response.data.message || "Rating submission failed");
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "An error occurred");
+      console.error("Rating submission error:", {
+        error: err,
+        response: err.response
+      });
+      
+      let errorMessage = "Failed to submit rating";
+      if (err.response) {
+        errorMessage = err.response.data.message || 
+                     err.response.data.error || 
+                     "Server error occurred";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="rating-modal-overlay">
       <div className="rating-modal">
-        <button className="close-modal" onClick={onClose}>
+        <button className="close-modal" onClick={onClose} disabled={isSubmitting}>
           ×
         </button>
-        
+
         {success ? (
           <div className="success-message">
-            <svg viewBox="0 0 24 24" className="success-icon">
-              <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" />
-            </svg>
-            <h3>Rating Submitted!</h3>
-            <p>Thank you for your feedback</p>
+            <div className="success-icon">✓</div>
+            <h3>Thank You!</h3>
+            <p>Your rating was submitted successfully.</p>
           </div>
         ) : (
           <>
-            <h3>Rate this item</h3>
-            <div className="stars">
+            <h2>Rate This Product</h2>
+            <p>How would you rate your experience with this item?</p>
+            
+            <div className="stars-container">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
-                  className={`star ${star <= (hover || rating) ? "filled" : ""}`}
+                  className={`star ${star <= (hover || rating) ? 'filled' : ''}`}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHover(star)}
                   onMouseLeave={() => setHover(0)}
-                  disabled={submitting}
+                  disabled={isSubmitting}
                 >
                   ★
                 </button>
               ))}
             </div>
+            
             <div className="rating-labels">
               <span>Poor</span>
               <span>Fair</span>
@@ -87,18 +111,33 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
               <span>Very Good</span>
               <span>Excellent</span>
             </div>
-            
-            {error && <p className="error-message">{error}</p>}
-            
-            <div className="modal-actions">
-              <button 
-                onClick={handleSubmit} 
-                disabled={submitting || rating === 0}
-                className="submit-btn"
-              >
-                {submitting ? "Submitting..." : "Submit Rating"}
-              </button>
-            </div>
+
+            {error && (
+              <div className="error-message">
+                <p>{error}</p>
+                <button 
+                  onClick={() => setError(null)}
+                  className="retry-button"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            <button
+              className="submit-button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || rating === 0}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner"></span>
+                  Submitting...
+                </>
+              ) : (
+                "Submit Rating"
+              )}
+            </button>
           </>
         )}
       </div>
