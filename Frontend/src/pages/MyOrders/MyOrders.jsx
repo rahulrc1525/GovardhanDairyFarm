@@ -3,9 +3,9 @@ import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./MyOrder.css";
-import { assests } from './../../assests/assests';
-import FoodItem from "../../components/FoodItem/FoodItem.jsx";
-import RatingModal from "../../components/RatingModal/RatingModal.jsx";
+import { assests } from '../../assests/assests';
+import FoodItem from "../../components/FoodItem/FoodItem";
+import RatingModal from "../../components/RatingModal/RatingModal";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
@@ -15,12 +15,10 @@ const MyOrders = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Fetch and Sort Orders
   const fetchOrders = async () => {
     try {
       const localToken = localStorage.getItem("token");
       if (!localToken) {
-        console.error("No token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -28,18 +26,14 @@ const MyOrders = () => {
       const response = await axios.post(
         `${url}/api/order/userOrders`,
         {},
-        {
-          headers: { Authorization: `Bearer ${localToken}` },
-        }
+        { headers: { Authorization: `Bearer ${localToken}` } }
       );
 
       if (response.data.success) {
-        // Filter out canceled orders and orders with incomplete payments
         const filteredOrders = response.data.data.filter(
-          (order) => order.status !== "Cancelled" && order.payment === true
+          order => order.status !== "Cancelled" && order.payment === true
         );
 
-        // Sort orders by status and creation date
         const sortedOrders = filteredOrders.sort((a, b) => {
           if (a.status === "Delivered" && b.status !== "Delivered") return 1;
           if (a.status !== "Delivered" && b.status === "Delivered") return -1;
@@ -47,17 +41,10 @@ const MyOrders = () => {
         });
 
         setData(sortedOrders);
-      } else {
-        console.error("Failed to fetch orders:", response.data.message);
-        alert("Failed to fetch orders. Please try again.");
       }
     } catch (error) {
-      console.error("Error fetching orders:", error);
       if (error.response?.status === 401) {
-        alert("Session expired. Please log in again.");
         navigate("/login");
-      } else {
-        alert("An error occurred while fetching orders. Please try again.");
       }
     }
   };
@@ -69,7 +56,7 @@ const MyOrders = () => {
   };
 
   const handleRatingSubmit = async () => {
-    await fetchOrders(); // Refresh orders after rating submission
+    await fetchOrders();
     setShowRatingModal(false);
   };
 
@@ -87,7 +74,6 @@ const MyOrders = () => {
       }
       return false;
     } catch (error) {
-      console.error("Error checking rating:", error);
       return false;
     }
   };
@@ -98,66 +84,111 @@ const MyOrders = () => {
 
   return (
     <div className="my-orders">
-      <h2>📦 My Orders</h2>
+      <h2><img src={assests.parcel_icon} alt="" className="title-icon" /> My Orders</h2>
+      
       <div className="orders-container">
-        {data.map((order, index) => (
-          <div key={index} className="my-orders-order">
-            <img src={assests.parcel_icon} alt="Order Icon" />
-            <div className="order-details">
-              <p className="order-food">
-                {order.items.map((item, index) => (
-                  <span key={index}>
-                    {item.name} x {item.quantity}
-                    {index !== order.items.length - 1 ? ", " : ""}
+        {data.length === 0 ? (
+          <div className="empty-orders">
+            <img src={assests.empty_order} alt="No orders" />
+            <p>You haven't placed any orders yet</p>
+          </div>
+        ) : (
+          data.map((order) => (
+            <div key={order._id} className="order-card">
+              <div className="order-header">
+                <div className="order-meta">
+                  <span className="order-date">
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </span>
-                ))}
-              </p>
-              <div className="order-summary">
-                <p className="order-price">💰 Rs. {order.amount / 100}</p>
-                <p className="order-items">🛒 Items: {order.items.length}</p>
-                <p className={`order-status ${order.status.toLowerCase()}`}>
-                  <span>&#x25cf;</span> <b>{order.status}</b>
-                </p>
-              </div>
-              
-              {/* Expanded order details with items */}
-              <div className="order-items-details">
-                {order.items.map((item, idx) => (
-                  <div key={idx} className="order-item-container">
-                    <FoodItem
-                      id={item._id}
-                      name={item.name}
-                      price={item.price}
-                      description={item.description}
-                      image={item.image}
-                      showRating={order.status === "Delivered"}
-                      orderId={order._id}
+                  <span className={`order-status ${order.status.toLowerCase()}`}>
+                    <img 
+                      src={
+                        order.status === "Delivered" ? assests.delivered_icon :
+                        order.status === "Preparing" ? assests.preparing_icon :
+                        assests.arrived_icon
+                      } 
+                      alt={order.status}
                     />
-                    {order.status === "Delivered" && (
-                      <button 
-                        className="rate-item-btn"
-                        onClick={async () => {
-                          const alreadyRated = await checkIfRated(item._id);
-                          if (!alreadyRated) {
-                            handleRateItem(item._id, order._id);
-                          }
-                        }}
-                      >
-                        Rate This Item
-                      </button>
-                    )}
+                    {order.status}
+                  </span>
+                </div>
+                <button className="track-btn" onClick={fetchOrders}>
+                  <img src={assests.track_icon} alt="Track" />
+                  Track Order
+                </button>
+              </div>
+
+              <div className="order-items">
+                {order.items.map((item) => (
+                  <div key={item._id} className="order-item">
+                    <img 
+                      src={item.image} 
+                      alt={item.name} 
+                      className="order-item-image" 
+                    />
+                    <div className="order-item-details">
+                      <h4>{item.name}</h4>
+                      <div className="item-meta">
+                        <span className="item-price">
+                          <img src={assests.rupee_icon} alt="Price" />
+                          {item.price}
+                        </span>
+                        <span className="item-quantity">
+                          <img src={assests.quantity_icon} alt="Quantity" />
+                          {item.quantity}
+                        </span>
+                      </div>
+
+                      {order.status === "Delivered" && (
+                        <div className="order-item-rating">
+                          <div className="rating-stars">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <img
+                                key={star}
+                                src={
+                                  star <= Math.floor(item.averageRating || 0) ? assests.star_filled :
+                                  star === Math.ceil(item.averageRating || 0) && (item.averageRating || 0) % 1 >= 0.5 ? 
+                                    assests.star_half : assests.star_empty
+                                }
+                                alt={`${star} star`}
+                                className="rating-star"
+                              />
+                            ))}
+                            <span className="rating-text">
+                              ({item.ratings?.length || 0} ratings)
+                            </span>
+                          </div>
+                          <button 
+                            className="rate-btn"
+                            onClick={async () => {
+                              const alreadyRated = await checkIfRated(item._id);
+                              if (!alreadyRated) handleRateItem(item._id, order._id);
+                            }}
+                          >
+                            <img src={assests.rate_icon} alt="Rate" />
+                            Rate Item
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
+
+              <div className="order-footer">
+                <div className="order-total">
+                  <span>Total:</span>
+                  <span>
+                    <img src={assests.rupee_icon} alt="Total" />
+                    {order.amount / 100}
+                  </span>
+                </div>
+              </div>
             </div>
-            <button className="track-btn" onClick={fetchOrders}>
-              🚚 Track Order
-            </button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      {/* Rating Modal */}
       {showRatingModal && (
         <RatingModal
           foodId={selectedFood}
