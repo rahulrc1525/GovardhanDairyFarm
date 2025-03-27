@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './RatingModal.css';
+import { motion } from 'framer-motion';
 
 const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) => {
   const [rating, setRating] = useState(0);
@@ -25,9 +26,9 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       );
 
       if (response.data.success) {
-        onRatingSubmit(foodId);
+        onRatingSubmit();
       } else {
-        setError("Failed to submit rating. Please try again.");
+        setError(response.data.message || "Failed to submit rating");
       }
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred");
@@ -37,8 +38,18 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
   };
 
   return (
-    <div className="rating-modal-overlay">
-      <div className="rating-modal">
+    <motion.div 
+      className="rating-modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div 
+        className="rating-modal"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: -20 }}
+      >
         <h3>Rate this item</h3>
         <div className="stars">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -56,19 +67,26 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
         </div>
         {error && <p className="error-message">{error}</p>}
         <div className="modal-actions">
-          <button onClick={onClose} disabled={submitting}>
+          <motion.button 
+            onClick={onClose} 
+            disabled={submitting}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             Cancel
-          </button>
-          <button 
+          </motion.button>
+          <motion.button 
             onClick={handleSubmit} 
             disabled={submitting || rating === 0}
             className="submit-btn"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             {submitting ? "Submitting..." : "Submit Rating"}
-          </button>
+          </motion.button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

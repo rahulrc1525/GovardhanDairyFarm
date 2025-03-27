@@ -13,9 +13,7 @@ import {
   FaMapMarkerAlt,
   FaRupeeSign,
   FaBox,
-  FaRegEdit,
-  FaPlus,
-  FaMinus
+  FaRegEdit
 } from "react-icons/fa";
 
 const MyOrders = () => {
@@ -26,19 +24,21 @@ const MyOrders = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const localToken = localStorage.getItem("token");
+      setError(null);
+      const localToken = localStorage.getItem("token") || token;
+      
       if (!localToken) {
         navigate("/login");
         return;
       }
 
-      const response = await axios.post(
+      const response = await axios.get(
         `${url}/api/order/userOrders`,
-        {},
         { headers: { Authorization: `Bearer ${localToken}` } }
       );
 
@@ -58,6 +58,8 @@ const MyOrders = () => {
     } catch (error) {
       if (error.response?.status === 401) {
         navigate("/login");
+      } else {
+        setError("Failed to load orders. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -98,17 +100,21 @@ const MyOrders = () => {
   }, []);
 
   const renderStars = (rating) => {
-    return [1, 2, 3, 4, 5].map((star) => (
-      <span 
-        key={star} 
-        className={`star ${
-          star <= Math.floor(rating) ? 'full' :
-          (star === Math.ceil(rating) && rating % 1 >= 0.5 ? 'half' : 'empty')
-        }`}
-      >
-        ★
-      </span>
-    ));
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<span key={i} className="star full">★</span>);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<span key={i} className="star half">★</span>);
+      } else {
+        stars.push(<span key={i} className="star empty">★</span>);
+      }
+    }
+
+    return stars;
   };
 
   return (
@@ -124,6 +130,11 @@ const MyOrders = () => {
         {loading ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
+          </div>
+        ) : error ? (
+          <div className="error-message">
+            {error}
+            <button onClick={fetchOrders}>Retry</button>
           </div>
         ) : data.length === 0 ? (
           <motion.div 
@@ -170,7 +181,7 @@ const MyOrders = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     <FaMapMarkerAlt size={14} />
-                    Track Order
+                    Refresh Orders
                   </motion.button>
                 </div>
 
@@ -201,8 +212,7 @@ const MyOrders = () => {
                             {item.price}
                           </span>
                           <span className="item-quantity">
-                            <span style={{ fontSize: "14px" }}>×</span>
-                            {item.quantity}
+                            × {item.quantity}
                           </span>
                         </div>
 
