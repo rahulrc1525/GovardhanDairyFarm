@@ -14,16 +14,16 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       setError("Please select a rating");
       return;
     }
-
+  
     setIsSubmitting(true);
     setError(null);
-
+  
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        throw new Error("User not authenticated");
+        throw new Error("User not authenticated - please login again");
       }
-
+  
       const response = await axios.post(
         `${url}/api/rating/add`,
         {
@@ -37,32 +37,45 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
-
-      if (response.data.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          onRatingSubmit(response.data.data.averageRating);
-          onClose();
-        }, 1500);
-      } else {
+  
+      if (!response.data.success) {
         throw new Error(response.data.message || "Rating submission failed");
       }
+  
+      setSuccess(true);
+      setTimeout(() => {
+        onRatingSubmit(response.data.data.averageRating);
+        onClose();
+      }, 1500);
     } catch (err) {
       console.error("Rating submission error:", {
         error: err,
-        response: err.response
+        response: err.response?.data,
+        config: err.config
       });
       
       let errorMessage = "Failed to submit rating";
+      
       if (err.response) {
-        errorMessage = err.response.data.message || 
-                     err.response.data.error || 
-                     "Server error occurred";
-      } else if (err.message) {
-        errorMessage = err.message;
+        // Handle structured error responses
+        if (err.response.data?.missingFields) {
+          errorMessage = `Missing fields: ${Object.keys(err.response.data.missingFields)
+            .filter(f => err.response.data.missingFields[f])
+            .join(', ')}`;
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+          if (err.response.data.details) {
+            errorMessage += ` (Details: ${JSON.stringify(err.response.data.details)})`;
+          }
+        }
+      } else if (err.request) {
+        errorMessage = "No response from server - please try again later";
+      } else {
+        errorMessage = err.message || "An unknown error occurred";
       }
       
       setError(errorMessage);

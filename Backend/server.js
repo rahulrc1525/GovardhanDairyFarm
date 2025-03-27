@@ -29,6 +29,17 @@ connectDB();
 const __dirname = path.resolve(); // Resolve the current directory
 //app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
 
+// Add this before your routes
+app.use((req, res, next) => {
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+    headers: req.headers
+  });
+  next();
+});
+
 // API endpoints
 app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
@@ -43,6 +54,24 @@ app.post("/api/order/webhook", express.json({ type: "application/json" }), handl
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: "Internal Server Error" });
+});
+
+// Add this after your routes
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', {
+    error: err,
+    stack: err.stack,
+    request: {
+      method: req.method,
+      url: req.url,
+      body: req.body
+    }
+  });
+  res.status(500).json({ 
+    success: false,
+    message: "Internal Server Error",
+    error: err.message
+  });
 });
 
 // Root route

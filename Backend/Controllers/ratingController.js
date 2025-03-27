@@ -5,19 +5,26 @@ const addRating = async (req, res) => {
   try {
     const { userId, foodId, orderId, rating } = req.body;
 
-    // Validate required fields
+    // Enhanced validation
     if (!userId || !foodId || !orderId || rating === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: userId, foodId, orderId, or rating"
+        message: "Missing required fields",
+        missingFields: {
+          userId: !userId,
+          foodId: !foodId,
+          orderId: !orderId,
+          rating: rating === undefined
+        }
       });
     }
 
     // Validate rating value
-    if (rating < 1 || rating > 5) {
+    if (isNaN(rating) || rating < 1 || rating > 5) {
       return res.status(400).json({
         success: false,
-        message: "Rating must be between 1 and 5"
+        message: "Rating must be a number between 1 and 5",
+        received: rating
       });
     }
 
@@ -26,25 +33,34 @@ const addRating = async (req, res) => {
       _id: orderId,
       userId: userId,
       status: "Delivered"
-    });
+    }).lean();
 
     if (!order) {
       return res.status(400).json({
         success: false,
-        message: "Order not found or not delivered"
+        message: "Order not found, not delivered, or doesn't belong to user",
+        details: {
+          orderExists: !!order,
+          isDelivered: order?.status === "Delivered",
+          userMatch: order?.userId?.toString() === userId
+        }
       });
     }
 
     // Verify the food item exists in the order
-    const foodItemInOrder = order.items.some(item => item._id.toString() === foodId);
+    const foodItemInOrder = order.items.some(item => 
+      item._id.toString() === foodId
+    );
+    
     if (!foodItemInOrder) {
       return res.status(400).json({
         success: false,
-        message: "Food item not found in this order"
+        message: "Food item not found in this order",
+        orderItems: order.items.map(item => item._id.toString())
       });
     }
 
-    // Check if user already rated this item in this order
+    // Check for existing rating
     const food = await foodModel.findById(foodId);
     if (!food) {
       return res.status(404).json({
@@ -53,26 +69,32 @@ const addRating = async (req, res) => {
       });
     }
 
-    const existingRatingIndex = food.ratings.findIndex(
+    const existingRating = food.ratings.find(
       r => r.userId.toString() === userId && r.orderId.toString() === orderId
     );
 
-    if (existingRatingIndex !== -1) {
+    if (existingRating) {
       return res.status(400).json({
         success: false,
-        message: "You have already rated this item from this order"
+        message: "You have already rated this item from this order",
+        existingRating: {
+          rating: existingRating.rating,
+          createdAt: existingRating.createdAt
+        }
       });
     }
 
     // Add the new rating
-    food.ratings.push({
+    const newRating = {
       userId,
       orderId,
       rating,
       review: req.body.review || ""
-    });
+    };
 
-    // Calculate new average rating
+    food.ratings.push(newRating);
+
+    // Recalculate average
     const totalRatings = food.ratings.length;
     const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
     food.averageRating = sumRatings / totalRatings;
@@ -84,7 +106,8 @@ const addRating = async (req, res) => {
       message: "Rating submitted successfully",
       data: {
         averageRating: food.averageRating,
-        totalRatings: food.ratings.length
+        totalRatings: food.ratings.length,
+        yourRating: rating
       }
     });
 
@@ -92,16 +115,18 @@ const addRating = async (req, res) => {
     console.error("Error in addRating:", {
       error: error.message,
       stack: error.stack,
-      body: req.body
+      body: req.body,
+      params: req.params
     });
+    
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
-
 const getFoodRatings = async (req, res) => {
   try {
     const { foodId } = req.params;
