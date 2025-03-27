@@ -5,7 +5,7 @@ const addRating = async (req, res) => {
   try {
     const { userId, foodId, orderId, rating } = req.body;
 
-    // Enhanced validation
+    // Enhanced validation with proper error messages
     if (!userId || !foodId || !orderId || rating === undefined) {
       return res.status(400).json({
         success: false,
@@ -15,6 +15,21 @@ const addRating = async (req, res) => {
           foodId: !foodId,
           orderId: !orderId,
           rating: rating === undefined
+        }
+      });
+    }
+
+    // Validate ObjectId formats
+    if (!mongoose.Types.ObjectId.isValid(userId) || 
+        !mongoose.Types.ObjectId.isValid(foodId) || 
+        !mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
+        invalidIds: {
+          userId: !mongoose.Types.ObjectId.isValid(userId),
+          foodId: !mongoose.Types.ObjectId.isValid(foodId),
+          orderId: !mongoose.Types.ObjectId.isValid(orderId)
         }
       });
     }
@@ -38,29 +53,23 @@ const addRating = async (req, res) => {
     if (!order) {
       return res.status(400).json({
         success: false,
-        message: "Order not found, not delivered, or doesn't belong to user",
-        details: {
-          orderExists: !!order,
-          isDelivered: order?.status === "Delivered",
-          userMatch: order?.userId?.toString() === userId
-        }
+        message: "Order not found, not delivered, or doesn't belong to user"
       });
     }
 
-    // Verify the food item exists in the order
+    // Verify the food item exists in the order with safe comparison
     const foodItemInOrder = order.items.some(item => 
-      item._id.toString() === foodId
+      item && item._id && item._id.toString() === foodId
     );
     
     if (!foodItemInOrder) {
       return res.status(400).json({
         success: false,
-        message: "Food item not found in this order",
-        orderItems: order.items.map(item => item._id.toString())
+        message: "Food item not found in this order"
       });
     }
 
-    // Check for existing rating
+    // Check for existing rating with safe comparison
     const food = await foodModel.findById(foodId);
     if (!food) {
       return res.status(404).json({
@@ -69,25 +78,24 @@ const addRating = async (req, res) => {
       });
     }
 
-    const existingRating = food.ratings.find(
-      r => r.userId.toString() === userId && r.orderId.toString() === orderId
-    );
+    // Safe comparison of ObjectIds
+    const existingRating = food.ratings.find(r => {
+      const ratingUserId = r.userId?.toString();
+      const ratingOrderId = r.orderId?.toString();
+      return ratingUserId === userId && ratingOrderId === orderId;
+    });
 
     if (existingRating) {
       return res.status(400).json({
         success: false,
-        message: "You have already rated this item from this order",
-        existingRating: {
-          rating: existingRating.rating,
-          createdAt: existingRating.createdAt
-        }
+        message: "You have already rated this item from this order"
       });
     }
 
-    // Add the new rating
+    // Add the new rating with proper ObjectId conversion
     const newRating = {
-      userId,
-      orderId,
+      userId: new mongoose.Types.ObjectId(userId),
+      orderId: new mongoose.Types.ObjectId(orderId),
       rating,
       review: req.body.review || ""
     };
