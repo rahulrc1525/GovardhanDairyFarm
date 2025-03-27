@@ -50,7 +50,16 @@ const MyOrders = () => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        setData(sortedOrders);
+        // Ensure image URLs are properly formatted
+        const ordersWithImages = sortedOrders.map(order => ({
+          ...order,
+          items: order.items.map(item => ({
+            ...item,
+            image: item.image.startsWith('http') ? item.image : `${url}/images/${item.image}`
+          }))
+        }));
+
+        setData(ordersWithImages);
       }
     } catch (error) {
       if (error.response?.status === 401) {
@@ -198,7 +207,7 @@ const MyOrders = () => {
                       {order.status === "Delivered" && (
                         <div className="order-item-rating">
                           <div className="rating-stars">
-                          
+                            {renderStars(item.averageRating)}
                           </div>
                           <button
                             className="rate-btn"
