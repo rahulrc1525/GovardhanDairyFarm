@@ -24,14 +24,14 @@
 
 .close-modal {
   position: absolute;
-  top: 15px;
+  top: 12px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: #666;
   transition: color 0.2s;
-  margin-left: 668px;
+  left: 167px;
 }
 
 .close-modal:hover {
