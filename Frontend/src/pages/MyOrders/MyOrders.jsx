@@ -27,17 +27,9 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const localToken = localStorage.getItem("token");
-      if (!localToken) {
-        navigate("/login");
-        return;
-      }
-
-      const response = await axios.post(
-        `${url}/api/order/userOrders`,
-        {},
-        { headers: { Authorization: `Bearer ${localToken}` } }
-      );
+      const response = await axios.get(`${url}/api/order/userOrders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (response.data.success) {
         const filteredOrders = response.data.data.filter(
@@ -68,6 +60,7 @@ const MyOrders = () => {
   };
 
   const handleRatingSubmit = async (foodId) => {
+    // Optimistic update
     setData(prevData => prevData.map(order => {
       if (order._id === selectedOrder) {
         return {
@@ -76,6 +69,7 @@ const MyOrders = () => {
             if (item._id === foodId) {
               return {
                 ...item,
+                // This will be updated properly when we refetch
                 ratings: [...(item.ratings || []), { userId: localStorage.getItem("userId") }]
               };
             }
@@ -86,6 +80,7 @@ const MyOrders = () => {
       return order;
     }));
 
+    // Then refetch to get accurate average rating
     await fetchOrders();
     setShowRatingModal(false);
   };
@@ -166,19 +161,19 @@ const MyOrders = () => {
               </div>
 
               <div className="order-items">
-                {order.items.map((item) => (
-                  <div key={item._id} className="order-item">
-                    <div className="food-item-img-container">
-                      <img
-                        src={`${url}/images/${item.image}`}
-                        alt={item.name}
-                        className="food-item-image"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
-                        }}
-                      />
-                    </div>
+        {order.items.map((item) => (
+          <div key={item._id} className="order-item">
+            <div className="food-item-img-container">
+              <img
+                src={item.image?.startsWith('http') ? item.image : `${url}/images/${item.image}`}
+                alt={item.name}
+                className="food-item-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/60?text=No+Image';
+                }}
+              />
+            </div>
                     <div className="order-item-details">
                       <h4>{item.name}</h4>
                       <div className="item-meta">
@@ -195,7 +190,7 @@ const MyOrders = () => {
                       {order.status === "Delivered" && (
                         <div className="order-item-rating">
                           <div className="rating-stars">
-                            {renderStars(item.averageRating)}
+                          
                           </div>
                           <button
                             className="rate-btn"

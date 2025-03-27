@@ -9,15 +9,20 @@ import contactRouter from "./Routes/contactRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
 import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
-import path from "path"; // Import path module
+import path from "path";
 import ratingRouter from "./Routes/ratingRoute.js";
-
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "*" }));
@@ -25,18 +30,12 @@ app.use(cors({ origin: "*" }));
 // Connect to the database
 connectDB();
 
-// Serve static files from the "Uploads" directory
-const __dirname = path.resolve(); // Resolve the current directory
-app.use("/images", express.static(path.join(__dirname, "Uploads"))); // Serve static files
+// Serve static files
+app.use("/images", express.static(path.join(__dirname, "Uploads")));
 
-// Add this before your routes
+// Logging middleware
 app.use((req, res, next) => {
-  console.log('Incoming request:', {
-    method: req.method,
-    path: req.path,
-    body: req.body,
-    headers: req.headers
-  });
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
@@ -48,38 +47,28 @@ app.use("/api/contact", contactRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/rating", ratingRouter);
-app.post("/api/order/webhook", express.json({ type: "application/json" }), handleWebhookEvent);
+app.post("/api/order/webhook", express.raw({ type: 'application/json' }), handleWebhookEvent);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: "Internal Server Error" });
-});
-
-// Add this after your routes
-app.use((err, req, res, next) => {
-  console.error('Global error handler:', {
-    error: err,
-    stack: err.stack,
-    request: {
-      method: req.method,
-      url: req.url,
-      body: req.body
-    }
-  });
   res.status(500).json({ 
-    success: false,
+    success: false, 
     message: "Internal Server Error",
-    error: err.message
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
-// Root route
+// Health check
 app.get("/", (req, res) => {
-  res.send("API WORKING");
+  res.json({ 
+    success: true,
+    message: "API is working",
+    timestamp: new Date() 
+  });
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
-  console.log(`Server started on https://govardhandairyfarmbackend.onrender.com`);
+  console.log(`Server running on port ${port}`);
 });
