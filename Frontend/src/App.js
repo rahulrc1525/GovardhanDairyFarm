@@ -23,6 +23,8 @@ import ContactPage from './pages/Contactus/Contactus';
 import Verify from './pages/Verify/Verify';
 import WhatsAppbot from './components/WhatsAppbot/WhatsAppbot';
 import Search from './pages/Search/Search';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -47,6 +49,8 @@ const App = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/search" element={<Search />} />
+          <ToastContainer position="bottom-right" autoClose={3000} />
+
 
 
         </Routes>
