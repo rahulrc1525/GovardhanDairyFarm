@@ -161,19 +161,19 @@ const MyOrders = () => {
               </div>
 
               <div className="order-items">
-        {order.items.map((item) => (
-          <div key={item._id} className="order-item">
-            <div className="food-item-img-container">
-              <img
-                src={item.image?.startsWith('http') ? item.image : `${url}/images/${item.image}`}
-                alt={item.name}
-                className="food-item-image"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/60?text=No+Image';
-                }}
-              />
-            </div>
+                {order.items.map((item) => (
+                  <div key={item._id} className="order-item">
+                    <div className="food-item-img-container">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="food-item-image"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/60?text=No+Image';
+                        }}
+                      />
+                    </div>
                     <div className="order-item-details">
                       <h4>{item.name}</h4>
                       <div className="item-meta">

@@ -3,7 +3,6 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-import foodModel from "../models/foodModel.js"; // Add this import
 import { sendEmail } from "./emailService.js";
 
 dotenv.config();
@@ -18,64 +17,46 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address, userEmail } = req.body;
 
+    console.log("Request Body:", req.body); // Debugging: Log request body
+
+
     // Validate required fields
     if (!userId || !items || !amount || !address || !userEmail) {
+      console.error("Missing required fields in request body");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Fetch food items to get complete details
-    const foodItems = await foodModel.find({ 
-      _id: { $in: items.map(item => item._id) } 
-    });
+    
 
-    // Map items with complete details
-    const completeItems = items.map(item => {
-      const foodItem = foodItems.find(f => f._id.toString() === item._id);
-      return {
-        _id: foodItem._id,
-        name: foodItem.name,
-        price: foodItem.price,
-        image: foodItem.image, // Include the image
-        quantity: item.quantity
-      };
-    });
-
-    // Create order in database
+    // Create new order in the database
     const newOrder = await orderModel.create({
       userId,
-      items: completeItems,
+      items,
       amount,
       address,
-      userEmail,
-      status: "Food Processing",
+      userEmail, // Include userEmail in the order
+      status: "Food Processing", // Set initial status to "Food Processing"
     });
+
+    console.log("New Order Created:", newOrder); // Debugging: Log created order
 
     // Clear user's cart
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
     // Create Razorpay order
     const options = {
-      amount: amount, // Amount in paise
+      amount: amount, // Amount is already in paise
       currency: "INR",
       receipt: newOrder._id.toString(),
-      payment_capture: 1 // Auto-capture payment
     };
-
     const razorpayOrder = await razorpay.orders.create(options);
 
-    res.status(201).json({ 
-      success: true, 
-      order: razorpayOrder, 
-      orderId: newOrder._id,
-      key: process.env.RAZORPAY_PUBLIC_KEY // Send Razorpay key to frontend
-    });
+    console.log("Razorpay Order Created:", razorpayOrder); // Debugging: Log Razorpay order
+
+    res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
   } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error placing order",
-      error: error.message 
-    });
+    console.error("Error placing order:", error); // Debugging: Log any errors
+    res.status(500).json({ success: false, message: "Error placing order" });
   }
 };
 
@@ -84,105 +65,98 @@ const verifyOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
-    // Create SHA256 signature
-    const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_PRIVATE_KEY)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_PRIVATE_KEY)
+      .update(body)
+      .digest("hex");
 
-    if (generated_signature !== razorpay_signature) {
-      // Payment verification failed
+    if (expectedSignature === razorpay_signature) {
+      // Payment successful, update order status and set payment to true
+      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
+      console.log(`Order ${orderId} status updated to Food Processing`);
+
+      // Fetch order details
+      const order = await orderModel.findById(orderId).populate('userId');
+      if (order && order.userId) {
+        const userEmail = order.userId.email; // User's email from the order
+        const adminEmail = process.env.ADMIN_EMAIL; // Admin email from .env
+
+        // Prepare email content for the user
+        const userSubject = 'Your Order Confirmation';
+        const userText = `Thank you for your order! Your order ID is ${orderId}.`;
+        const userHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Thank you for your order!</h2>
+            <p>Your order has been successfully placed. Below are the details:</p>
+            <h3>Order Summary</h3>
+            <ul>
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
+            </ul>
+            <p>We will notify you once your order is out for delivery.</p>
+            <p>Thank you for shopping with us!</p>
+            <p>Best regards,<br/>Govardhan Dairy Farm</p>
+          </div>
+        `;
+
+        // Send email to the user
+        await sendEmail(userEmail, userSubject, userText, userHtml);
+
+        // Prepare email content for the admin
+        const adminSubject = 'New Order Placed';
+        const adminText = `A new order has been placed. Order ID: ${orderId}, User Email: ${userEmail}`;
+        const adminHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">New Order Placed</h2>
+            <p>A new order has been placed. Below are the details:</p>
+            <h3>Order Summary</h3>
+            <ul>
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>User Email:</strong> ${userEmail}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
+            </ul>
+            <p>Please process the order as soon as possible.</p>
+            <p>Best regards,<br/>Govardhan Dairy Farm</p>
+          </div>
+        `;
+
+        // Send email to the admin
+        await sendEmail(adminEmail, adminSubject, adminText, adminHtml);
+      }
+
+      return res.status(200).json({ success: true, message: "Payment verified" });
+    } else {
+      // Payment failed, delete the order
       await orderModel.findByIdAndDelete(orderId);
+      console.log(`Order ${orderId} deleted due to payment verification failure`);
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
-
-    // Payment successful
-    await orderModel.findByIdAndUpdate(orderId, { 
-      status: "Food Processing", 
-      payment: true,
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id
-    });
-
-    // Fetch order details for email
-    const order = await orderModel.findById(orderId).populate('userId');
-    if (order && order.userId) {
-      // Send confirmation emails (user and admin)
-      await sendConfirmationEmails(order);
-    }
-
-    res.status(200).json({ success: true, message: "Payment verified" });
   } catch (error) {
     console.error("Error verifying payment:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error verifying payment",
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
-
-async function sendConfirmationEmails(order) {
-  const userEmail = order.userId.email;
-  const adminEmail = process.env.ADMIN_EMAIL;
-
-  // User email
-  const userSubject = 'Your Order Confirmation';
-  const userHtml = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-      <h2 style="color: #4CAF50;">Thank you for your order!</h2>
-      <p>Your order has been successfully placed. Below are the details:</p>
-      <h3>Order Summary</h3>
-      <ul>
-        <li><strong>Order ID:</strong> ${order._id}</li>
-        <li><strong>Items:</strong></li>
-        <ul>
-          ${order.items.map(item => `
-            <li>
-              <img src="${item.image}" alt="${item.name}" width="50" style="vertical-align: middle; margin-right: 10px;">
-              ${item.name} - ₹${item.price} x ${item.quantity}
-            </li>
-          `).join('')}
-        </ul>
-        <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
-      </ul>
-      <p>We will notify you once your order is out for delivery.</p>
-    </div>
-  `;
-
-  await sendEmail(userEmail, userSubject, null, userHtml);
-
-  // Admin email
-  const adminSubject = 'New Order Placed';
-  const adminHtml = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-      <h2 style="color: #4CAF50;">New Order Notification</h2>
-      <p>Order ID: ${order._id}</p>
-      <p>Customer: ${order.userId.name} (${userEmail})</p>
-      <h3>Order Details:</h3>
-      <ul>
-        ${order.items.map(item => `
-          <li>
-            <img src="${item.image}" alt="${item.name}" width="50" style="vertical-align: middle; margin-right: 10px;">
-            ${item.name} - ₹${item.price} x ${item.quantity}
-          </li>
-        `).join('')}
-      </ul>
-      <p><strong>Total:</strong> ₹${order.amount / 100}</p>
-      <p><strong>Delivery Address:</strong></p>
-      <p>
-        ${order.address.street},<br>
-        ${order.address.city}, ${order.address.state}<br>
-        ${order.address.ZipCode}
-      </p>
-    </div>
-  `;
-
-  await sendEmail(adminEmail, adminSubject, null, adminHtml);
-}
-
-// ... rest of the controller methods remain the same ...
-
 
 // Get orders of a user
 const userOrders = async (req, res) => {
