@@ -150,9 +150,23 @@ const verifyOrder = async (req, res) => {
 };
 
 // Get orders of a user
+// Get orders of a user
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId, status: { $ne: "Cancelled" } });
+    // Verify the userId matches the authenticated user
+    if (req.body.userId !== req.user.id) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Unauthorized access to orders" 
+      });
+    }
+
+    const orders = await orderModel.find({ 
+      userId: req.body.userId, 
+      status: { $ne: "Cancelled" },
+      payment: true
+    }).sort({ createdAt: -1 }); // Sort by newest first
+
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching user orders:", error);

@@ -14,6 +14,7 @@ import {
   FaBox,
   FaRegEdit
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
@@ -23,6 +24,7 @@ const MyOrders = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [ratingLoading, setRatingLoading] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -33,9 +35,15 @@ const MyOrders = () => {
         return;
       }
 
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        navigate("/login");
+        return;
+      }
+
       const response = await axios.post(
         `${url}/api/order/userOrders`,
-        {},
+        { userId },
         { headers: { Authorization: `Bearer ${localToken}` } }
       );
 
@@ -44,7 +52,6 @@ const MyOrders = () => {
           order => order.status !== "Cancelled" && order.payment === true
         );
 
-        // Process image URLs before setting state
         const processedOrders = filteredOrders.map(order => ({
           ...order,
           items: order.items.map(item => ({
@@ -53,34 +60,23 @@ const MyOrders = () => {
           }))
         }));
 
-        const sortedOrders = processedOrders.sort((a, b) => {
-          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
-          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-
-        setData(sortedOrders);
+        setData(processedOrders);
       }
     } catch (error) {
       if (error.response?.status === 401) {
         navigate("/login");
+      } else {
+        toast.error("Failed to fetch orders");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to process image URLs
   const processImageUrl = (imageUrl, baseUrl) => {
     if (!imageUrl) return 'https://via.placeholder.com/80?text=No+Image';
-    
-    // If already a full URL, return as is
     if (imageUrl.startsWith('http')) return imageUrl;
-    
-    // If starts with /, prepend base URL
     if (imageUrl.startsWith('/')) return `${baseUrl}${imageUrl}`;
-    
-    // Otherwise, assume it's in the uploads directory
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
@@ -90,9 +86,33 @@ const MyOrders = () => {
     setShowRatingModal(true);
   };
 
-  const handleRatingSubmit = async (foodId) => {
-    await fetchOrders();
-    setShowRatingModal(false);
+  const handleRatingSubmit = async (ratingData) => {
+    try {
+      setRatingLoading(true);
+      const response = await axios.post(
+        `${url}/api/rating/add`,
+        {
+          foodId: selectedFood,
+          orderId: selectedOrder,
+          rating: ratingData.rating,
+          review: ratingData.review
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        toast.success("Rating submitted successfully!");
+        await fetchOrders();
+      } else {
+        toast.error(response.data.message || "Failed to submit rating");
+      }
+    } catch (error) {
+      console.error("Rating submission error:", error);
+      toast.error(error.response?.data?.message || "Error submitting rating");
+    } finally {
+      setRatingLoading(false);
+      setShowRatingModal(false);
+    }
   };
 
   const checkIfRated = async (foodId, orderId) => {
@@ -103,6 +123,7 @@ const MyOrders = () => {
       });
       return response.data.alreadyRated;
     } catch (error) {
+      console.error("Error checking rating:", error);
       return false;
     }
   };
@@ -183,11 +204,16 @@ const MyOrders = () => {
                             className="rate-btn"
                             onClick={async () => {
                               const alreadyRated = await checkIfRated(item._id, order._id);
-                              if (!alreadyRated) handleRateItem(item._id, order._id);
+                              if (!alreadyRated) {
+                                handleRateItem(item._id, order._id);
+                              } else {
+                                toast.info("You've already rated this item");
+                              }
                             }}
+                            disabled={ratingLoading}
                           >
                             <FaRegEdit size={14} />
-                            Rate Item
+                            {ratingLoading ? "Loading..." : "Rate Item"}
                           </button>
                         </div>
                       )}
@@ -215,9 +241,8 @@ const MyOrders = () => {
           foodId={selectedFood}
           orderId={selectedOrder}
           onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
-          url={url}
-          token={token}
+          onRatingSubmit={handleRatingSubmit}
+          isLoading={ratingLoading}
         />
       )}
     </div>
