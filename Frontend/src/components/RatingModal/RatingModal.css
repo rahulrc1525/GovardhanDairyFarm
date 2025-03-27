@@ -25,14 +25,13 @@
 .close-modal {
   position: absolute;
   top: 15px;
-  right: 15px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: #666;
   transition: color 0.2s;
-  margin-left: 68px;
+  margin-left: 668px;
 }
 
 .close-modal:hover {
