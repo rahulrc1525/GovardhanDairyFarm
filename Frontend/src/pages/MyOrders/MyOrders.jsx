@@ -198,10 +198,7 @@ const MyOrders = () => {
                       {order.status === "Delivered" && (
                         <div className="order-item-rating">
                           <div className="rating-stars">
-                            {renderStars(item.averageRating)}
-                            <span className="rating-text">
-                              ({item.ratings?.length || 0} ratings)
-                            </span>
+                          
                           </div>
                           <button
                             className="rate-btn"
