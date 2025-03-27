@@ -13,76 +13,117 @@
 
 .rating-modal {
   background: white;
-  padding: 2rem;
   border-radius: 12px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 25px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
   text-align: center;
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.close-modal:hover {
+  color: #333;
 }
 
 .rating-modal h3 {
   margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #2c3e50;
-  font-size: 1.4rem;
+  color: #333;
+  font-size: 22px;
 }
 
-.rating-modal .stars {
+.stars {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin: 2rem 0;
+  gap: 10px;
+  margin: 20px 0;
 }
 
-.rating-modal .star {
+.stars button {
   background: none;
   border: none;
-  font-size: 2.2rem;
-  color: #ddd;
+  font-size: 32px;
   cursor: pointer;
-  transition: all 0.2s;
-  padding: 0 0.2rem;
-  line-height: 1;
+  color: #ddd;
+  transition: all 0.2s ease;
+  padding: 0 5px;
 }
 
-.rating-modal .star.filled {
+.stars button.filled {
   color: #FFD700;
-  transform: scale(1.1);
 }
 
-.rating-modal .modal-actions {
+.stars button:hover {
+  transform: scale(1.2);
+}
+
+.rating-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: #666;
+}
+
+.modal-actions {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
 }
 
-.rating-modal button {
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #ddd;
-  background: white;
-  font-size: 0.9rem;
-  min-width: 100px;
-}
-
-.rating-modal .submit-btn {
+.submit-btn {
   background: #4CAF50;
   color: white;
   border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease;
 }
 
-.rating-modal button:disabled {
-  opacity: 0.6;
+.submit-btn:hover {
+  background: #3e8e41;
+}
+
+.submit-btn:disabled {
+  background: #cccccc;
   cursor: not-allowed;
 }
 
 .error-message {
   color: #e53935;
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
-  min-height: 1.2rem;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.success-message {
+  padding: 20px;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  color: #4CAF50;
+  margin-bottom: 15px;
+}
+
+.success-message h3 {
+  color: #4CAF50;
+  margin-bottom: 5px;
+}
+
+.success-message p {
+  color: #666;
 }

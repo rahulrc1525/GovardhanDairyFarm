@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
-import './FoodItem.css';
 import { StoreContext } from '../../context/StoreContext';
+import './FoodItem.css';
 import axios from 'axios';
 import RatingModal from '../RatingModal/RatingModal';
 import { assests } from '../../assests/assests';
@@ -17,11 +17,11 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   } = useContext(StoreContext);
   
   const [quantity, setQuantity] = useState(cart[id] || 0);
-  const [showQuantity, setShowQuantity] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userCanRate, setUserCanRate] = useState(false);
+  const [loadingRating, setLoadingRating] = useState(false);
+  const [ratingError, setRatingError] = useState(null);
 
-  // Get rating data from context or fetch if needed
   const ratingData = foodRatings[id] || {};
   const averageRating = ratingData.averageRating || 0;
 
@@ -30,28 +30,37 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       if (!token || !orderId) return;
       
       try {
+        setLoadingRating(true);
+        setRatingError(null);
+        
         // Check if order is delivered and contains this item
-        const orderResponse = await axios.get(`${url}/api/order/${orderId}`, {
+        const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        if (orderResponse.data.success && 
-            orderResponse.data.status === "Delivered" &&
-            orderResponse.data.items.some(item => item._id === id)) {
+        const order = orderResponse.data.data.find(o => o._id === orderId);
+        
+        if (order && 
+            order.status === "Delivered" &&
+            order.items.some(item => item._id === id)) {
           
           // Check if already rated
           await fetchFoodRatings(id);
           const userId = localStorage.getItem('userId');
-          const alreadyRated = ratingData.ratings?.some(r => r.userId._id === userId);
+          const alreadyRated = ratingData.ratings?.some(r => 
+            r.userId._id === userId || r.userId.toString() === userId
+          );
           
           setUserCanRate(!alreadyRated);
         }
       } catch (error) {
         console.error("Rating eligibility check failed:", error);
+        setRatingError("Failed to check rating eligibility");
+      } finally {
+        setLoadingRating(false);
       }
     };
 
-    // Initial fetch if no rating data
     if (showRating && !ratingData.ratings) {
       fetchFoodRatings(id);
     }
@@ -61,10 +70,13 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     }
   }, [id, token, orderId, showRating, fetchFoodRatings, ratingData.ratings]);
 
-  const handleRatingSubmit = (newAverage) => {
-    // Refresh ratings after submission
-    fetchFoodRatings(id);
-    setShowRatingModal(false);
+  const handleRatingSubmit = async (newRating) => {
+    try {
+      await fetchFoodRatings(id);
+      setShowRatingModal(false);
+    } catch (error) {
+      console.error("Error refreshing ratings:", error);
+    }
   };
 
   const renderStars = () => {
@@ -88,11 +100,8 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     }
 
     addToCart(id);
-    setQuantity((prev) => prev + 1);
-    setShowQuantity(true);
-    setTimeout(() => setShowQuantity(false), 2000);
+    setQuantity(prev => prev + 1);
 
-    // Update clicks
     try {
       await axios.post(`${url}/api/food/updateclicks`, { id }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -105,7 +114,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const handleDecrease = () => {
     if (quantity > 0) {
       removeFromCart(id);
-      setQuantity((prev) => prev - 1);
+      setQuantity(prev => prev - 1);
     }
   };
 
@@ -116,7 +125,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       </div>
       <div className="food-item-info">
         <div className="food-item-name-rating">
-          <p>{name}</p>
+          <h3>{name}</h3>
           {showRating && (
             <div className="food-item-rating">
               <div className="stars-display">
@@ -129,31 +138,32 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           )}
         </div>
         <p className="food-item-desc">{description}</p>
-        <p className="food-item-price">Rs. {price}</p>
-        <div className="food-item-action">
-          <img
-            src={assests.remove_icon_red}
-            alt="Remove"
-            className="food-item-action-icon"
-            onClick={handleDecrease}
-          />
-          <span className="quantity-display">{quantity}</span>
-          <img
-            src={assests.add_icon_green}
-            alt="Add"
-            className="food-item-action-icon"
-            onClick={handleIncrease}
-          />
+        <div className="food-item-bottom">
+          <p className="food-item-price">₹{price}</p>
+          <div className="food-item-action">
+            <img
+              src={assests.remove_icon_red}
+              alt="Remove"
+              onClick={handleDecrease}
+            />
+            <span>{quantity}</span>
+            <img
+              src={assests.add_icon_green}
+              alt="Add"
+              onClick={handleIncrease}
+            />
+          </div>
         </div>
         {userCanRate && (
           <button 
-            className="rate-button" 
+            className="rate-button"
             onClick={() => setShowRatingModal(true)}
+            disabled={loadingRating}
           >
-            Rate this item
+            {loadingRating ? "Checking..." : "Rate this item"}
           </button>
         )}
-        {showQuantity && <p className="quantity-message">Quantity: {quantity}</p>}
+        {ratingError && <p className="rating-error">{ratingError}</p>}
       </div>
 
       {showRatingModal && (
