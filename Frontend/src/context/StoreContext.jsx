@@ -31,7 +31,12 @@ const StoreContextProvider = ({ children }) => {
       const response = await axios.post(
         `${url}/api/cart/get`,
         { userId },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.success) {
@@ -62,7 +67,12 @@ const StoreContextProvider = ({ children }) => {
       const response = await axios.post(
         `${url}/api/cart/add`,
         { userId, itemId },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.success) {
@@ -89,7 +99,12 @@ const StoreContextProvider = ({ children }) => {
       const response = await axios.post(
         `${url}/api/cart/remove`,
         { userId, itemId },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.success) {
@@ -154,7 +169,12 @@ const StoreContextProvider = ({ children }) => {
       const response = await axios.post(
         `${url}/api/cart/clear`,
         { userId },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.success) {
@@ -170,16 +190,16 @@ const StoreContextProvider = ({ children }) => {
 
   const fetchFoodRatings = async (foodId) => {
     if (!token) return;
-    
+
     try {
       const response = await axios.get(`${url}/api/rating/${foodId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.data.success) {
-        setFoodRatings(prev => ({
+        setFoodRatings((prev) => ({
           ...prev,
-          [foodId]: response.data
+          [foodId]: response.data,
         }));
       }
     } catch (error) {
@@ -204,7 +224,7 @@ const StoreContextProvider = ({ children }) => {
         clearCart,
         fetchFoodRatings,
         foodRatings,
-        userRatings
+        userRatings,
       }}
     >
       {children}

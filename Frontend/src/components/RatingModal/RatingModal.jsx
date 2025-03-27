@@ -14,38 +14,32 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       setError("Please select a rating");
       return;
     }
-  
+
     setIsSubmitting(true);
     setError(null);
-  
+
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        throw new Error("User not authenticated - please login again");
-      }
-  
       const response = await axios.post(
         `${url}/api/rating/add`,
         {
-          userId,
+          userId: localStorage.getItem('userId'),
           foodId,
           orderId,
           rating,
-          review: ""
+          review: "",
         },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
-          timeout: 10000 // 10 second timeout
         }
       );
-  
+
       if (!response.data.success) {
         throw new Error(response.data.message || "Rating submission failed");
       }
-  
+
       setSuccess(true);
       setTimeout(() => {
         onRatingSubmit(response.data.data.averageRating);
@@ -55,29 +49,30 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
       console.error("Rating submission error:", {
         error: err,
         response: err.response?.data,
-        config: err.config
+        config: err.config,
       });
-      
+
       let errorMessage = "Failed to submit rating";
-      
+
       if (err.response) {
-        // Handle structured error responses
         if (err.response.data?.missingFields) {
           errorMessage = `Missing fields: ${Object.keys(err.response.data.missingFields)
-            .filter(f => err.response.data.missingFields[f])
+            .filter((f) => err.response.data.missingFields[f])
             .join(', ')}`;
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message;
           if (err.response.data.details) {
             errorMessage += ` (Details: ${JSON.stringify(err.response.data.details)})`;
           }
+        } else {
+          errorMessage = `Server error: ${err.response.status}`;
         }
       } else if (err.request) {
         errorMessage = "No response from server - please try again later";
       } else {
         errorMessage = err.message || "An unknown error occurred";
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -90,7 +85,6 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
         <button className="close-modal" onClick={onClose} disabled={isSubmitting}>
           ×
         </button>
-
         {success ? (
           <div className="success-message">
             <div className="success-icon">✓</div>
@@ -101,7 +95,6 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
           <>
             <h2>Rate This Product</h2>
             <p>How would you rate your experience with this item?</p>
-            
             <div className="stars-container">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -116,7 +109,6 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
                 </button>
               ))}
             </div>
-            
             <div className="rating-labels">
               <span>Poor</span>
               <span>Fair</span>
@@ -124,19 +116,14 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
               <span>Very Good</span>
               <span>Excellent</span>
             </div>
-
             {error && (
               <div className="error-message">
                 <p>{error}</p>
-                <button 
-                  onClick={() => setError(null)}
-                  className="retry-button"
-                >
+                <button onClick={() => setError(null)} className="retry-button">
                   Try Again
                 </button>
               </div>
             )}
-
             <button
               className="submit-button"
               onClick={handleSubmit}
@@ -144,8 +131,7 @@ const RatingModal = ({ foodId, orderId, onClose, onRatingSubmit, url, token }) =
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner"></span>
-                  Submitting...
+                  <span className="spinner"></span> Submitting...
                 </>
               ) : (
                 "Submit Rating"
