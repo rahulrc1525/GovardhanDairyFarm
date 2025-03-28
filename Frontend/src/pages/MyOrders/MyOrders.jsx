@@ -84,8 +84,6 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-
-
   const handleRatingSubmit = async (foodId) => {
     await fetchOrders();
     setShowRatingModal(false);
@@ -103,32 +101,29 @@ const MyOrders = () => {
     }
   };
 
-  // Add these functions to your MyOrders component
+  const checkRatingEligibility = async (foodId, orderId) => {
+    try {
+      const response = await axios.get(`${url}/api/rating/check/eligibility`, {
+        params: { foodId, orderId },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.canRate;
+    } catch (error) {
+      console.error("Error checking rating eligibility:", error);
+      return false;
+    }
+  };
 
-const checkRatingEligibility = async (foodId, orderId) => {
-  try {
-    const response = await axios.get(`${url}/api/rating/check/eligibility`, {
-      params: { foodId, orderId },
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data.canRate;
-  } catch (error) {
-    console.error("Error checking rating eligibility:", error);
-    return false;
-  }
-};
-
-const handleRateItem = async (foodId, orderId) => {
-  try {
-    setSelectedFood(foodId);
-    setSelectedOrder(orderId);
-    setShowRatingModal(true);
-  } catch (error) {
-    console.error("Error in handleRateItem:", error);
-    alert("Error preparing rating form");
-  }
-};
-
+  const handleRateItem = async (foodId, orderId) => {
+    try {
+      setSelectedFood(foodId);
+      setSelectedOrder(orderId);
+      setShowRatingModal(true);
+    } catch (error) {
+      console.error("Error in handleRateItem:", error);
+      alert("Error preparing rating form");
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -201,16 +196,16 @@ const handleRateItem = async (foodId, orderId) => {
                       </div>
 
                       {order.status === "Delivered" && (
-  <div className="order-item-rating">
-    <button
-      className="rate-btn"
-      onClick={() => handleRateItem(item._id, order._id)}
-    >
-      <FaRegEdit size={14} />
-      {item.userRating ? "Update Rating" : "Rate Item"}
-    </button>
-  </div>
-)}
+                        <div className="order-item-rating">
+                          <button
+                            className="rate-btn"
+                            onClick={() => handleRateItem(item._id, order._id)}
+                          >
+                            <FaRegEdit size={14} />
+                            Rate Item
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
