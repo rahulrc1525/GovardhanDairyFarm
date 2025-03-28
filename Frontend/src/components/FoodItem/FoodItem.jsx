@@ -41,22 +41,23 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
 
   const checkRatingEligibility = async () => {
     try {
-        setLoadingRating(true);
-        const response = await axios.get(`${url}/api/rating/check-eligibility`, {
-            params: { foodId, orderId },
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.data.success) {
-            setUserCanRate(response.data.canRate && !response.data.hasExistingRating);
-        }
+      setLoadingRating(true);
+      
+      const response = await axios.get(`${url}/api/rating/check-eligibility`, {
+        params: { foodId: id, orderId },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setUserCanRate(response.data.canRate && !response.data.hasExistingRating);
+      }
     } catch (error) {
-        console.error("Rating eligibility check failed:", error);
-        setUserCanRate(false);
+      console.error("Rating eligibility check failed:", error);
+      setUserCanRate(false);
     } finally {
-        setLoadingRating(false);
+      setLoadingRating(false);
     }
-};
+  };
 
   const handleRatingSubmit = (newRatingData) => {
     updateFoodRatings(id, newRatingData);
