@@ -44,56 +44,55 @@ const RatingModal = ({
     e.preventDefault();
     
     if (rating === 0) {
-      setError("Please select a rating");
-      return;
+        setError("Please select a rating");
+        return;
     }
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await axios.post(
-        `${url}/api/rating/add`,
-        {
-          foodId,
-          orderId,
-          rating,
-          review,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const response = await axios.post(
+            `${url}/api/rating/add`,
+            {
+                foodId,
+                orderId,
+                rating: Number(rating),
+                review,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (!response.data.success) {
+            throw new Error(response.data.message || "Rating submission failed");
         }
-      );
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Rating submission failed");
-      }
+        setSuccess(true);
+        
+        // Update the food ratings in parent component
+        if (onRatingSubmit) {
+            onRatingSubmit(response.data.data);
+        }
 
-      setSuccess(true);
-      
-      // Update the food ratings in parent component
-      if (updateFoodRatings) {
-        await updateFoodRatings(foodId);
-      }
-
-      setTimeout(() => {
-        onRatingSubmit(response.data.data);
-        onClose();
-      }, 1500);
+        setTimeout(() => {
+            onClose();
+        }, 1500);
     } catch (error) {
-      console.error("Rating submission error:", error);
-      setError(
-        error.response?.data?.message || 
-        error.message || 
-        "Failed to submit rating. Please try again."
-      );
+        console.error("Rating submission error:", error);
+        setError(
+            error.response?.data?.message || 
+            error.message || 
+            "Failed to submit rating. Please try again."
+        );
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   return (
     <div className="rating-modal-overlay">

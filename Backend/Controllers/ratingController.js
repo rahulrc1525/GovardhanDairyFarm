@@ -60,8 +60,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Verify food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id.toString() === foodId || 
-            (item._id && item._id.toString() === foodId)
+            item._id.toString() === foodId
         );
 
         if (!foodItemInOrder) {
@@ -161,24 +160,27 @@ const getUserRating = async (req, res) => {
             });
         }
 
-        // Find the food item with the user's rating
-        const food = await foodModel.findOne({
-            _id: foodId,
-            'ratings.userId': userId,
-            'ratings.orderId': orderId
-        }).select('ratings name');
+        // Find the food item
+        const food = await foodModel.findById(foodId).select('ratings name');
 
         if (!food) {
+            return res.status(404).json({
+                success: false,
+                message: "Food item not found",
+            });
+        }
+
+        // Find the user's rating
+        const userRating = food.ratings.find(
+            r => r.userId.toString() === userId && r.orderId.toString() === orderId
+        );
+
+        if (!userRating) {
             return res.status(404).json({
                 success: false,
                 message: "Rating not found",
             });
         }
-
-        // Extract the user's rating
-        const userRating = food.ratings.find(
-            r => r.userId.toString() === userId && r.orderId.toString() === orderId
-        );
 
         return res.status(200).json({ 
             success: true, 
@@ -290,8 +292,7 @@ const checkRatingEligibility = async (req, res) => {
 
         // Check if food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id.toString() === foodId || 
-            (item._id && item._id.toString() === foodId)
+            item._id.toString() === foodId
         );
 
         if (!foodItemInOrder) {
