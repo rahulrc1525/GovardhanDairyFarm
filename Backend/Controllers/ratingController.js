@@ -45,31 +45,30 @@ const addOrUpdateRating = async (req, res) => {
       }
   
       // Check if order exists and is delivered
-      const order = await orderModel.findOne({
-        _id: orderId,
-        userId,
-        status: "Delivered",
-      });
-  
-      if (!order) {
-        return res.status(400).json({
-          success: false,
-          message: "Order not found or not eligible for rating",
-        });
-      }
-  
-      // Verify food item exists in the order
-      const foodItemInOrder = order.items.some(item => 
-        item._id.toString() === foodId || 
-        (item._id && item._id.toString() === foodId)
-      );
-  
-      if (!foodItemInOrder) {
-        return res.status(400).json({
-          success: false,
-          message: "Food item not found in this order",
-        });
-      }
+// In addOrUpdateRating controller
+const order = await orderModel.findOne({
+  _id: orderId,
+  userId,
+  status: "Delivered",
+}).lean();
+
+if (!order) {
+  return res.status(400).json({
+    success: false,
+    message: "Order not found or not eligible for rating",
+  });
+}
+
+const foodItemInOrder = order.items.some(item => 
+  item._id && item._id.toString() === foodId
+);
+
+if (!foodItemInOrder) {
+  return res.status(400).json({
+    success: false,
+    message: "Food item not found in this order",
+  });
+}
   
       // Find the food item
       const food = await foodModel.findById(foodId);
