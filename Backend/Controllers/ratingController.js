@@ -277,12 +277,20 @@ const checkRatingEligibility = async (req, res) => {
       });
     }
 
+    // Validate ID formats
+    if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
+      });
+    }
+
     // Check if order exists and is delivered
     const order = await orderModel.findOne({
       _id: orderId,
       userId,
-      status: "Delivered",
-    });
+      status: "Delivered"
+    }).lean();
 
     if (!order) {
       return res.status(200).json({
@@ -314,9 +322,10 @@ const checkRatingEligibility = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      canRate: true,
+      canRate: !food, // Can rate only if no existing rating
       hasExistingRating: !!food,
-      orderDelivered: true
+      orderDelivered: true,
+      reason: food ? "You've already rated this item" : "Eligible to rate"
     });
 
   } catch (error) {
@@ -328,7 +337,6 @@ const checkRatingEligibility = async (req, res) => {
     });
   }
 };
-
 export { 
   addOrUpdateRating as addRating, 
   getUserRating, 

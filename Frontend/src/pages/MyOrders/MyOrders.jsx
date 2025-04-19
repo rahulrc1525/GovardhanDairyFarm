@@ -47,37 +47,44 @@ const MyOrders = () => {
           order => order.status !== "Cancelled" && order.payment === true
         );
 
-        // Process image URLs before setting state
+        // Process image URLs and check rating eligibility
         const processedOrders = await Promise.all(filteredOrders.map(async order => {
           const itemsWithRatings = await Promise.all(order.items.map(async item => {
-            // Check if item is eligible for rating
             let canRate = false;
             let hasRated = false;
+            let reason = "";
             
             if (order.status === "Delivered") {
               const eligibility = await checkRatingEligibility(item._id, order._id);
               canRate = eligibility.canRate;
               hasRated = eligibility.hasExistingRating;
+              reason = eligibility.reason || "";
             }
 
             return {
               ...item,
               image: processImageUrl(item.image, url),
               canRate,
-              hasRated
+              hasRated,
+              reason
             };
           }));
 
           return {
             ...order,
-            items: itemsWithRatings
+            items: itemsWithRatings,
+            createdAt: new Date(order.createdAt) // Ensure proper date object
           };
         }));
 
+        // Sort orders: non-delivered first, then by date (newest first)
         const sortedOrders = processedOrders.sort((a, b) => {
-          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
+          // Non-delivered orders first
           if (a.status !== "Delivered" && b.status === "Delivered") return -1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
+          if (a.status === "Delivered" && b.status !== "Delivered") return 1;
+          
+          // Then sort by date (newest first)
+          return b.createdAt - a.createdAt;
         });
 
         setData(sortedOrders);
@@ -94,7 +101,6 @@ const MyOrders = () => {
     }
   };
 
-  // Helper function to process image URLs
   const processImageUrl = (imageUrl, baseUrl) => {
     if (!imageUrl) return 'https://via.placeholder.com/80?text=No+Image';
     
@@ -108,30 +114,28 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-  const updateFoodRatings = async (foodId) => {
-    try {
-      const response = await axios.get(`${url}/api/rating/${foodId}`);
-      if (response.data.success) {
-        setFoodRatings(prev => ({
-          ...prev,
-          [foodId]: response.data.data
-        }));
-      }
-    } catch (error) {
-      console.error("Error updating food ratings:", error);
-    }
-  };
-
   const checkRatingEligibility = async (foodId, orderId) => {
     try {
       const response = await axios.get(`${url}/api/rating/check-eligibility`, {
         params: { foodId, orderId },
         headers: { Authorization: `Bearer ${token}` }
       });
-      return response.data;
+      
+      if (response.data.success) {
+        return {
+          canRate: response.data.canRate,
+          hasExistingRating: response.data.hasExistingRating,
+          reason: response.data.reason || ""
+        };
+      }
+      return { canRate: false, hasExistingRating: false, reason: "Error checking eligibility" };
     } catch (error) {
       console.error("Error checking rating eligibility:", error);
-      return { canRate: false, hasExistingRating: false };
+      return { 
+        canRate: false, 
+        hasExistingRating: false, 
+        reason: error.response?.data?.message || "Error checking eligibility" 
+      };
     }
   };
 
@@ -152,7 +156,6 @@ const MyOrders = () => {
   };
 
   const handleRatingSuccess = async (foodId) => {
-    await updateFoodRatings(foodId);
     await fetchOrders(); // Refresh orders to update rating status
     toast.success("Rating submitted successfully!");
   };
@@ -168,6 +171,16 @@ const MyOrders = () => {
       default:
         return <FaBox className="status-icon" />;
     }
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   useEffect(() => {
@@ -201,13 +214,7 @@ const MyOrders = () => {
               <div className="order-header">
                 <div className="order-meta">
                   <span className="order-date">
-                    Ordered on {new Date(order.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    Ordered on {formatDate(order.createdAt)}
                   </span>
                   <span className={`order-status ${order.status.toLowerCase().replace(' ', '-')}`}>
                     {getOrderStatusIcon(order.status)}
@@ -260,12 +267,13 @@ const MyOrders = () => {
                             </div>
                           ) : (
                             <button
-                              className="rate-btn"
+                              className={`rate-btn ${item.canRate ? '' : 'disabled'}`}
                               onClick={() => handleRateItem(item._id, order._id)}
                               disabled={!item.canRate}
+                              title={item.reason}
                             >
                               <FaRegEdit size={14} />
-                              {item.canRate ? "Rate Item" : "Not Eligible"}
+                              {item.canRate ? "Rate Item" : item.reason || "Not Eligible"}
                             </button>
                           )}
                         </div>
@@ -297,7 +305,6 @@ const MyOrders = () => {
           onRatingSubmit={() => handleRatingSuccess(selectedFood)}
           url={url}
           token={token}
-          updateFoodRatings={updateFoodRatings}
         />
       )}
     </div>
