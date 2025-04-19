@@ -76,13 +76,12 @@ const RatingModal = ({
       
       // Call the parent's onRatingSubmit with the new data
       if (onRatingSubmit) {
-        onRatingSubmit({
-          foodId,
-          orderId,
-          rating,
-          review,
-          isUpdate: !!existingRating
-        });
+        onRatingSubmit(response.data.data); // Pass the full response data
+      }
+  
+      // Update food ratings if callback provided
+      if (updateFoodRatings) {
+        await updateFoodRatings(foodId);
       }
   
       setTimeout(() => {
