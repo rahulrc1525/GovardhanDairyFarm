@@ -12,10 +12,8 @@ import {
   FaMapMarkerAlt,
   FaRupeeSign,
   FaBox,
-  FaRegEdit,
-  FaStar
+  FaRegEdit
 } from "react-icons/fa";
-import { toast } from "react-toastify";
 
 const MyOrders = () => {
   const [data, setData] = useState([]);
@@ -25,12 +23,11 @@ const MyOrders = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [foodRatings, setFoodRatings] = useState({});
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const localToken = localStorage.getItem("token") || token;
+      const localToken = localStorage.getItem("token");
       if (!localToken) {
         navigate("/login");
         return;
@@ -47,60 +44,33 @@ const MyOrders = () => {
           order => order.status !== "Cancelled" && order.payment === true
         );
 
-        // Process image URLs and check rating eligibility
-        const processedOrders = await Promise.all(filteredOrders.map(async order => {
-          const itemsWithRatings = await Promise.all(order.items.map(async item => {
-            let canRate = false;
-            let hasRated = false;
-            let reason = "";
-            
-            if (order.status === "Delivered") {
-              const eligibility = await checkRatingEligibility(item._id, order._id);
-              canRate = eligibility.canRate;
-              hasRated = eligibility.hasExistingRating;
-              reason = eligibility.reason || "";
-            }
-
-            return {
-              ...item,
-              image: processImageUrl(item.image, url),
-              canRate,
-              hasRated,
-              reason
-            };
-          }));
-
-          return {
-            ...order,
-            items: itemsWithRatings,
-            createdAt: new Date(order.createdAt) // Ensure proper date object
-          };
+        // Process image URLs before setting state
+        const processedOrders = filteredOrders.map(order => ({
+          ...order,
+          items: order.items.map(item => ({
+            ...item,
+            image: processImageUrl(item.image, url)
+          }))
         }));
 
-        // Sort orders: non-delivered first, then by date (newest first)
         const sortedOrders = processedOrders.sort((a, b) => {
-          // Non-delivered orders first
-          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
           if (a.status === "Delivered" && b.status !== "Delivered") return 1;
-          
-          // Then sort by date (newest first)
-          return b.createdAt - a.createdAt;
+          if (a.status !== "Delivered" && b.status === "Delivered") return -1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
         setData(sortedOrders);
       }
     } catch (error) {
-      console.error("Error fetching orders:", error);
       if (error.response?.status === 401) {
         navigate("/login");
-      } else {
-        toast.error("Failed to load orders. Please try again.");
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // Helper function to process image URLs
   const processImageUrl = (imageUrl, baseUrl) => {
     if (!imageUrl) return 'https://via.placeholder.com/80?text=No+Image';
     
@@ -114,73 +84,45 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-  const checkRatingEligibility = async (foodId, orderId) => {
+  const handleRatingSubmit = async (foodId) => {
+    await fetchOrders();
+    setShowRatingModal(false);
+  };
+
+  const checkIfRated = async (foodId, orderId) => {
     try {
-      const response = await axios.get(`${url}/api/rating/check-eligibility`, {
+      const response = await axios.get(`${url}/api/rating/check`, {
         params: { foodId, orderId },
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      if (response.data.success) {
-        return {
-          canRate: response.data.canRate,
-          hasExistingRating: response.data.hasExistingRating,
-          reason: response.data.reason || ""
-        };
-      }
-      return { canRate: false, hasExistingRating: false, reason: "Error checking eligibility" };
+      return response.data.alreadyRated;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const checkRatingEligibility = async (foodId, orderId) => {
+    try {
+      const response = await axios.get(`${url}/api/rating/check/eligibility`, {
+        params: { foodId, orderId },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.canRate;
     } catch (error) {
       console.error("Error checking rating eligibility:", error);
-      return { 
-        canRate: false, 
-        hasExistingRating: false, 
-        reason: error.response?.data?.message || "Error checking eligibility" 
-      };
+      return false;
     }
   };
 
   const handleRateItem = async (foodId, orderId) => {
     try {
-      const { canRate } = await checkRatingEligibility(foodId, orderId);
-      if (!canRate) {
-        toast.warning("This item is not eligible for rating or you've already rated it");
-        return;
-      }
       setSelectedFood(foodId);
       setSelectedOrder(orderId);
       setShowRatingModal(true);
     } catch (error) {
       console.error("Error in handleRateItem:", error);
-      toast.error("Error preparing rating form");
+      alert("Error preparing rating form");
     }
-  };
-
-  const handleRatingSuccess = async (foodId) => {
-    await fetchOrders(); // Refresh orders to update rating status
-    toast.success("Rating submitted successfully!");
-  };
-
-  const getOrderStatusIcon = (status) => {
-    switch (status) {
-      case "Delivered":
-        return <FaCheckCircle className="status-icon delivered" />;
-      case "Preparing":
-        return <FaUtensils className="status-icon preparing" />;
-      case "On the way":
-        return <FaShippingFast className="status-icon on-the-way" />;
-      default:
-        return <FaBox className="status-icon" />;
-    }
-  };
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   useEffect(() => {
@@ -195,18 +137,11 @@ const MyOrders = () => {
         {loading ? (
           <div className="loading-spinner">
             <div className="spinner"></div>
-            <p>Loading your orders...</p>
           </div>
         ) : data.length === 0 ? (
           <div className="empty-orders animate">
             <FaBoxOpen size={60} style={{ opacity: 0.7, marginBottom: "1rem" }} />
             <p>You haven't placed any orders yet</p>
-            <button 
-              className="primary-btn"
-              onClick={() => navigate('/')}
-            >
-              Browse Menu
-            </button>
           </div>
         ) : (
           data.map((order) => (
@@ -214,18 +149,20 @@ const MyOrders = () => {
               <div className="order-header">
                 <div className="order-meta">
                   <span className="order-date">
-                    Ordered on {formatDate(order.createdAt)}
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </span>
-                  <span className={`order-status ${order.status.toLowerCase().replace(' ', '-')}`}>
-                    {getOrderStatusIcon(order.status)}
+                  <span className={`order-status ${order.status.toLowerCase()}`}>
+                    {order.status === "Delivered" ? (
+                      <FaCheckCircle size={16} />
+                    ) : order.status === "Preparing" ? (
+                      <FaUtensils size={16} />
+                    ) : (
+                      <FaShippingFast size={16} />
+                    )}
                     {order.status}
                   </span>
                 </div>
-                <button 
-                  className="track-btn" 
-                  onClick={fetchOrders}
-                  title="Refresh order status"
-                >
+                <button className="track-btn" onClick={fetchOrders}>
                   <FaMapMarkerAlt size={14} />
                   Track Order
                 </button>
@@ -233,7 +170,7 @@ const MyOrders = () => {
 
               <div className="order-items">
                 {order.items.map((item) => (
-                  <div key={`${order._id}-${item._id}`} className="order-item">
+                  <div key={item._id} className="order-item">
                     <div className="food-item-img-container">
                       <img
                         src={item.image}
@@ -260,22 +197,13 @@ const MyOrders = () => {
 
                       {order.status === "Delivered" && (
                         <div className="order-item-rating">
-                          {item.hasRated ? (
-                            <div className="already-rated">
-                              <FaStar className="rated-star" />
-                              <span>You've rated this item</span>
-                            </div>
-                          ) : (
-                            <button
-                              className={`rate-btn ${item.canRate ? '' : 'disabled'}`}
-                              onClick={() => handleRateItem(item._id, order._id)}
-                              disabled={!item.canRate}
-                              title={item.reason}
-                            >
-                              <FaRegEdit size={14} />
-                              {item.canRate ? "Rate Item" : item.reason || "Not Eligible"}
-                            </button>
-                          )}
+                          <button
+                            className="rate-btn"
+                            onClick={() => handleRateItem(item._id, order._id)}
+                          >
+                            <FaRegEdit size={14} />
+                            Rate Item
+                          </button>
                         </div>
                       )}
                     </div>
@@ -302,7 +230,7 @@ const MyOrders = () => {
           foodId={selectedFood}
           orderId={selectedOrder}
           onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={() => handleRatingSuccess(selectedFood)}
+          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
           url={url}
           token={token}
         />

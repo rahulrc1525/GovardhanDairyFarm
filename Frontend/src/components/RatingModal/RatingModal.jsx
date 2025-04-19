@@ -47,10 +47,10 @@ const RatingModal = ({
       setError("Please select a rating");
       return;
     }
-  
+
     setIsSubmitting(true);
     setError(null);
-  
+
     try {
       const response = await axios.post(
         `${url}/api/rating/add`,
@@ -67,24 +67,20 @@ const RatingModal = ({
           },
         }
       );
-  
+
       if (!response.data.success) {
         throw new Error(response.data.message || "Rating submission failed");
       }
-  
+
       setSuccess(true);
       
-      // Call the parent's onRatingSubmit with the new data
-      if (onRatingSubmit) {
-        onRatingSubmit(response.data.data); // Pass the full response data
-      }
-  
-      // Update food ratings if callback provided
+      // Update the food ratings in parent component
       if (updateFoodRatings) {
         await updateFoodRatings(foodId);
       }
-  
+
       setTimeout(() => {
+        onRatingSubmit(response.data.data);
         onClose();
       }, 1500);
     } catch (error) {
