@@ -18,8 +18,8 @@
 
 /* Image container styling */
 .food-item-img-container {
-    width: 100%;
-    height: 250px;
+    width: 100% !important;
+    height: 240px !important;
     overflow: hidden;
     border-radius: 10px;
 ;
