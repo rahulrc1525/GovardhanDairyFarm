@@ -34,13 +34,8 @@ connectDB();
 app.use("/images", express.static(path.join(__dirname, "Uploads")));
 
 // Logging middleware
-// Add this before your routes in server.js
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-  }
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
@@ -55,24 +50,12 @@ app.use("/api/rating", ratingRouter);
 app.post("/api/order/webhook", express.raw({ type: 'application/json' }), handleWebhookEvent);
 
 // Error handling middleware
-// Replace your existing error handler with this:
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', {
-    message: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    body: req.body,
-    headers: req.headers
-  });
-
+  console.error(err.stack);
   res.status(500).json({ 
     success: false, 
     message: "Internal Server Error",
-    error: process.env.NODE_ENV === 'development' ? {
-      message: err.message,
-      stack: err.stack
-    } : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 

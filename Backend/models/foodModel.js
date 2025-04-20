@@ -46,10 +46,6 @@ const foodSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
-  isRecommended: {
-    type: Boolean,
-    default: false
-  },
   ratings: [{
     userId: { 
       type: mongoose.Schema.Types.ObjectId, 
@@ -77,10 +73,6 @@ const foodSchema = new mongoose.Schema({
       type: Date, 
       default: Date.now,
       immutable: true
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now
     }
   }],
   averageRating: { 
@@ -99,7 +91,6 @@ const foodSchema = new mongoose.Schema({
 foodSchema.index({ averageRating: -1 });
 foodSchema.index({ 'ratings.userId': 1 });
 foodSchema.index({ 'ratings.orderId': 1 });
-foodSchema.index({ isRecommended: 1 });
 
 // Calculate average rating before saving
 foodSchema.pre('save', function(next) {
@@ -120,5 +111,3 @@ foodSchema.virtual('ratingCount').get(function() {
 const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
 
 export default foodModel;
-
-//113
