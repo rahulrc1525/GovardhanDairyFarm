@@ -26,13 +26,16 @@ const RatingModal = ({
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        if (response.data.success && response.data.data) {
+        if (response.data.success) {
           setExistingRating(response.data.data);
-          setRating(response.data.data.rating);
-          setReview(response.data.data.review || '');
+          if (response.data.data) {
+            setRating(response.data.data.rating);
+            setReview(response.data.data.review || '');
+          }
         }
       } catch (error) {
         console.error("Error fetching user rating:", error);
+        setError("Failed to load rating data");
       }
     };
 
@@ -67,15 +70,15 @@ const RatingModal = ({
         }
       );
 
-      if (!response.data.success) {
+      if (response.data.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          onRatingSubmit();
+          onClose();
+        }, 1500);
+      } else {
         throw new Error(response.data.message || "Rating submission failed");
       }
-
-      setSuccess(true);
-      setTimeout(() => {
-        onRatingSubmit();
-        onClose();
-      }, 1500);
     } catch (error) {
       console.error("Rating submission error:", error);
       setError(
@@ -128,16 +131,8 @@ const RatingModal = ({
               ))}
             </div>
             
-            <div className="rating-labels">
-              <span>Poor</span>
-              <span>Fair</span>
-              <span>Good</span>
-              <span>Very Good</span>
-              <span>Excellent</span>
-            </div>
-            
             <div className="review-section">
-              <label htmlFor="review">Your Review:</label>
+              <label htmlFor="review">Your Review (optional):</label>
               <textarea
                 id="review"
                 value={review}
@@ -151,13 +146,6 @@ const RatingModal = ({
             {error && (
               <div className="error-message">
                 <p>{error}</p>
-                <button 
-                  onClick={() => setError(null)} 
-                  className="retry-button"
-                  disabled={isSubmitting}
-                >
-                  Try Again
-                </button>
               </div>
             )}
             
