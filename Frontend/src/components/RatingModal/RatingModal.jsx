@@ -8,8 +8,7 @@ const RatingModal = ({
   onClose, 
   onRatingSubmit, 
   url, 
-  token,
-  updateFoodRatings 
+  token
 }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -37,7 +36,9 @@ const RatingModal = ({
       }
     };
 
-    fetchUserRating();
+    if (foodId && orderId && token) {
+      fetchUserRating();
+    }
   }, [foodId, orderId, token, url]);
 
   const handleSubmit = async (e) => {
@@ -73,15 +74,8 @@ const RatingModal = ({
       }
 
       setSuccess(true);
-      
-      // Update the food ratings in parent component
-      if (updateFoodRatings) {
-        await updateFoodRatings(foodId);
-      }
-
       setTimeout(() => {
-        onRatingSubmit(response.data.data);
-        onClose();
+        onRatingSubmit();
       }, 1500);
     } catch (error) {
       console.error("Rating submission error:", error);
