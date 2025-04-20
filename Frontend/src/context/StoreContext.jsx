@@ -147,26 +147,20 @@ const StoreContextProvider = ({ children }) => {
 
   const fetchFoodRatings = async (foodId) => {
     try {
-      const response = await axios.get(`${url}/api/rating/${foodId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const response = await axios.get(`${url}/api/rating/${foodId}`);
       if (response.data.success) {
-        setFoodRatings((prev) => ({
+        setFoodRatings(prev => ({
           ...prev,
-          [foodId]: response.data.data,
+          [foodId]: response.data.data
         }));
       }
     } catch (error) {
-      console.error("Error fetching ratings:", error);
+      console.error("Error fetching food ratings:", error);
     }
   };
-
-  const updateFoodRatings = (foodId, newRatingData) => {
-    setFoodRatings((prev) => ({
-      ...prev,
-      [foodId]: newRatingData,
-    }));
+  
+  const updateFoodRatings = async (foodId) => {
+    await fetchFoodRatings(foodId);
   };
 
   return (

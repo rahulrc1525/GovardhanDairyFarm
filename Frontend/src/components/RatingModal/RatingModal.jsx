@@ -8,8 +8,7 @@ const RatingModal = ({
   onClose, 
   onRatingSubmit, 
   url, 
-  token,
-  updateFoodRatings 
+  token
 }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -18,6 +17,7 @@ const RatingModal = ({
   const [success, setSuccess] = useState(false);
   const [review, setReview] = useState('');
   const [existingRating, setExistingRating] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserRating = async () => {
@@ -28,16 +28,23 @@ const RatingModal = ({
         });
 
         if (response.data.success && response.data.data) {
-          setExistingRating(response.data.data);
-          setRating(response.data.data.rating);
-          setReview(response.data.data.review || '');
+          setExistingRating(response.data.data.rating);
+          setRating(response.data.data.rating.rating || 0);
+          setReview(response.data.data.rating.review || '');
         }
       } catch (error) {
         console.error("Error fetching user rating:", error);
+        setError("Failed to load rating data");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUserRating();
+    if (foodId && orderId && token) {
+      fetchUserRating();
+    } else {
+      setLoading(false);
+    }
   }, [foodId, orderId, token, url]);
 
   const handleSubmit = async (e) => {
@@ -74,11 +81,7 @@ const RatingModal = ({
 
       setSuccess(true);
       
-      // Update the food ratings in parent component
-      if (updateFoodRatings) {
-        await updateFoodRatings(foodId);
-      }
-
+      // Call the onRatingSubmit callback after a delay
       setTimeout(() => {
         onRatingSubmit(response.data.data);
         onClose();
@@ -94,6 +97,17 @@ const RatingModal = ({
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="rating-modal-overlay">
+        <div className="rating-modal">
+          <div className="loading-spinner"></div>
+          <p>Loading rating data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rating-modal-overlay">
@@ -144,7 +158,7 @@ const RatingModal = ({
             </div>
             
             <div className="review-section">
-              <label htmlFor="review">Your Review:</label>
+              <label htmlFor="review">Your Review (optional):</label>
               <textarea
                 id="review"
                 value={review}

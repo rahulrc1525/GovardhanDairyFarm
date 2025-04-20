@@ -112,18 +112,59 @@ const updateClicks = async (req, res) => {
 
 const getRecommendedFood = async (req, res) => {
   try {
-    const foodItems = await foodModel.find();
-    const recommendedFood = foodItems
-      .map((item) => {
-        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
-        return { ...item.toObject(), score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-    res.json({ success: true, data: recommendedFood });
+    // Get top-rated foods (averageRating >= 4) with at least 5 ratings
+    const recommendedFood = await foodModel.aggregate([
+      {
+        $match: {
+          averageRating: { $gte: 4 },
+          $expr: { $gte: [{ $size: "$ratings" }, 5] }
+        }
+      },
+      { $sort: { averageRating: -1, clicks: -1 } },
+      { $limit: 8 },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          price: 1,
+          image: 1,
+          averageRating: 1,
+          ratingCount: { $size: "$ratings" }
+        }
+      }
+    ]);
+
+    // If we don't have enough highly rated items, supplement with most popular
+    if (recommendedFood.length < 8) {
+      const popularFood = await foodModel.aggregate([
+        { $sort: { clicks: -1 } },
+        { $limit: 8 - recommendedFood.length },
+        {
+          $project: {
+            name: 1,
+            description: 1,
+            price: 1,
+            image: 1,
+            averageRating: 1,
+            ratingCount: { $size: "$ratings" }
+          }
+        }
+      ]);
+      recommendedFood.push(...popularFood);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Recommended food items fetched successfully",
+      data: recommendedFood
+    });
   } catch (error) {
-    console.error("Error getting recommended food:", error);
-    res.status(500).json({ success: false, message: "Error getting recommended food" });
+    console.error("Error fetching recommended food:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching recommended food",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
