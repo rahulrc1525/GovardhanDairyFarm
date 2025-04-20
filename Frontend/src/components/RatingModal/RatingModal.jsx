@@ -8,8 +8,7 @@ const RatingModal = ({
   onClose, 
   onRatingSubmit, 
   url, 
-  token,
-  updateFoodRatings 
+  token
 }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -73,14 +72,8 @@ const RatingModal = ({
       }
 
       setSuccess(true);
-      
-      // Update the food ratings in parent component
-      if (updateFoodRatings) {
-        await updateFoodRatings(foodId);
-      }
-
       setTimeout(() => {
-        onRatingSubmit(response.data.data);
+        onRatingSubmit();
         onClose();
       }, 1500);
     } catch (error) {

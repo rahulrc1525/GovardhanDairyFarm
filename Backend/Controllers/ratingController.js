@@ -2,11 +2,6 @@ import foodModel from "../models/foodModel.js";
 import orderModel from "../models/orderModel.js";
 import mongoose from "mongoose";
 
-/**
- * @desc    Add or update a rating for a food item from an order
- * @route   POST /api/rating/add
- * @access  Private
- */
 const addOrUpdateRating = async (req, res) => {
     try {
       const { foodId, orderId, rating, review = "" } = req.body;
@@ -60,8 +55,7 @@ const addOrUpdateRating = async (req, res) => {
   
       // Verify food item exists in the order
       const foodItemInOrder = order.items.some(item => 
-        item._id.toString() === foodId || 
-        (item._id && item._id.toString() === foodId)
+        item._id.toString() === foodId
       );
   
       if (!foodItemInOrder) {
@@ -133,20 +127,13 @@ const addOrUpdateRating = async (req, res) => {
         } : undefined
       });
     }
-  };
-  
+};
 
-/**
- * @desc    Get a user's specific rating for a food item from an order
- * @route   GET /api/rating/user-rating
- * @access  Private
- */
 const getUserRating = async (req, res) => {
     try {
         const { foodId, orderId } = req.query;
         const userId = req.user.id;
 
-        // Validate required fields
         if (!foodId || !orderId) {
             return res.status(400).json({
                 success: false,
@@ -154,7 +141,6 @@ const getUserRating = async (req, res) => {
             });
         }
 
-        // Validate ID formats
         if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
             return res.status(400).json({
                 success: false,
@@ -162,7 +148,6 @@ const getUserRating = async (req, res) => {
             });
         }
 
-        // Find the food item
         const food = await foodModel.findById(foodId).select('ratings name');
 
         if (!food) {
@@ -172,7 +157,6 @@ const getUserRating = async (req, res) => {
             });
         }
 
-        // Find the user's rating
         const userRating = food.ratings.find(
             r => r.userId.toString() === userId && r.orderId.toString() === orderId
         );
@@ -203,16 +187,10 @@ const getUserRating = async (req, res) => {
     }
 };
 
-/**
- * @desc    Get all ratings for a specific food item
- * @route   GET /api/rating/:foodId
- * @access  Public
- */
 const getFoodRatings = async (req, res) => {
     try {
         const { foodId } = req.params;
 
-        // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(foodId)) {
             return res.status(400).json({
                 success: false,
@@ -220,7 +198,6 @@ const getFoodRatings = async (req, res) => {
             });
         }
 
-        // Find the food item with populated ratings
         const food = await foodModel.findById(foodId)
             .populate("ratings.userId", "name email avatar")
             .populate("ratings.orderId", "createdAt")
@@ -233,7 +210,6 @@ const getFoodRatings = async (req, res) => {
             });
         }
 
-        // Sort ratings by date (newest first)
         const sortedRatings = food.ratings.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
@@ -259,17 +235,11 @@ const getFoodRatings = async (req, res) => {
     }
 };
 
-/**
- * @desc    Check if a user can rate a food item from an order
- * @route   GET /api/rating/check-eligibility
- * @access  Private
- */
 const checkRatingEligibility = async (req, res) => {
     try {
         const { foodId, orderId } = req.query;
         const userId = req.user.id;
 
-        // Validate required fields
         if (!foodId || !orderId) {
             return res.status(400).json({
                 success: false,
@@ -306,7 +276,7 @@ const checkRatingEligibility = async (req, res) => {
         }
 
         // Check if rating already exists
-        const food = await foodModel.findOne({
+        const existingRating = await foodModel.findOne({
             _id: foodId,
             'ratings.userId': userId,
             'ratings.orderId': orderId
@@ -315,8 +285,7 @@ const checkRatingEligibility = async (req, res) => {
         return res.status(200).json({
             success: true,
             canRate: true,
-            hasExistingRating: !!food,
-            orderDelivered: true
+            hasExistingRating: !!existingRating
         });
 
     } catch (error) {
