@@ -7,12 +7,11 @@ import userRouter from "./Routes/userRoute.js";
 import cartRouter from "./Routes/cartRoute.js";
 import contactRouter from "./Routes/contactRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
+import { handleWebhookEvent } from "./Controllers/orderController.js";
 import salesRouter from "./Routes/salesRoute.js";
 import path from "path";
 import ratingRouter from "./Routes/ratingRoute.js";
 import { fileURLToPath } from 'url';
-import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
 
 dotenv.config();
 
@@ -23,29 +22,16 @@ const port = process.env.PORT || 4000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Security middleware
-app.use(helmet());
-app.use(cors({ 
-  origin: process.env.FRONTEND_URL || "*",
-  credentials: true 
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-
-// Body parsers
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: "*" }));
 
 // Connect to the database
 connectDB();
 
 // Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "Uploads")));
+app.use("/images", express.static(path.join(__dirname, "Uploads")));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -61,6 +47,7 @@ app.use("/api/contact", contactRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/rating", ratingRouter);
+app.post("/api/order/webhook", express.raw({ type: 'application/json' }), handleWebhookEvent);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -77,16 +64,7 @@ app.get("/", (req, res) => {
   res.json({ 
     success: true,
     message: "API is working",
-    timestamp: new Date(),
-    version: process.env.npm_package_version
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Endpoint not found"
+    timestamp: new Date() 
   });
 });
 

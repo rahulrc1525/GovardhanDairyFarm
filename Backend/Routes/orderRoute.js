@@ -1,29 +1,24 @@
 import express from "express";
 import authMiddleware from "../middleware/auth.js";
-import adminMiddleware from "../middleware/admin.js";
-import { 
-  placeOrder, 
-  verifyOrder, 
-  userOrders, 
-  listOrders, 
-  updateStatus,
-  deleteOrder,
-  handleWebhookEvent
-} from "../Controllers/orderController.js";
+import { placeOrder, verifyOrder, userOrders, listOrders, updateStatus,deleteOrder  } from "../Controllers/orderController.js";
 
 const orderRouter = express.Router();
 
-// User routes
 orderRouter.post("/place", authMiddleware, placeOrder);
 orderRouter.post("/verify", verifyOrder);
-orderRouter.get("/user", authMiddleware, userOrders); // Changed from POST to GET
+orderRouter.post("/userOrders", authMiddleware, userOrders);
+orderRouter.get("/list", listOrders);
+orderRouter.post("/status", updateStatus);
 orderRouter.post("/delete", authMiddleware, deleteOrder);
 
-// Admin routes
-orderRouter.get("/list", authMiddleware, adminMiddleware, listOrders);
-orderRouter.post("/status", authMiddleware, adminMiddleware, updateStatus);
+// Ensure only admins can list all orders
+orderRouter.post("/listOrders", authMiddleware, async (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Unauthorized" });
+  }
+  next();
+}, listOrders);
 
-// Webhook (no auth needed)
-orderRouter.post("/webhook", express.raw({ type: 'application/json' }), handleWebhookEvent);
+orderRouter.post("/updateStatus", authMiddleware, updateStatus);
 
 export default orderRouter;
