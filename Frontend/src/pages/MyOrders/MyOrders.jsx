@@ -33,8 +33,9 @@ const MyOrders = () => {
         return;
       }
 
-      const response = await axios.get(
+      const response = await axios.post(
         `${url}/api/order/userOrders`,
+        {},
         { headers: { Authorization: `Bearer ${localToken}` } }
       );
 
@@ -75,15 +76,20 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-  const handleRatingSubmit = async () => {
+  const handleRatingSubmit = async (foodId) => {
     await fetchOrders();
     setShowRatingModal(false);
   };
 
-  const handleRateItem = (foodId, orderId) => {
-    setSelectedFood(foodId);
-    setSelectedOrder(orderId);
-    setShowRatingModal(true);
+  const handleRateItem = async (foodId, orderId) => {
+    try {
+      setSelectedFood(foodId);
+      setSelectedOrder(orderId);
+      setShowRatingModal(true);
+    } catch (error) {
+      console.error("Error in handleRateItem:", error);
+      alert("Error preparing rating form");
+    }
   };
 
   useEffect(() => {
@@ -191,7 +197,7 @@ const MyOrders = () => {
           foodId={selectedFood}
           orderId={selectedOrder}
           onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={handleRatingSubmit}
+          onRatingSubmit={() => handleRatingSubmit(selectedFood)}
           url={url}
           token={token}
         />

@@ -49,7 +49,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       });
       
       if (response.data.success) {
-        setUserCanRate(response.data.canRate);
+        setUserCanRate(response.data.canRate && !response.data.hasExistingRating);
       }
     } catch (error) {
       console.error("Rating eligibility check failed:", error);
@@ -59,8 +59,8 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     }
   };
 
-  const handleRatingSubmit = async () => {
-    await fetchFoodRatings(id);
+  const handleRatingSubmit = (newRatingData) => {
+    updateFoodRatings(id, newRatingData);
     setShowRatingModal(false);
   };
 
@@ -170,6 +170,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           orderId={orderId}
           onClose={() => setShowRatingModal(false)}
           onRatingSubmit={handleRatingSubmit}
+          updateFoodRatings={updateFoodRatings}
           url={url}
           token={token}
         />
