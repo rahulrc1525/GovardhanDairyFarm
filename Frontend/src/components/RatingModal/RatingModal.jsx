@@ -54,45 +54,54 @@ const RatingModal = ({
       setError("Please select a rating");
       return;
     }
-
+  
     setIsSubmitting(true);
     setError(null);
-
+  
     try {
       const response = await axios.post(
         `${url}/api/rating/add`,
         {
           foodId,
           orderId,
-          rating,
-          review,
+          rating: Number(rating), // Ensure rating is a number
+          review: review.trim(), // Clean up review text
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          timeout: 10000, // Add timeout
         }
       );
-
+  
       if (!response.data.success) {
         throw new Error(response.data.message || "Rating submission failed");
       }
-
+  
       setSuccess(true);
       
-      // Call the onRatingSubmit callback after a delay
       setTimeout(() => {
         onRatingSubmit(response.data.data);
         onClose();
       }, 1500);
     } catch (error) {
-      console.error("Rating submission error:", error);
-      setError(
-        error.response?.data?.message || 
-        error.message || 
-        "Failed to submit rating. Please try again."
-      );
+      console.error("Full error details:", error);
+      console.error("Error response data:", error.response?.data);
+      
+      let errorMessage = "Failed to submit rating. Please try again.";
+      if (error.response) {
+        // Server responded with error status
+        errorMessage = error.response.data?.message || 
+                      error.response.statusText || 
+                      `Server error (${error.response.status})`;
+      } else if (error.request) {
+        // Request was made but no response received
+        errorMessage = "No response from server. Please check your connection.";
+      }
+  
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

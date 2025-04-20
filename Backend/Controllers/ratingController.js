@@ -7,17 +7,20 @@ const addOrUpdateRating = async (req, res) => {
   session.startTransaction();
   
   try {
-    const { foodId, orderId, rating, review = "" } = req.body;
-    const userId = req.user.id;
-
     // Validate required fields
-    if (!foodId || !orderId || rating === undefined) {
+    const requiredFields = ['foodId', 'orderId', 'rating'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: foodId, orderId, and rating are required",
+        message: `Missing required fields: ${missingFields.join(', ')}`,
       });
     }
+
+    const { foodId, orderId, rating, review = "" } = req.body;
+    const userId = req.user.id;
 
     // Validate ID formats
     if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
@@ -25,24 +28,21 @@ const addOrUpdateRating = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid ID format",
+        details: {
+          foodIdValid: mongoose.Types.ObjectId.isValid(foodId),
+          orderIdValid: mongoose.Types.ObjectId.isValid(orderId)
+        }
       });
     }
 
-    // Validate rating range
-    if (isNaN(rating) || rating < 1 || rating > 5) {
+    // Validate rating is a number between 1-5
+    const numericRating = Number(rating);
+    if (isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
-        message: "Rating must be between 1 and 5",
-      });
-    }
-
-    // Validate review length
-    if (review.length > 500) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Review cannot exceed 500 characters",
+        message: "Rating must be a number between 1 and 5",
+        received: rating
       });
     }
 
@@ -58,13 +58,17 @@ const addOrUpdateRating = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Order not found or not eligible for rating",
+        details: {
+          orderExists: !!order,
+          status: order?.status,
+          userMatch: order?.userId?.toString() === userId
+        }
       });
     }
 
     // Verify food item exists in the order
     const foodItemInOrder = order.items.some(item => 
-      item._id.toString() === foodId || 
-      (item._id && item._id.toString() === foodId)
+      item._id.toString() === foodId
     );
 
     if (!foodItemInOrder) {
@@ -72,6 +76,8 @@ const addOrUpdateRating = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Food item not found in this order",
+        orderItems: order.items.map(i => i._id.toString()),
+        requestedFoodId: foodId
       });
     }
 
@@ -94,7 +100,7 @@ const addOrUpdateRating = async (req, res) => {
     const ratingData = {
       userId,
       orderId,
-      rating,
+      rating: numericRating,
       review: review.trim(),
       createdAt: existingRatingIndex === -1 ? new Date() : food.ratings[existingRatingIndex].createdAt,
       updatedAt: new Date()
@@ -130,7 +136,13 @@ const addOrUpdateRating = async (req, res) => {
 
   } catch (error) {
     await session.abortTransaction();
-    console.error("Error in addOrUpdateRating:", error);
+    console.error("Detailed error in addOrUpdateRating:", {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user
+    });
+    
     return res.status(500).json({
       success: false,
       message: "Internal server error",
