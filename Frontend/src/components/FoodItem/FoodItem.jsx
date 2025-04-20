@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { StoreContext } from '../../context/StoreContext';
 import './FoodItem.css';
 import RatingModal from '../RatingModal/RatingModal';
-import { assets } from '../../assets/assets';
+import { assests } from './../../assests/assests';
 
 const FoodItem = ({ id, name, price, description, image, orderId, showRating = true }) => {
   const { 
@@ -100,7 +100,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = assets.placeholder_image;
+            e.target.src = assests.placeholder_image;
           }}
         />
       </div>
@@ -114,13 +114,13 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           <p className="food-item-price">₹{price}</p>
           <div className="food-item-action">
             <img
-              src={assets.remove_icon_red}
+              src={assests.remove_icon_red}
               alt="Remove"
               onClick={handleDecrease}
             />
             <span>{quantity}</span>
             <img
-              src={assets.add_icon_green}
+              src={assests.add_icon_green}
               alt="Add"
               onClick={handleIncrease}
             />
