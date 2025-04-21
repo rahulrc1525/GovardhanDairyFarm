@@ -135,12 +135,7 @@ const addOrUpdateRating = async (req, res) => {
 
 // ... (keep your other controller methods the same)
 
-export { 
-  addOrUpdateRating as addRating, 
-  getUserRating, 
-  getFoodRatings, 
-  checkRatingEligibility 
-};
+
   
 
 /**
