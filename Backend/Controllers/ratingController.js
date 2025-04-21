@@ -294,7 +294,7 @@ const checkRatingEligibility = async (req, res) => {
 
         // Check if food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id.toString() === foodId
+          (item._id?.toString() === foodId)
         );
 
         if (!foodItemInOrder) {
