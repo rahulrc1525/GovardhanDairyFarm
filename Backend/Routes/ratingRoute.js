@@ -2,9 +2,7 @@ import express from "express";
 import { 
   addRating, 
   getFoodRatings, 
-  getUserRating ,
-  checkRatingEligibility
-
+  getUserRating 
 } from "../Controllers/ratingController.js";
 import authMiddleware from "../middleware/auth.js";
 
@@ -15,8 +13,6 @@ router.post("/add", authMiddleware, addRating);
 
 // Get user's specific rating for a food item from an order
 router.get("/user-rating", authMiddleware, getUserRating);
-
-router.get("/check-eligibility", authMiddleware, checkRatingEligibility);
 
 // Get all ratings for a food item
 router.get("/:foodId", getFoodRatings);
