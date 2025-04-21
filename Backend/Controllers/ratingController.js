@@ -2,138 +2,145 @@ import foodModel from "../models/foodModel.js";
 import orderModel from "../models/orderModel.js";
 import mongoose from "mongoose";
 
-/**
- * @desc    Add or update a rating for a food item from an order
- * @route   POST /api/rating/add
- * @access  Private
- */
 const addOrUpdateRating = async (req, res) => {
-    try {
-      const { foodId, orderId, rating, review = "" } = req.body;
-      const userId = req.user.id;
+  const session = await mongoose.startSession();
+  session.startTransaction();
   
-      // Validate required fields
-      if (!foodId || !orderId || rating === undefined) {
-        return res.status(400).json({
-          success: false,
-          message: "Missing required fields: foodId, orderId, and rating are required",
-        });
-      }
-  
-      // Validate ID formats
-      if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid ID format",
-        });
-      }
-  
-      // Validate rating range
-      if (isNaN(rating) || rating < 1 || rating > 5) {
-        return res.status(400).json({
-          success: false,
-          message: "Rating must be between 1 and 5",
-        });
-      }
-  
-      // Validate review length
-      if (review.length > 500) {
-        return res.status(400).json({
-          success: false,
-          message: "Review cannot exceed 500 characters",
-        });
-      }
-  
-      // Check if order exists and is delivered
-      const order = await orderModel.findOne({
-        _id: orderId,
-        userId,
-        status: "Delivered",
-      });
-  
-      if (!order) {
-        return res.status(400).json({
-          success: false,
-          message: "Order not found or not eligible for rating",
-        });
-      }
-  
-      // Verify food item exists in the order
-      const foodItemInOrder = order.items.some(item => 
-        item._id.toString() === foodId || 
-        (item._id && item._id.toString() === foodId)
-      );
-  
-      if (!foodItemInOrder) {
-        return res.status(400).json({
-          success: false,
-          message: "Food item not found in this order",
-        });
-      }
-  
-      // Find the food item
-      const food = await foodModel.findById(foodId);
-      if (!food) {
-        return res.status(404).json({
-          success: false,
-          message: "Food item not found",
-        });
-      }
-  
-      // Check for existing rating
-      const existingRatingIndex = food.ratings.findIndex(
-        r => r.userId.toString() === userId && r.orderId.toString() === orderId
-      );
-  
-      // Prepare rating data
-      const ratingData = {
-        userId,
-        orderId,
-        rating,
-        review: review.trim(),
-        createdAt: existingRatingIndex === -1 ? new Date() : food.ratings[existingRatingIndex].createdAt,
-        updatedAt: new Date()
-      };
-  
-      // Update or add rating
-      if (existingRatingIndex === -1) {
-        food.ratings.push(ratingData);
-      } else {
-        food.ratings[existingRatingIndex] = ratingData;
-      }
-  
-      // Recalculate average rating
-      const totalRatings = food.ratings.length;
-      const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
-      food.averageRating = parseFloat((sumRatings / totalRatings).toFixed(1));
-  
-      await food.save();
-  
-      return res.status(200).json({
-        success: true,
-        message: existingRatingIndex === -1 ? "Rating submitted successfully" : "Rating updated successfully",
-        data: {
-          foodId: food._id,
-          foodName: food.name,
-          averageRating: food.averageRating,
-          totalRatings: food.ratings.length,
-          userRating: ratingData,
-          isUpdate: existingRatingIndex !== -1
-        },
-      });
-  
-    } catch (error) {
-      console.error("Error in addOrUpdateRating:", error);
-      return res.status(500).json({
+  try {
+    const { foodId, orderId, rating, review = "" } = req.body;
+    const userId = req.user.id;
+
+    // Basic validation
+    if (!foodId || !orderId || !rating) {
+      await session.abortTransaction();
+      return res.status(400).json({
         success: false,
-        message: "Internal server error",
-        error: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          stack: error.stack
-        } : undefined
+        message: "Food ID, Order ID, and Rating are required"
       });
     }
-  };
+
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(foodId) || 
+        !mongoose.Types.ObjectId.isValid(orderId)) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format"
+      });
+    }
+
+    // Validate rating
+    if (rating < 1 || rating > 5) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5"
+      });
+    }
+
+    // Check if order exists and is delivered
+    const order = await orderModel.findOne({
+      _id: orderId,
+      userId,
+      status: "Delivered"
+    }).session(session);
+
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Order not found or not eligible for rating"
+      });
+    }
+
+    // Check if food exists in order
+    const foodInOrder = order.items.some(item => 
+      item._id && item._id.toString() === foodId
+    );
+
+    if (!foodInOrder) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Food item not found in this order"
+      });
+    }
+
+    // Find the food item
+    const food = await foodModel.findById(foodId).session(session);
+    if (!food) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Food item not found"
+      });
+    }
+
+    // Check for existing rating
+    const existingRatingIndex = food.ratings.findIndex(
+      r => r.userId.toString() === userId && r.orderId.toString() === orderId
+    );
+
+    // Prepare rating data
+    const ratingData = {
+      userId,
+      orderId,
+      rating,
+      review: review.trim(),
+      updatedAt: new Date()
+    };
+
+    // Update or add rating
+    if (existingRatingIndex === -1) {
+      ratingData.createdAt = new Date();
+      food.ratings.push(ratingData);
+    } else {
+      ratingData.createdAt = food.ratings[existingRatingIndex].createdAt;
+      food.ratings[existingRatingIndex] = ratingData;
+    }
+
+    // Calculate new average
+    const totalRatings = food.ratings.length;
+    const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
+    food.averageRating = sumRatings / totalRatings;
+
+    // Save changes
+    await food.save({ session });
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: existingRatingIndex === -1 ? "Rating submitted" : "Rating updated",
+      data: {
+        foodId: food._id,
+        foodName: food.name,
+        averageRating: food.averageRating,
+        totalRatings: totalRatings,
+        userRating: ratingData
+      }
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Rating error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+// ... (keep your other controller methods the same)
+
+export { 
+  addOrUpdateRating as addRating, 
+  getUserRating, 
+  getFoodRatings, 
+  checkRatingEligibility 
+};
   
 
 /**

@@ -54,7 +54,6 @@ const foodSchema = new mongoose.Schema({
     },
     orderId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Order', 
       required: true 
     },
     rating: { 
@@ -73,13 +72,20 @@ const foodSchema = new mongoose.Schema({
       type: Date, 
       default: Date.now,
       immutable: true
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now
     }
   }],
   averageRating: { 
     type: Number, 
     default: 0,
     min: 0,
-    max: 5
+    max: 5,
+    set: function(v) {
+      return parseFloat(v.toFixed(1));
+    }
   }
 }, {
   timestamps: true,
@@ -87,16 +93,16 @@ const foodSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for better performance
+// Indexes
 foodSchema.index({ averageRating: -1 });
 foodSchema.index({ 'ratings.userId': 1 });
 foodSchema.index({ 'ratings.orderId': 1 });
 
 // Calculate average rating before saving
 foodSchema.pre('save', function(next) {
-  if (this.ratings.length > 0) {
+  if (this.ratings && this.ratings.length > 0) {
     const sum = this.ratings.reduce((total, rating) => total + rating.rating, 0);
-    this.averageRating = parseFloat((sum / this.ratings.length).toFixed(1));
+    this.averageRating = sum / this.ratings.length;
   } else {
     this.averageRating = 0;
   }
@@ -105,7 +111,7 @@ foodSchema.pre('save', function(next) {
 
 // Virtual for rating count
 foodSchema.virtual('ratingCount').get(function() {
-  return this.ratings.length;
+  return this.ratings ? this.ratings.length : 0;
 });
 
 const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
