@@ -110,4 +110,4 @@ foodSchema.virtual('ratingCount').get(function() {
 
 const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
 
-export default foodModel;
+export default foodModel; 

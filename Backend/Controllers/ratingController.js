@@ -334,4 +334,4 @@ export {
     getUserRating, 
     getFoodRatings, 
     checkRatingEligibility 
-};
+}; 
