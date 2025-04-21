@@ -22,7 +22,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const [userCanRate, setUserCanRate] = useState(false);
   const [loadingRating, setLoadingRating] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [ratingError, setRatingError] = useState(null);
 
   const ratingData = foodRatings[id] || {};
   const averageRating = ratingData.averageRating || 0;
@@ -43,7 +42,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const checkRatingEligibility = async () => {
     try {
       setLoadingRating(true);
-      setRatingError(null);
       
       const response = await axios.get(`${url}/api/rating/check-eligibility`, {
         params: { foodId: id, orderId },
@@ -52,29 +50,18 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       
       if (response.data.success) {
         setUserCanRate(response.data.canRate && !response.data.hasExistingRating);
-      } else {
-        setRatingError(response.data.message || "Unable to check rating eligibility");
       }
     } catch (error) {
       console.error("Rating eligibility check failed:", error);
-      setRatingError(error.response?.data?.message || "Failed to check rating eligibility");
       setUserCanRate(false);
     } finally {
       setLoadingRating(false);
     }
   };
 
-  const handleRatingSubmit = async (newRatingData) => {
-    try {
-      await updateFoodRatings(id, newRatingData);
-      setShowRatingModal(false);
-      // Re-check eligibility in case this was the first rating
-      if (orderId && token) {
-        await checkRatingEligibility();
-      }
-    } catch (error) {
-      console.error("Error handling rating submission:", error);
-    }
+  const handleRatingSubmit = (newRatingData) => {
+    updateFoodRatings(id, newRatingData);
+    setShowRatingModal(false);
   };
 
   const renderStars = () => {
@@ -141,10 +128,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           src={image} 
           alt={name}
           onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = 'https://via.placeholder.com/150?text=No+Image';
-          }}
         />
         {!imageLoaded && <div className="image-placeholder"></div>}
       </div>
@@ -170,21 +153,14 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
             />
           </div>
         </div>
-        {showRating && orderId && token && (
-          <>
-            {loadingRating ? (
-              <div className="rating-check-loading">Checking...</div>
-            ) : userCanRate ? (
-              <button 
-                className="rate-button"
-                onClick={() => setShowRatingModal(true)}
-              >
-                Rate this item
-              </button>
-            ) : ratingError ? (
-              <div className="rating-error">{ratingError}</div>
-            ) : null}
-          </>
+        {userCanRate && (
+          <button 
+            className="rate-button"
+            onClick={() => setShowRatingModal(true)}
+            disabled={loadingRating}
+          >
+            {loadingRating ? "Checking..." : "Rate this item"}
+          </button>
         )}
       </div>
 
@@ -194,6 +170,7 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           orderId={orderId}
           onClose={() => setShowRatingModal(false)}
           onRatingSubmit={handleRatingSubmit}
+          updateFoodRatings={updateFoodRatings}
           url={url}
           token={token}
         />
