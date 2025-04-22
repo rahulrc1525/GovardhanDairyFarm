@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import { StoreContext } from '../../context/StoreContext';
 import './FoodItem.css';
 import RatingModal from '../RatingModal/RatingModal';
@@ -11,12 +12,15 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     token, 
     cart, 
     url,
-    foodRatings
+    fetchFoodRatings,
+    foodRatings,
+    updateFoodRatings
   } = useContext(StoreContext);
   
   const [quantity, setQuantity] = useState(cart[id] || 0);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [userCanRate, setUserCanRate] = useState(false);
+  const [loadingRating, setLoadingRating] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const ratingData = foodRatings[id] || {};
@@ -24,40 +28,68 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const totalRatings = ratingData.totalRatings || 0;
 
   useEffect(() => {
-    if (orderId && token && showRating) {
-      checkRatingEligibility();
+    if (showRating) {
+      if (!ratingData.ratings) {
+        fetchFoodRatings(id);
+      }
+      
+      if (orderId && token) {
+        checkRatingEligibility();
+      }
     }
-  }, [orderId, token, showRating]);
+  }, [id, token, orderId, showRating, ratingData.ratings]);
 
   const checkRatingEligibility = async () => {
     try {
-      const response = await fetch(`${url}/api/order/userOrders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await response.json();
+      setLoadingRating(true);
       
-      if (data.success) {
-        const order = data.data.find(o => o._id === orderId);
-        if (order?.status === "Delivered") {
-          setUserCanRate(true);
-        }
+      const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const order = orderResponse.data.data.find(o => o._id === orderId);
+      
+      if (order?.status === "Delivered" && 
+          order.items.some(item => item._id.toString() === id)) {
+        
+        const userId = localStorage.getItem('userId');
+        const alreadyRated = ratingData.ratings?.some(r => 
+          (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
+          r.orderId.toString() === orderId
+        );
+        
+        setUserCanRate(!alreadyRated);
+      } else {
+        setUserCanRate(false);
       }
     } catch (error) {
-      console.error("Error checking rating eligibility:", error);
+      console.error("Rating eligibility check failed:", error);
+      setUserCanRate(false);
+    } finally {
+      setLoadingRating(false);
     }
+  };
+
+  const handleRatingSubmit = (newRatingData) => {
+    updateFoodRatings(id, newRatingData);
+    setShowRatingModal(false);
   };
 
   const renderStars = () => {
     const stars = [];
+    const fullStars = Math.floor(averageRating);
+    const hasHalfStar = averageRating % 1 >= 0.5;
+
     for (let i = 1; i <= 5; i++) {
+      let starClass = 'empty';
+      if (i <= fullStars) {
+        starClass = 'full';
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        starClass = 'half';
+      }
+
       stars.push(
-        <span key={i} className={`star ${i <= averageRating ? 'full' : 'empty'}`}>
+        <span key={i} className={`star ${starClass}`}>
           ★
         </span>
       );
@@ -74,13 +106,22 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     );
   };
 
-  const handleIncrease = () => {
+  const handleIncrease = async () => {
     if (!token) {
       alert("Please login to add items to cart");
       return;
     }
+
     addToCart(id);
     setQuantity(prev => prev + 1);
+
+    try {
+      await axios.post(`${url}/api/food/updateclicks`, { id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Error updating clicks:", error);
+    }
   };
 
   const handleDecrease = () => {
@@ -127,8 +168,9 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           <button 
             className="rate-button"
             onClick={() => setShowRatingModal(true)}
+            disabled={loadingRating}
           >
-            Rate this item
+            {loadingRating ? "Checking..." : "Rate this item"}
           </button>
         )}
       </div>
@@ -138,6 +180,8 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           foodId={id}
           orderId={orderId}
           onClose={() => setShowRatingModal(false)}
+          onRatingSubmit={handleRatingSubmit}
+          updateFoodRatings={updateFoodRatings}
           url={url}
           token={token}
         />

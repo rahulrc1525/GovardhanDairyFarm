@@ -147,11 +147,14 @@ const StoreContextProvider = ({ children }) => {
 
   const fetchFoodRatings = async (foodId) => {
     try {
-      const response = await axios.get(`${url}/api/rating/${foodId}`);
+      const response = await axios.get(`${url}/api/rating/${foodId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (response.data.success) {
-        setFoodRatings(prev => ({
+        setFoodRatings((prev) => ({
           ...prev,
-          [foodId]: response.data.data
+          [foodId]: response.data.data,
         }));
       }
     } catch (error) {
