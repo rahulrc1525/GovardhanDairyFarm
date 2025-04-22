@@ -182,8 +182,11 @@ const getUserRating = async (req, res) => {
         const { foodId, orderId } = req.query;
         const userId = req.user.id;
 
+        console.log("getUserRating called with:", { foodId, orderId, userId }); // ADDED
+
         // Validate required fields
         if (!foodId || !orderId) {
+            console.log("Missing foodId or orderId"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Food ID and Order ID are required"
@@ -192,6 +195,7 @@ const getUserRating = async (req, res) => {
 
         // Validate ID formats
         if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
+            console.log("Invalid ID format:", { foodId, orderId }); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Invalid ID format",
@@ -205,7 +209,10 @@ const getUserRating = async (req, res) => {
             'ratings.orderId': orderId
         });
 
+        console.log("Food found:", food); // ADDED
+
         if (!food) {
+            console.log("Rating not found (food not found)"); // ADDED
             return res.status(404).json({
                 success: false,
                 message: "Rating not found",
@@ -218,7 +225,10 @@ const getUserRating = async (req, res) => {
                 r.orderId && r.orderId.toString() === orderId.toString()
         );
 
+        console.log("User rating found:", userRating); // ADDED
+
         if (!userRating) {
+            console.log("Rating not found (user rating not found)"); // ADDED
             return res.status(404).json({
                 success: false,
                 message: "Rating not found",
@@ -243,6 +253,7 @@ const getUserRating = async (req, res) => {
         });
     }
 };
+
 
 /**
  * @desc    Get all ratings for a specific food item
