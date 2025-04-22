@@ -34,7 +34,10 @@ const RatingModal = ({
                 }
             } catch (error) {
                 console.error("Error fetching user rating:", error);
-                setError("Failed to fetch existing rating. Please try again.");
+                // Don't show error if no rating exists yet
+                if (error.response?.status !== 404) {
+                    setError("Failed to fetch existing rating. Please try again.");
+                }
             }
         };
 
@@ -53,7 +56,7 @@ const RatingModal = ({
 
         setIsSubmitting(true);
         setError(null);
-        setSuccess(false); // Reset success state
+        setSuccess(false);
 
         try {
             const response = await axios.post(
@@ -69,7 +72,7 @@ const RatingModal = ({
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    timeout: 10000 // 10 second timeout
+                    timeout: 10000
                 }
             );
 
@@ -90,13 +93,7 @@ const RatingModal = ({
                 onClose();
             }, 1500);
         } catch (error) {
-            console.error("Full rating submission error:", {
-                message: error.message,
-                response: error.response?.data,
-                config: error.config,
-                stack: error.stack
-            });
-
+            console.error("Rating submission error:", error);
             setError(
                 error.response?.data?.message ||
                 error.message ||
@@ -156,7 +153,7 @@ const RatingModal = ({
                         </div>
 
                         <div className="review-section">
-                            <label htmlFor="review">Your Review:</label>
+                            <label htmlFor="review">Your Review (optional):</label>
                             <textarea
                                 id="review"
                                 value={review}
@@ -164,6 +161,7 @@ const RatingModal = ({
                                 rows="3"
                                 placeholder="Share your experience with this food item..."
                                 disabled={isSubmitting}
+                                maxLength="500"
                             />
                         </div>
 
