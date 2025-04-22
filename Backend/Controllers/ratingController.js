@@ -7,6 +7,15 @@ import mongoose from "mongoose";
  * @route   POST /api/rating/add
  * @access  Private
  */
+
+const logError = (error, context = '') => {
+    console.error(`[ERROR] ${context}`, {
+      message: error.message,
+      stack: error.stack,
+      ...(error.response && { response: error.response.data }),
+      ...(error.request && { request: error.request })
+    });
+  };
 const addOrUpdateRating = async (req, res) => {
     try {
         const { foodId, orderId, rating, review = "" } = req.body;
@@ -52,10 +61,15 @@ const addOrUpdateRating = async (req, res) => {
             });
         }
 
+        // Convert IDs to ObjectId early
+const foodObjectId = new mongoose.Types.ObjectId(foodId);
+const orderObjectId = new mongoose.Types.ObjectId(orderId);
+const userObjectId = new mongoose.Types.ObjectId(userId);
+
         // Check if order exists and is delivered
         const order = await orderModel.findOne({
-            _id: orderId,
-            userId,
+            _id: orderObjectId,
+            userId: userObjectId,
             status: "Delivered",
         });
 
@@ -68,7 +82,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Verify food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id && item._id.toString() === foodId.toString()
+            item._id && item._id.toString() === foodObjectId.toString()
         );
 
         if (!foodItemInOrder) {
@@ -136,13 +150,14 @@ const addOrUpdateRating = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error in addOrUpdateRating:", error);
+        logError(error, 'addOrUpdateRating');
         return res.status(500).json({
             success: false,
             message: "Internal server error",
             error: process.env.NODE_ENV === 'development' ? {
                 message: error.message,
-                stack: error.stack
+                stack: error.stack,
+                fullError: error
             } : undefined
         });
     }

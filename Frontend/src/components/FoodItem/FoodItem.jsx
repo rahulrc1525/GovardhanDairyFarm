@@ -170,14 +170,16 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
 
       {showRatingModal && (
         <RatingModal
-          foodId={id}
-          orderId={orderId}
-          onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={handleRatingSubmit}
-          updateFoodRatings={updateFoodRatings}
-          url={url}
-          token={token}
-        />
+        foodId={id}
+        orderId={orderId}
+        onClose={() => setShowRatingModal(false)}
+        onRatingSubmit={(newRatingData) => {
+            updateFoodRatings(id, newRatingData);
+            setShowRatingModal(false);
+        }}
+        url={url}
+        token={token}
+    />
       )}
     </div>
   );
