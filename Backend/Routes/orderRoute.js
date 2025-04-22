@@ -21,4 +21,4 @@ orderRouter.post("/listOrders", authMiddleware, async (req, res, next) => {
 
 orderRouter.post("/updateStatus", authMiddleware, updateStatus);
 
-export default orderRouter
+export default orderRouter;

@@ -43,13 +43,24 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     try {
       setLoadingRating(true);
       
-      const response = await axios.get(`${url}/api/rating/check-eligibility`, {
-        params: { foodId: id, orderId },
+      const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.success) {
-        setUserCanRate(response.data.canRate && !response.data.hasExistingRating);
+      const order = orderResponse.data.data.find(o => o._id === orderId);
+      
+      if (order?.status === "Delivered" && 
+          order.items.some(item => item._id.toString() === id)) {
+        
+        const userId = localStorage.getItem('userId');
+        const alreadyRated = ratingData.ratings?.some(r => 
+          (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
+          r.orderId.toString() === orderId
+        );
+        
+        setUserCanRate(!alreadyRated);
+      } else {
+        setUserCanRate(false);
       }
     } catch (error) {
       console.error("Rating eligibility check failed:", error);
