@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import './RatingModal.css';
 
 const RatingModal = ({ 
   foodId, 
   orderId, 
   onClose, 
-  onRatingSubmit, 
   url, 
-  token,
-  updateFoodRatings 
+  token
 }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -17,28 +14,6 @@ const RatingModal = ({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [review, setReview] = useState('');
-  const [existingRating, setExistingRating] = useState(null);
-
-  useEffect(() => {
-    const fetchUserRating = async () => {
-      try {
-        const response = await axios.get(`${url}/api/rating/user-rating`, {
-          params: { foodId, orderId },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.data.success && response.data.data) {
-          setExistingRating(response.data.data);
-          setRating(response.data.data.rating);
-          setReview(response.data.data.review || '');
-        }
-      } catch (error) {
-        console.error("Error fetching user rating:", error);
-      }
-    };
-
-    fetchUserRating();
-  }, [foodId, orderId, token, url]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,44 +27,33 @@ const RatingModal = ({
     setError(null);
 
     try {
-      const response = await axios.post(
-        `${url}/api/rating/add`,
-        {
+      const response = await fetch(`${url}/api/rating/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           foodId,
           orderId,
           rating,
-          review,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+          review
+        })
+      });
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Rating submission failed");
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Rating submission failed");
       }
 
       setSuccess(true);
-      
-      // Update the food ratings in parent component
-      if (updateFoodRatings) {
-        await updateFoodRatings(foodId);
-      }
-
       setTimeout(() => {
-        onRatingSubmit(response.data.data);
         onClose();
       }, 1500);
     } catch (error) {
       console.error("Rating submission error:", error);
-      setError(
-        error.response?.data?.message || 
-        error.message || 
-        "Failed to submit rating. Please try again."
-      );
+      setError(error.message || "Failed to submit rating. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -98,12 +62,7 @@ const RatingModal = ({
   return (
     <div className="rating-modal-overlay">
       <div className="rating-modal">
-        <button 
-          className="close-modal" 
-          onClick={onClose} 
-          disabled={isSubmitting}
-          aria-label="Close rating modal"
-        >
+        <button className="close-modal" onClick={onClose} disabled={isSubmitting}>
           ×
         </button>
         
@@ -111,11 +70,11 @@ const RatingModal = ({
           <div className="success-message">
             <div className="success-icon">✓</div>
             <h3>Thank You!</h3>
-            <p>{existingRating ? "Your rating was updated successfully." : "Your rating was submitted successfully."}</p>
+            <p>Your rating was submitted successfully.</p>
           </div>
         ) : (
           <>
-            <h2>{existingRating ? "Update Your Rating" : "Rate This Product"}</h2>
+            <h2>Rate This Product</h2>
             <p>How would you rate your experience with this item?</p>
             
             <div className="stars-container">
@@ -128,23 +87,14 @@ const RatingModal = ({
                   onMouseEnter={() => setHover(star)}
                   onMouseLeave={() => setHover(0)}
                   disabled={isSubmitting}
-                  aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
                 >
                   ★
                 </button>
               ))}
             </div>
             
-            <div className="rating-labels">
-              <span>Poor</span>
-              <span>Fair</span>
-              <span>Good</span>
-              <span>Very Good</span>
-              <span>Excellent</span>
-            </div>
-            
             <div className="review-section">
-              <label htmlFor="review">Your Review:</label>
+              <label htmlFor="review">Your Review (optional):</label>
               <textarea
                 id="review"
                 value={review}
@@ -158,13 +108,6 @@ const RatingModal = ({
             {error && (
               <div className="error-message">
                 <p>{error}</p>
-                <button 
-                  onClick={() => setError(null)} 
-                  className="retry-button"
-                  disabled={isSubmitting}
-                >
-                  Try Again
-                </button>
               </div>
             )}
             
@@ -177,9 +120,9 @@ const RatingModal = ({
               {isSubmitting ? (
                 <>
                   <span className="spinner"></span>
-                  {existingRating ? "Updating..." : "Submitting..."}
+                  Submitting...
                 </>
-              ) : existingRating ? "Update Rating" : "Submit Rating"}
+              ) : "Submit Rating"}
             </button>
           </>
         )}
