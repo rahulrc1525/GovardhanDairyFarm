@@ -1,21 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="icon" href="%PUBLIC_URL%/logo.png" type="image/png" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="Govardhan Dairy Farm - E-Dairy" />
-        <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
-        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-        <title>Govardhan Dairy Farm</title>
+<head>
+    <!-- Basic Meta Tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
+    <meta name="theme-color" content="#4CAF50">
     
-        <!-- ✅ ADD THIS RAZORPAY SCRIPT -->
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    </head>
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="%PUBLIC_URL%/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png">
+    <link rel="mask-icon" href="%PUBLIC_URL%/logo.svg" color="#4CAF50">
     
+    <!-- SEO Optimization -->
+    <title>Govardhan Dairy Farm | Fresh Milk & Dairy Products Online</title>
+    <meta name="description" content="Order fresh milk, ghee, paneer & dairy products from Govardhan Dairy Farm. 100% natural & organic dairy delivered to your doorstep.">
+    <meta name="keywords" content="fresh milk, organic dairy, ghee, paneer, curd, Govardhan Dairy">
+    
+    <!-- Open Graph / Social Media Meta -->
+    <meta property="og:title" content="Govardhan Dairy Farm | Fresh Dairy Delivered">
+    <meta property="og:description" content="Premium quality milk and dairy products from farm to your home">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://govardhandairyfarm.shop">
+    <meta property="og:image" content="%PUBLIC_URL%/social-preview.jpg">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@GovardhanDairy">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" crossorigin="use-credentials">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Razorpay Payment Integration -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="%PUBLIC_URL%/static/js/main.js" as="script">
+    <link rel="preload" href="%PUBLIC_URL%/static/css/main.css" as="style">
+    
+    <!-- Performance Optimization -->
+    <link rel="preconnect" href="https://checkout.razorpay.com">
+    <link rel="preconnect" href="https://api.razorpay.com">
+    <link rel="dns-prefetch" href="https://govardhandairyfarm-backend.onrender.com">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "DairyFarm",
+      "name": "Govardhan Dairy Farm",
+      "image": "%PUBLIC_URL%/logo.png",
+      "url": "https://govardhandairyfarm.shop",
+      "telephone": "+919619224145",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Govardhan Dairy Farm,Vehale,Vasind,MurbadRoad,"
+        "addressLocality": "Thane",
+        "addressRegion": "Maharashtra",
+        "addressArea": "Thane District",
+        "postalCode": "421301","421601",
+        "addressCountry": "IN"
+      },
+      "openingHours": "Mo,Tu,We,Th,Fr,Sa,Su 06:00-21:00",
+      "priceRange": "₹60-₹200",
+      "description": "Govardhan Dairy Farm offers fresh milk, ghee, paneer, and other dairy products. We are committed to providing 100% natural and organic dairy products delivered to your doorstep.",
+        "sameAs": [
+            "https://www.facebook.com/GovardhanDairyFarm",
+            "https://www.instagram.com/govardhandairyfarm/",
+            "https://twitter.com/GovardhanDairy"
+        ]
+        "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "19.123456",
+        "longitude": "73.123456"
+        },
+        "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1500",
+        "bestRating": "5",
+        "worstRating": "1"
+        },
+        "offers": {
+        "@type": "Offer",
+        "url": "https://govardhandairyfarm.shop",
+        "priceCurrency": "INR",
+        "price": "60.00",
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": "https://schema.org/InStock",
+        "seller": {
+            "@type": "Organization",
+            "name": "Govardhan Dairy Farm"
+        }
+        },
+        "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+919619224145",
+        "contactType": "Customer Service",
+        "areaServed": "IN",
+        "availableLanguage": "Hindi, English","Marathi"
+
+    }
+    </script>
+</head>
+
 <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Enhanced NoScript Content -->
+    <noscript>
+        <div style="text-align:center;padding:2rem;font-family:Arial,sans-serif;">
+            <img src="%PUBLIC_URL%/logo.png" alt="Govardhan Dairy Farm" width="120" style="margin-bottom:1rem;">
+            <h1 style="color:#4CAF50;">JavaScript Required</h1>
+            <p>Our online store requires JavaScript to function properly.</p>
+            <p>Please enable JavaScript in your browser settings or contact us directly:</p>
+            <p style="margin-top:1.5rem;">
+                <a href="tel:+919307756469" style="color:#4CAF50;text-decoration:none;">📞 +91 9307756469</a>
+            </p>
+            <p>
+                <a href="mailto:govardhandairyfarms@gmail.com" style="color:#4CAF50;text-decoration:none;">✉️ govardhandairyfarms@gmail.com</a>
+            </p>
+        </div>
+    </noscript>
+    
+    <!-- App Root -->
     <div id="root"></div>
+    
+    <!-- Loading Animation -->
+    <div id="app-loading" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;">
+        <img src="%PUBLIC_URL%/logo.png" alt="Loading" width="80" style="animation:pulse 1.5s infinite;">
+        <p style="margin-top:1rem;color:#4CAF50;font-family:Arial,sans-serif;">Loading your dairy experience...</p>
+    </div>
+    
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+    </style>
+    
+    <script>
+        // Hide loading screen when app mounts
+        document.addEventListener('DOMContentLoaded', function() {
+            var loadingElement = document.getElementById('app-loading');
+            if (loadingElement) {
+                setTimeout(function() {
+                    loadingElement.style.opacity = '0';
+                    setTimeout(function() {
+                        loadingElement.style.display = 'none';
+                    }, 300);
+                }, 500);
+            }
+            
+            // Register service worker for PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('%PUBLIC_URL%/service-worker.js')
+                        .then(function(registration) {
+                            console.log('ServiceWorker registration successful');
+                        })
+                        .catch(function(err) {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
