@@ -29,7 +29,15 @@ const addOrUpdateRating = async (req, res) => {
         }
 
         // Validate rating range
-        if (isNaN(rating) || rating < 1 || rating > 5) {
+        if (isNaN(rating)) {
+            return res.status(400).json({
+                success: false,
+                message: "Rating must be a number",
+            });
+        }
+        
+        const numericRating = Number(rating);
+        if (numericRating < 1 || numericRating > 5) {
             return res.status(400).json({
                 success: false,
                 message: "Rating must be between 1 and 5",
@@ -60,8 +68,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Verify food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id.toString() === foodId || 
-            (item._id && item._id.toString() === foodId)
+            item._id && item._id.toString() === foodId.toString()
         );
 
         if (!foodItemInOrder) {
@@ -80,16 +87,22 @@ const addOrUpdateRating = async (req, res) => {
             });
         }
 
+        // Initialize ratings array if it doesn't exist
+        if (!food.ratings) {
+            food.ratings = [];
+        }
+
         // Check for existing rating
         const existingRatingIndex = food.ratings.findIndex(
-            r => r.userId.toString() === userId && r.orderId.toString() === orderId
+            r => r.userId && r.userId.toString() === userId.toString() && 
+                 r.orderId && r.orderId.toString() === orderId.toString()
         );
 
         // Prepare rating data
         const ratingData = {
-            userId,
-            orderId,
-            rating,
+            userId: new mongoose.Types.ObjectId(userId),
+            orderId: new mongoose.Types.ObjectId(orderId),
+            rating: numericRating,
             review: review.trim(),
             createdAt: existingRatingIndex === -1 ? new Date() : food.ratings[existingRatingIndex].createdAt,
             updatedAt: new Date()
@@ -105,7 +118,7 @@ const addOrUpdateRating = async (req, res) => {
         // Recalculate average rating
         const totalRatings = food.ratings.length;
         const sumRatings = food.ratings.reduce((sum, r) => sum + r.rating, 0);
-        food.averageRating = parseFloat((sumRatings / totalRatings).toFixed(1));
+        food.averageRating = totalRatings > 0 ? parseFloat((sumRatings / totalRatings).toFixed(1)) : 0;
 
         await food.save();
 
@@ -166,7 +179,7 @@ const getUserRating = async (req, res) => {
             _id: foodId,
             'ratings.userId': userId,
             'ratings.orderId': orderId
-        }).select('ratings name');
+        });
 
         if (!food) {
             return res.status(404).json({
@@ -177,8 +190,16 @@ const getUserRating = async (req, res) => {
 
         // Extract the user's rating
         const userRating = food.ratings.find(
-            r => r.userId.toString() === userId && r.orderId.toString() === orderId
+            r => r.userId && r.userId.toString() === userId.toString() && 
+                 r.orderId && r.orderId.toString() === orderId.toString()
         );
+
+        if (!userRating) {
+            return res.status(404).json({
+                success: false,
+                message: "Rating not found",
+            });
+        }
 
         return res.status(200).json({ 
             success: true, 
@@ -218,8 +239,6 @@ const getFoodRatings = async (req, res) => {
 
         // Find the food item with populated ratings
         const food = await foodModel.findById(foodId)
-            .populate("ratings.userId", "name email avatar")
-            .populate("ratings.orderId", "createdAt")
             .select('ratings name averageRating');
 
         if (!food) {
@@ -230,17 +249,17 @@ const getFoodRatings = async (req, res) => {
         }
 
         // Sort ratings by date (newest first)
-        const sortedRatings = food.ratings.sort(
+        const sortedRatings = food.ratings ? food.ratings.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
+        ) : [];
 
         return res.status(200).json({
             success: true,
             data: {
                 foodId: food._id,
                 foodName: food.name,
-                averageRating: food.averageRating,
-                totalRatings: food.ratings.length,
+                averageRating: food.averageRating || 0,
+                totalRatings: food.ratings ? food.ratings.length : 0,
                 ratings: sortedRatings
             },
         });
@@ -290,8 +309,7 @@ const checkRatingEligibility = async (req, res) => {
 
         // Check if food item exists in the order
         const foodItemInOrder = order.items.some(item => 
-            item._id.toString() === foodId || 
-            (item._id && item._id.toString() === foodId)
+            item._id && item._id.toString() === foodId.toString()
         );
 
         if (!foodItemInOrder) {

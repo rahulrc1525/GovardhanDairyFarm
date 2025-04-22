@@ -43,22 +43,13 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
     try {
       setLoadingRating(true);
       
-      const orderResponse = await axios.get(`${url}/api/order/userOrders`, {
+      const response = await axios.get(`${url}/api/rating/check-eligibility`, {
+        params: { foodId: id, orderId },
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const order = orderResponse.data.data.find(o => o._id === orderId);
-      
-      if (order?.status === "Delivered" && 
-          order.items.some(item => item._id.toString() === id)) {
-        
-        const userId = localStorage.getItem('userId');
-        const alreadyRated = ratingData.ratings?.some(r => 
-          (r.userId._id?.toString() === userId || r.userId.toString() === userId) &&
-          r.orderId.toString() === orderId
-        );
-        
-        setUserCanRate(!alreadyRated);
+      if (response.data.success) {
+        setUserCanRate(response.data.canRate);
       } else {
         setUserCanRate(false);
       }
@@ -71,7 +62,9 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   };
 
   const handleRatingSubmit = (newRatingData) => {
-    updateFoodRatings(id, newRatingData);
+    if (updateFoodRatings) {
+      updateFoodRatings(id, newRatingData);
+    }
     setShowRatingModal(false);
   };
 

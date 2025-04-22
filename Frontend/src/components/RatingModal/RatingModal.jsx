@@ -27,17 +27,19 @@ const RatingModal = ({
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        if (response.data.success && response.data.data) {
-          setExistingRating(response.data.data);
-          setRating(response.data.data.rating);
-          setReview(response.data.data.review || '');
+        if (response.data.success && response.data.data.rating) {
+          setExistingRating(response.data.data.rating);
+          setRating(response.data.data.rating.rating);
+          setReview(response.data.data.rating.review || '');
         }
       } catch (error) {
         console.error("Error fetching user rating:", error);
       }
     };
 
-    fetchUserRating();
+    if (foodId && orderId && token) {
+      fetchUserRating();
+    }
   }, [foodId, orderId, token, url]);
 
   const handleSubmit = async (e) => {
@@ -80,7 +82,9 @@ const RatingModal = ({
       }
 
       setTimeout(() => {
-        onRatingSubmit(response.data.data);
+        if (onRatingSubmit) {
+          onRatingSubmit(response.data.data);
+        }
         onClose();
       }, 1500);
     } catch (error) {
