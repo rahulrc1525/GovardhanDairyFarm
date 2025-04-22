@@ -22,8 +22,11 @@ const addOrUpdateRating = async (req, res) => {
         const { foodId, orderId, rating, review = "" } = req.body;
         const userId = req.user.id;
 
+        console.log("addOrUpdateRating called with:", { foodId, orderId, rating, review, userId }); // ADDED
+
         // Validate required fields
         if (!foodId || !orderId || rating === undefined) {
+            console.log("Missing required fields"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Missing required fields: foodId, orderId, and rating are required",
@@ -32,6 +35,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Validate ID formats
         if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
+            console.log("Invalid ID format:", { foodId, orderId }); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Invalid ID format",
@@ -40,6 +44,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Validate rating range
         if (isNaN(rating)) {
+            console.log("Rating is not a number"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Rating must be a number",
@@ -48,6 +53,7 @@ const addOrUpdateRating = async (req, res) => {
 
         const numericRating = Number(rating);
         if (numericRating < 1 || numericRating > 5) {
+            console.log("Rating out of range"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Rating must be between 1 and 5",
@@ -56,6 +62,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Validate review length
         if (review.length > 500) {
+            console.log("Review too long"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Review cannot exceed 500 characters",
@@ -69,6 +76,7 @@ const addOrUpdateRating = async (req, res) => {
             orderObjectId = new mongoose.Types.ObjectId(orderId);
             userObjectId = new mongoose.Types.ObjectId(userId);
         } catch (err) {
+            console.log("Invalid ID format (ObjectId creation failed):", { foodId, orderId, userId }); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Invalid ID format",
@@ -82,7 +90,10 @@ const addOrUpdateRating = async (req, res) => {
             status: "Delivered",
         });
 
+        console.log("Order found:", order); // ADDED
+
         if (!order) {
+            console.log("Order not found or not delivered"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Order not found or not eligible for rating",
@@ -94,7 +105,10 @@ const addOrUpdateRating = async (req, res) => {
             item._id && item._id.toString() === foodObjectId.toString()
         );
 
+        console.log("Food item in order:", foodItemInOrder); // ADDED
+
         if (!foodItemInOrder) {
+            console.log("Food item not found in this order"); // ADDED
             return res.status(400).json({
                 success: false,
                 message: "Food item not found in this order",
@@ -103,7 +117,11 @@ const addOrUpdateRating = async (req, res) => {
 
         // Find the food item
         const food = await foodModel.findById(foodId);
+
+        console.log("Food item found:", food); // ADDED
+
         if (!food) {
+            console.log("Food item not found"); // ADDED
             return res.status(404).json({
                 success: false,
                 message: "Food item not found",
@@ -120,6 +138,8 @@ const addOrUpdateRating = async (req, res) => {
             r => r.userId && r.userId.toString() === userId.toString() &&
                 r.orderId && r.orderId.toString() === orderId.toString()
         );
+
+        console.log("Existing rating index:", existingRatingIndex); // ADDED
 
         // Prepare rating data
         const ratingData = {
@@ -144,6 +164,8 @@ const addOrUpdateRating = async (req, res) => {
         food.averageRating = totalRatings > 0 ? parseFloat((sumRatings / totalRatings).toFixed(1)) : 0;
 
         await food.save();
+
+        console.log("Rating saved successfully"); // ADDED
 
         return res.status(200).json({
             success: true,
@@ -194,7 +216,11 @@ const getUserRating = async (req, res) => {
         }
 
         // Validate ID formats
-        if (!mongoose.Types.ObjectId.isValid(foodId) || !mongoose.Types.ObjectId.isValid(orderId)) {
+        let foodIdObj, orderIdObj;
+        try {
+            foodIdObj = new mongoose.Types.ObjectId(foodId);
+            orderIdObj = new mongoose.Types.ObjectId(orderId);
+        } catch (err) {
             console.log("Invalid ID format:", { foodId, orderId }); // ADDED
             return res.status(400).json({
                 success: false,
@@ -204,9 +230,9 @@ const getUserRating = async (req, res) => {
 
         // Find the food item with the user's rating
         const food = await foodModel.findOne({
-            _id: foodId,
-            'ratings.userId': userId,
-            'ratings.orderId': orderId
+            _id: foodIdObj,
+            'ratings.userId': new mongoose.Types.ObjectId(userId), // Convert to ObjectId
+            'ratings.orderId': orderIdObj
         });
 
         console.log("Food found:", food); // ADDED
@@ -220,6 +246,14 @@ const getUserRating = async (req, res) => {
         }
 
         // Extract the user's rating
+        if (!food.ratings) {
+            console.log("No ratings found for this food item.");
+            return res.status(404).json({
+                success: false,
+                message: "Rating not found",
+            });
+        }
+
         const userRating = food.ratings.find(
             r => r.userId && r.userId.toString() === userId.toString() &&
                 r.orderId && r.orderId.toString() === orderId.toString()
@@ -245,15 +279,17 @@ const getUserRating = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error getting user rating:", error);
+        logError(error, "getUserRating");
         return res.status(500).json({
             success: false,
             message: "Error getting user rating",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                stack: error.stack
+            } : undefined
         });
     }
 };
-
 
 /**
  * @desc    Get all ratings for a specific food item
