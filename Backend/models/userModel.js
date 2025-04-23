@@ -22,8 +22,6 @@ const userSchema = new mongoose.Schema(
     emailVerificationExpires: { type: Date },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
-    emailQualityScore: { type: Number }, // Score from MailboxLayer
-    emailValid: { type: Boolean }, // Is email valid according to MailboxLayer
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     accountLocked: { type: Boolean, default: false },
@@ -35,7 +33,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Add index for better query performance
+// Add indexes
 userSchema.index({ email: 1 });
 userSchema.index({ emailVerificationToken: 1 }, { sparse: true });
 userSchema.index({ passwordResetToken: 1 }, { sparse: true });

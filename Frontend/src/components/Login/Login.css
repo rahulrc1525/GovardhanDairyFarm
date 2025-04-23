@@ -61,6 +61,34 @@ form {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.link-button {
+  background: none;
+  border: none;
+  color: #3498db;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.link-button:hover {
+  color: #2980b9;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 h1 {
   font-size: 28px; /* Larger heading */

@@ -7,8 +7,7 @@ import axios from "axios";
 
 const Login = ({ setShowLogin }) => {
   const { url, setAuthData } = useContext(StoreContext);
-  const [isRegisterActive, setIsRegisterActive] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [activeForm, setActiveForm] = useState('login'); // 'login', 'register', 'forgot'
   const [data, setData] = useState({
     name: "",
     email: "",
@@ -20,46 +19,54 @@ const Login = ({ setShowLogin }) => {
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
-    setData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    setData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
     
     try {
       const response = await axios.post(`${url}/api/user/login`, {
         email: data.email,
-        password: data.password,
+        password: data.password
       });
 
       if (response.data.success) {
         const { token, userId, user } = response.data;
         setAuthData(token, userId, user);
         setShowLogin(false);
-      } else {
-        setErrorMessage(response.data.message || "Login failed. Please try again.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred during login. Please try again.";
-      setErrorMessage(errorMsg);
+      console.error("Login error:", error);
+      
+      if (error.response?.data?.code === "EMAIL_NOT_VERIFIED") {
+        setErrorMessage(
+          <span>
+            Email not verified. 
+            <button 
+              type="button" 
+              className="link-button"
+              onClick={() => handleResendVerification(data.email)}
+            >
+              Resend verification email
+            </button>
+          </span>
+        );
+      } else {
+        setErrorMessage(error.response?.data?.message || "Login failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
+  const handleRegister = async (e) => {
+    e.preventDefault();
     
     if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
+      setErrorMessage("Passwords don't match");
       return;
     }
     
@@ -74,71 +81,20 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "Registration successful! Please check your email to verify your account.");
-        setIsRegisterActive(false);
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        setErrorMessage(response.data.message || "Registration failed. Please try again.");
+        alert(response.data.message);
+        setActiveForm('login');
+        setData({ name: "", email: "", password: "", confirmPassword: "" });
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred during registration. Please try again.";
-      setErrorMessage(errorMsg);
+      console.error("Registration error:", error);
+      setErrorMessage(error.response?.data?.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = async (event) => {
-    event.preventDefault();
-    
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/reset-password`, {
-        email: data.email,
-        password: data.password,
-      });
-
-      if (response.data.success) {
-        alert(response.data.message || "Password reset successfully. You can now login.");
-        setShowForgotPassword(false);
-        setErrorMessage("");
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        setErrorMessage(response.data.message || "Password reset failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const requestPasswordReset = async (event) => {
-    event.preventDefault();
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
     
@@ -148,32 +104,40 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "If this email exists, a reset link has been sent.");
-        setShowForgotPassword(false);
-        setErrorMessage("");
-      } else {
-        setErrorMessage(response.data.message || "Failed to send reset email. Please try again.");
+        alert(response.data.message);
+        setActiveForm('login');
       }
     } catch (error) {
-      console.error("Error requesting password reset:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred. Please try again.";
-      setErrorMessage(errorMsg);
+      console.error("Forgot password error:", error);
+      setErrorMessage(error.response?.data?.message || "Failed to send reset email");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleForm = () => {
+  const handleResendVerification = async (email) => {
+    setIsLoading(true);
     setErrorMessage("");
-    setIsRegisterActive(!isRegisterActive);
-    setData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: ""
-    });
+    
+    try {
+      const response = await axios.post(`${url}/api/user/resend-verification`, {
+        email
+      });
+
+      if (response.data.success) {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      setErrorMessage(error.response?.data?.message || "Failed to resend verification");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearForm = () => {
+    setData({ name: "", email: "", password: "", confirmPassword: "" });
+    setErrorMessage("");
   };
 
   return (
@@ -185,7 +149,7 @@ const Login = ({ setShowLogin }) => {
         </button>
 
         {/* Login Form */}
-        {!isRegisterActive && !showForgotPassword && (
+        {activeForm === 'login' && (
           <div className="form-box login">
             <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
@@ -215,13 +179,25 @@ const Login = ({ setShowLogin }) => {
                 {isLoading ? <FaSpinner className="spin" /> : "Login"}
               </button>
               <p className="forgot-password-link">
-                <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
+                <button 
+                  type="button" 
+                  className="link-button"
+                  onClick={() => { setActiveForm('forgot'); clearForm(); }}
+                >
+                  Forgot Password?
+                </button>
               </p>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>
                   Don't have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Register</a>
+                  <button 
+                    type="button" 
+                    className="link-button"
+                    onClick={() => { setActiveForm('register'); clearForm(); }}
+                  >
+                    Register
+                  </button>
                 </p>
               </div>
             </form>
@@ -229,7 +205,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Register Form */}
-        {isRegisterActive && !showForgotPassword && (
+        {activeForm === 'register' && (
           <div className="form-box register">
             <form onSubmit={handleRegister}>
               <h1>Register</h1>
@@ -251,7 +227,7 @@ const Login = ({ setShowLogin }) => {
                   name="email"
                   value={data.email}
                   placeholder="Email"
-                  onChange={onChangeHandler}
+                  onChange={onchangeHandler}
                   required
                 />
               </div>
@@ -286,7 +262,13 @@ const Login = ({ setShowLogin }) => {
               <div className="register-link">
                 <p>
                   Already have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Login</a>
+                  <button 
+                    type="button" 
+                    className="link-button"
+                    onClick={() => { setActiveForm('login'); clearForm(); }}
+                  >
+                    Login
+                  </button>
                 </p>
               </div>
             </form>
@@ -294,9 +276,9 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Forgot Password Form */}
-        {showForgotPassword && (
+        {activeForm === 'forgot' && (
           <div className="form-box forgot-password">
-            <form onSubmit={requestPasswordReset}>
+            <form onSubmit={handleForgotPassword}>
               <h1>Reset Password</h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
@@ -315,7 +297,13 @@ const Login = ({ setShowLogin }) => {
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>
-                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
+                  <button 
+                    type="button" 
+                    className="link-button"
+                    onClick={() => { setActiveForm('login'); clearForm(); }}
+                  >
+                    Back to Login
+                  </button>
                 </p>
               </div>
             </form>
