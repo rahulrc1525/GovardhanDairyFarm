@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "axios"; // Import axios for API calls
 
 const PlaceOrder = () => {
   const { cart, token, foodList, url, clearCart, userId } = useContext(StoreContext);
@@ -23,8 +23,6 @@ const PlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [errors, setErrors] = useState({});
-  const [pincodeInfo, setPincodeInfo] = useState(null);
-  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -59,95 +57,49 @@ const PlaceOrder = () => {
     const { name, value } = event.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
-    
-    if (name === "ZipCode") {
-      setPincodeInfo(null);
-    }
   };
 
-  const checkPincode = async () => {
-    if (!data.ZipCode || data.ZipCode.length !== 6) return;
-    
-    setIsCheckingPincode(true);
-    setErrors(prev => ({ ...prev, ZipCode: "" }));
-    
-    try {
-      const response = await fetch(`https://api.postalpincode.in/pincode/${data.ZipCode}`);
-      const result = await response.json();
-      
-      if (result[0].Status === "Error") {
-        setErrors(prev => ({ ...prev, ZipCode: "Invalid pincode" }));
-        setPincodeInfo(null);
-        return;
-      }
-      
-      const postOffices = result[0].PostOffice;
-      if (!postOffices || postOffices.length === 0) {
-        setErrors(prev => ({ ...prev, ZipCode: "No post offices found for this pincode" }));
-        setPincodeInfo(null);
-        return;
-      }
-      
-      // Extract unique districts (cities) and states
-      const districts = [...new Set(postOffices.map(po => po.District))];
-      const states = [...new Set(postOffices.map(po => po.State))];
-      
-      setPincodeInfo({
-        districts,
-        state: states[0], // Most pincodes are in one state
-        postOffices
-      });
-      
-      // Auto-fill state if empty
-      if (!data.state && states.length === 1) {
-        setData(prev => ({ ...prev, state: states[0] }));
-      }
-      
-    } catch (error) {
-      console.error("Error checking pincode:", error);
-      setErrors(prev => ({ ...prev, ZipCode: "Error validating pincode" }));
-    } finally {
-      setIsCheckingPincode(false);
-    }
-  };
-
-  // Debounced pincode check
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (data.ZipCode && data.ZipCode.length === 6) {
-        checkPincode();
-      }
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [data.ZipCode]);
-
-  const validateCityState = () => {
-    const { city, state } = data;
-    const newErrors = {};
+  // Function to validate city, state, and pincode
+  const validateCityStatePincode = async () => {
+    const { ZipCode, city, state } = data;
     let isValid = true;
-    
-    if (!pincodeInfo) {
-      newErrors.ZipCode = "Please enter a valid pincode first";
-      return { isValid: false, newErrors };
-    }
-    
-    // Check if state matches
-    if (!state || !pincodeInfo.state.toLowerCase().includes(state.toLowerCase())) {
-      newErrors.state = `State should be ${pincodeInfo.state}`;
+    const newErrors = {};
+
+    if (!ZipCode || !city || !state) {
+      newErrors.ZipCode = "Pincode, city, and state are required";
       isValid = false;
     }
-    
-    // Check if city matches any district
-    if (!city || !pincodeInfo.districts.some(d => 
-      d.toLowerCase().includes(city.toLowerCase()) || 
-      city.toLowerCase().includes(d.toLowerCase())
-    )) {
-      newErrors.city = `City should be one of: ${pincodeInfo.districts.join(", ")}`;
-      isValid = false;
+
+    if (isValid) {
+      try {
+        const response = await fetch(
+          `https://api.postalpincode.in/pincode/${ZipCode}`
+        );
+        const result = await response.json();
+
+        if (result[0].Status === "Error") {
+          newErrors.ZipCode = "Invalid pincode";
+          isValid = false;
+        } else {
+          const postOffice = result[0].PostOffice[0];
+          if (postOffice.District.toLowerCase() !== city.toLowerCase()) {
+            newErrors.city = "City does not match the pincode";
+            isValid = false;
+          }
+          if (postOffice.State.toLowerCase() !== state.toLowerCase()) {
+            newErrors.state = "State does not match the pincode";
+            isValid = false;
+          }
+        }
+      } catch (error) {
+        console.error("Error validating pincode:", error);
+        newErrors.ZipCode = "Error validating pincode";
+        isValid = false;
+      }
     }
-    
-    return { isValid, newErrors };
+
+    setErrors((prevErrors) => ({ ...prevErrors, ...newErrors }));
+    return isValid;
   };
 
   const validateForm = async () => {
@@ -163,7 +115,6 @@ const PlaceOrder = () => {
     ];
     const newErrors = {};
 
-    // Basic field validation
     requiredFields.forEach((field) => {
       if (!data[field]) {
         newErrors[field] = `${
@@ -180,20 +131,11 @@ const PlaceOrder = () => {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
-    if (data.ZipCode && !/^\d{6}$/.test(data.ZipCode)) {
-      newErrors.ZipCode = "Pincode must be 6 digits";
-    }
-
     setErrors(newErrors);
 
-    // Only proceed with city/state validation if basic fields are valid
-    if (Object.keys(newErrors).length === 0) {
-      const { isValid, newErrors: locationErrors } = validateCityState();
-      setErrors(prev => ({ ...prev, ...locationErrors }));
-      return isValid;
-    }
-
-    return false;
+    // Validate city, state, and pincode
+    const isCityStatePincodeValid = await validateCityStatePincode();
+    return Object.keys(newErrors).length === 0 && isCityStatePincodeValid;
   };
 
   const placeOrder = async (event) => {
@@ -222,10 +164,10 @@ const PlaceOrder = () => {
       amount: total * 100, // Convert amount to paise
       address: data,
       status: "Food Processing",
-      userEmail: data.email,
+      userEmail: data.email, // Include user's email in the order data
     };
 
-    console.log("Order Data being sent:", orderData);
+    console.log("Order Data being sent:", orderData); // Debugging: Log order data
 
     try {
       const token = localStorage.getItem("token");
@@ -246,16 +188,16 @@ const PlaceOrder = () => {
       });
 
       const result = await response.json();
-      console.log("Order Placement Response:", result);
+      console.log("Order Placement Response:", result); // Debugging: Log API response
 
       if (response.status === 201 && result.success) {
         handleRazorpayPayment(result.order);
       } else {
         alert("Failed to create order. Try again.");
-        console.error("Order creation failed. Response:", result);
+        console.error("Order creation failed. Response:", result); // Debugging: Log failure details
       }
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error("Error placing order:", error); // Debugging: Log any errors
       alert("An error occurred while placing the order.");
     } finally {
       setLoading(false);
@@ -269,12 +211,12 @@ const PlaceOrder = () => {
     }
 
     const options = {
-      key: "rzp_test_K1augfcwb6fgUh",
-      amount: order.amount,
+      key: "rzp_test_K1augfcwb6fgUh", // Replace with your Razorpay key
+      amount: order.amount, // Amount is already in paise
       currency: "INR",
       name: "Govardhan Dairy Farm",
       description: "Complete your payment",
-      order_id: order.id,
+      order_id: order.id, // Razorpay order ID
       handler: async function (response) {
         console.log("Razorpay Payment Response:", response);
         try {
@@ -297,8 +239,10 @@ const PlaceOrder = () => {
           if (verificationResponse.ok && verificationResult.success) {
             console.log("Payment successful!");
 
+            // Clear the cart
             await clearCart();
 
+            // Reset the form
             setData({
               firstName: "",
               lastName: "",
@@ -311,9 +255,11 @@ const PlaceOrder = () => {
               phone: "",
             });
 
+            // Navigate to My Orders
             navigate("/myorders");
           } else {
             console.error("Payment verification failed.");
+            // Delete the order if payment verification fails
             await fetch(`${url}/api/order/delete`, {
               method: "POST",
               headers: {
@@ -324,6 +270,7 @@ const PlaceOrder = () => {
           }
         } catch (error) {
           console.error("Error verifying payment:", error);
+          // Delete the order if there's an error during verification
           await fetch(`${url}/api/order/delete`, {
             method: "POST",
             headers: {
@@ -346,6 +293,7 @@ const PlaceOrder = () => {
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', async function (response) {
       console.error("Payment failed:", response.error);
+      // Delete the order if payment fails
       await fetch(`${url}/api/order/delete`, {
         method: "POST",
         headers: {
@@ -390,18 +338,6 @@ const PlaceOrder = () => {
               )}
             </div>
           ))}
-          
-          {/* Pincode validation status */}
-          {isCheckingPincode && <p>Validating pincode...</p>}
-          
-          {/* Pincode information */}
-          {pincodeInfo && (
-            <div className="pincode-info">
-              <h4>Pincode Information:</h4>
-              <p><strong>State:</strong> {pincodeInfo.state}</p>
-              <p><strong>Valid Cities:</strong> {pincodeInfo.districts.join(", ")}</p>
-            </div>
-          )}
         </form>
       </div>
 
