@@ -98,6 +98,74 @@ h1 {
 
 }
 
+/* Email status indicators */
+.email-status {
+  margin-top: 5px;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.email-status.checking {
+  color: #666;
+  background-color: #f0f0f0;
+}
+
+.email-status.available {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+.email-status.taken {
+  color: #c62828;
+  background-color: #ffebee;
+}
+
+.email-status.invalid {
+  color: #f57f17;
+  background-color: #fff8e1;
+}
+
+.email-status.disposable {
+  color: #d84315;
+  background-color: #fbe9e7;
+}
+
+.email-status.error {
+  color: #c62828;
+  background-color: #ffebee;
+}
+
+.email-status a {
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.email-status a:hover {
+  text-decoration: none;
+}
+
+/* Disabled button styling */
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #cccccc !important;
+}
+
+/* Input validation styling */
+.input-box input:invalid {
+  border-color: #ff6b6b;
+}
+
+.input-box input:valid {
+  border-color: #5ed527;
+}
+
 /* Button styling */
 button {
   width: 100%;
