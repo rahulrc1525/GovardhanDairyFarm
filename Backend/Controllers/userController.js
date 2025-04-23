@@ -162,7 +162,7 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new userModel({ name, email, password: hashedPassword });
-    const verificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const verificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "2d" });
     newUser.emailVerificationToken = verificationToken;
     await newUser.save();
 
@@ -199,22 +199,80 @@ const registerUser = async (req, res) => {
 };
 
 // Verify email
+// [Previous imports remain the same...]
+
+// Verify email - Updated with better error handling
 const verifyEmail = async (req, res) => {
   const { token } = req.query;
+  console.log("Verification request received with token:", token);
+  
   try {
-    const user = await userModel.findOne({ emailVerificationToken: token });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+    // Validate token exists
+    if (!token || typeof token !== 'string') {
+      console.error("Invalid token format");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid verification token format" 
+      });
     }
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    await user.save();
-    res.status(200).json({ success: true, message: "Email verified successfully" });
+
+    // Find user by token
+    const user = await userModel.findOne({ emailVerificationToken: token });
+    
+    if (!user) {
+      console.error("No user found with this token");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired verification link" 
+      });
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      console.log("User already verified");
+      return res.status(200).json({ 
+        success: true, 
+        message: "Email already verified" 
+      });
+    }
+
+    // Verify and update user
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Token verified for user ID:", decoded.id);
+
+      user.isEmailVerified = true;
+      user.emailVerificationToken = undefined;
+      await user.save();
+
+      console.log("Email verified successfully for:", user.email);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Email verified successfully" 
+      });
+    } catch (jwtError) {
+      console.error("JWT verification failed:", jwtError);
+      if (jwtError.name === 'TokenExpiredError') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Verification link has expired" 
+        });
+      }
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid verification token" 
+      });
+    }
   } catch (error) {
-    console.error("Error verifying email:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Server error during verification:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error during verification" 
+    });
   }
 };
+
+// [Rest of your controller remains the same...]
 
 // Forgot password
 const forgotPassword = async (req, res) => {
