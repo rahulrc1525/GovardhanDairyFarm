@@ -31,6 +31,6 @@
     "razorpay": "^2.9.5",
     "react-toastify": "^11.0.3",
     "stripe": "^17.2.1",
-    "validator": "^13.12.0"
+    "validator": "^13.15.0"
   }
 }
