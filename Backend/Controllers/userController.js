@@ -4,11 +4,6 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import nodemailer from "nodemailer";
 import axios from "axios";
-import { 
-  verifyPhoneWithNumVerify, 
-  generateVerificationCode 
-} from "../utils/phoneVerification.js";
-
 
 // Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
@@ -37,7 +32,38 @@ const verifyEmailWithMailboxLayer = async (email) => {
   }
 };
 
-// Register user with email verification
+// Helper function to verify phone with NumVerify
+const verifyPhoneWithNumVerify = async (phoneNumber) => {
+  try {
+    const response = await axios.get(
+      `http://apilayer.net/api/validate?access_key=${process.env.NUMVERIFY_API_KEY}&number=${phoneNumber}&format=1`
+    );
+    
+    return {
+      valid: response.data.valid,
+      number: response.data.number,
+      localFormat: response.data.local_format,
+      internationalFormat: response.data.international_format,
+      countryPrefix: response.data.country_prefix,
+      countryCode: response.data.country_code,
+      countryName: response.data.country_name,
+      location: response.data.location,
+      carrier: response.data.carrier,
+      lineType: response.data.line_type,
+      ...response.data
+    };
+  } catch (error) {
+    console.error("NumVerify verification error:", error);
+    return { valid: false };
+  }
+};
+
+// Generate a random verification code
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+};
+
+// Register user with email and phone verification
 const registerUser = async (req, res) => {
   const { name, email, password, phoneNumber } = req.body;
   
@@ -131,7 +157,7 @@ const registerUser = async (req, res) => {
       newUser.phoneVerificationToken = await bcrypt.hash(phoneVerificationCode, 8);
       newUser.phoneVerificationExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
       
-      // In a real app, you would send this code via SMS (e.g., using Twilio)
+      // In production, send this code via SMS (e.g., using Twilio)
       console.log(`Phone verification code for ${phoneNumber}: ${phoneVerificationCode}`);
     }
 
@@ -175,6 +201,50 @@ const registerUser = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: "Server error during registration" 
+    });
+  }
+};
+
+// Verify email
+const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+  
+  try {
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Verification token is required" 
+      });
+    }
+
+    // Find user by token
+    const user = await userModel.findOne({ 
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired verification token" 
+      });
+    }
+
+    // Mark as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Email verified successfully. You can now log in." 
+    });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error during email verification" 
     });
   }
 };
@@ -232,7 +302,7 @@ const verifyPhone = async (req, res) => {
   }
 };
 
-// Enhanced login with phone number option
+// Login user with email or phone
 const loginUser = async (req, res) => {
   const { email, phoneNumber, password } = req.body;
   
@@ -335,7 +405,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Forgot password with phone number option
+// Forgot password with email or phone
 const forgotPassword = async (req, res) => {
   const { email, phoneNumber } = req.body;
   
@@ -374,7 +444,7 @@ const forgotPassword = async (req, res) => {
       user.phoneResetToken = await bcrypt.hash(resetCode, 8);
       user.phoneResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
       
-      // In a real app, you would send this code via SMS
+      // In production, send this code via SMS
       console.log(`Password reset code for ${phoneNumber}: ${resetCode}`);
     }
 
@@ -421,7 +491,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset password with phone verification option
+// Reset password with token or phone verification
 const resetPassword = async (req, res) => {
   const { token, phoneNumber, code, password } = req.body;
   
@@ -499,10 +569,11 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Export all controller functions
 export default { 
   loginUser, 
   registerUser, 
-  verifyEmail, 
+  verifyEmail,
   verifyPhone,
   forgotPassword, 
   resetPassword 

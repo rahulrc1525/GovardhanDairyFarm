@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { FaUser, FaKey, FaEnvelope, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaKey, FaEnvelope, FaSpinner, FaPhone } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import './Login.css';
 import { StoreContext } from '../../context/StoreContext';
@@ -146,7 +146,6 @@ const Login = ({ setShowLogin }) => {
     }
   };
 
-
   const handleForgotPassword = async (event) => {
     event.preventDefault();
     
@@ -215,6 +214,7 @@ const Login = ({ setShowLogin }) => {
       setIsLoading(false);
     }
   };
+
   const toggleForm = () => {
     setErrorMessage("");
     setIsRegisterActive(!isRegisterActive);
