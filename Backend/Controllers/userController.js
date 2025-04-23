@@ -199,16 +199,18 @@ const registerUser = async (req, res) => {
 };
 
 // Verify email
-// [Previous imports remain the same...]
+// [Keep all your existing imports and other functions...]
 
-// Verify email - Updated with better error handling
+// Verify email - Fixed version
 const verifyEmail = async (req, res) => {
   const { token } = req.query;
+  
+  // Debug: Log the incoming token
   console.log("Verification request received with token:", token);
   
   try {
-    // Validate token exists
-    if (!token || typeof token !== 'string') {
+    // Validate token exists and looks like a JWT
+    if (!token || token.split('.').length !== 3) {
       console.error("Invalid token format");
       return res.status(400).json({ 
         success: false, 
@@ -219,6 +221,9 @@ const verifyEmail = async (req, res) => {
     // Find user by token
     const user = await userModel.findOne({ emailVerificationToken: token });
     
+    // Debug: Log user finding result
+    console.log("User search result:", user ? "Found" : "Not found");
+    
     if (!user) {
       console.error("No user found with this token");
       return res.status(400).json({ 
@@ -227,42 +232,39 @@ const verifyEmail = async (req, res) => {
       });
     }
 
-    // Check if already verified
-    if (user.isEmailVerified) {
-      console.log("User already verified");
-      return res.status(200).json({ 
-        success: true, 
-        message: "Email already verified" 
-      });
-    }
-
-    // Verify and update user
+    // Verify JWT token
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log("Token verified for user ID:", decoded.id);
-
-      user.isEmailVerified = true;
-      user.emailVerificationToken = undefined;
-      await user.save();
-
-      console.log("Email verified successfully for:", user.email);
-      return res.status(200).json({ 
-        success: true, 
-        message: "Email verified successfully" 
-      });
-    } catch (jwtError) {
-      console.error("JWT verification failed:", jwtError);
-      if (jwtError.name === 'TokenExpiredError') {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Verification link has expired" 
+      
+      // Verify the token matches the user
+      if (decoded.id !== user._id.toString()) {
+        console.error("Token user ID mismatch");
+        return res.status(400).json({
+          success: false,
+          message: "Invalid verification token"
         });
       }
+    } catch (jwtError) {
+      console.error("JWT verification error:", jwtError);
       return res.status(400).json({ 
         success: false, 
-        message: "Invalid verification token" 
+        message: jwtError.name === 'TokenExpiredError' 
+          ? "Verification link has expired" 
+          : "Invalid verification token"
       });
     }
+
+    // Update user
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    await user.save();
+    
+    console.log("Email verified successfully for:", user.email);
+    return res.status(200).json({ 
+      success: true, 
+      message: "Email verified successfully" 
+    });
   } catch (error) {
     console.error("Server error during verification:", error);
     return res.status(500).json({ 
@@ -271,9 +273,6 @@ const verifyEmail = async (req, res) => {
     });
   }
 };
-
-// [Rest of your controller remains the same...]
-
 // Forgot password
 const forgotPassword = async (req, res) => {
   const { email } = req.body;

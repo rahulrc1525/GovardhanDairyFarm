@@ -7,101 +7,94 @@ const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const [message, setMessage] = useState('Verifying your email...');
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const verifyEmailToken = async () => {
+    const verifyEmail = async () => {
       const token = searchParams.get('token');
       
+      // Debug: Log the token we're receiving
+      console.log("Verification token from URL:", token);
+      
       if (!token) {
-        setMessage('Invalid verification link - missing token');
-        setIsLoading(false);
+        setMessage('Invalid verification link - no token found');
         return;
       }
 
       try {
-        console.log('Attempting to verify email with token:', token);
+        // Debug: Log the API request we're about to make
+        console.log("Making verification request to:", 
+          `${process.env.REACT_APP_API_URL}/api/user/verify-email?token=${token}`);
+        
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/user/verify-email`,
-          {
+          { 
             params: { token },
             headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
+              'Content-Type': 'application/json'
             }
           }
         );
 
-        console.log('Verification response:', response.data);
+        // Debug: Log the full response
+        console.log("Verification response:", response);
         
         if (response.data.success) {
-          setMessage(response.data.message || 'Email verified successfully!');
+          setMessage('Email verified successfully!');
           setIsSuccess(true);
-          // Redirect to login after 3 seconds
           setTimeout(() => navigate('/login'), 3000);
         } else {
           setMessage(response.data.message || 'Email verification failed');
         }
       } catch (error) {
-        console.error('Verification error:', error);
+        // Enhanced error logging
+        console.error("Verification error details:", {
+          message: error.message,
+          response: error.response?.data,
+          stack: error.stack
+        });
         
-        let errorMessage = 'Error verifying email';
-        if (error.response) {
-          // Server responded with error status
-          errorMessage = error.response.data.message || errorMessage;
-        } else if (error.request) {
-          // Request was made but no response
-          errorMessage = 'Network error - please check your connection';
-        }
-        
-        setMessage(errorMessage);
-      } finally {
-        setIsLoading(false);
+        setMessage(error.response?.data?.message || 'Error verifying email. Please try again later.');
       }
     };
 
-    verifyEmailToken();
+    verifyEmail();
   }, [searchParams, navigate]);
 
   return (
-    <div className="verify-email-container">
-      <div className="verify-email-card">
-        <h2>Email Verification</h2>
-        
-        {isLoading ? (
-          <div className="loading-spinner"></div>
-        ) : (
-          <p className={isSuccess ? 'success-message' : 'error-message'}>
-            {message}
-          </p>
-        )}
-
-        {isSuccess && (
-          <button 
-            onClick={() => navigate('/login')} 
-            className="login-redirect-btn"
-          >
-            Go to Login
-          </button>
-        )}
-
-        {!isSuccess && !isLoading && (
-          <div className="verification-help">
-            <p>Need help? Try these solutions:</p>
-            <ul>
-              <li>Make sure you're using the latest link from your email</li>
-              <li>Try registering again if the link has expired</li>
-              <li>Contact support if the problem persists</li>
-            </ul>
+    <div className="login-modal">
+      <div className="overlay"></div>
+      <div className="login-background">
+        <div className="form-box">
+          <h2>Email Verification</h2>
+          <p className={isSuccess ? 'success-message' : 'error-message'}>{message}</p>
+          
+          {!isSuccess && (
+            <div className="verification-help">
+              <p>Need help? Try these solutions:</p>
+              <ul>
+                <li>Make sure you're using the latest link from your email</li>
+                <li>Try registering again if the link has expired</li>
+                <li>Contact support if the problem persists</li>
+              </ul>
+              <button 
+                onClick={() => navigate('/register')}
+                className="btn-submit"
+              >
+                Register Again
+              </button>
+            </div>
+          )}
+          
+          {isSuccess && (
             <button 
-              onClick={() => navigate('/register')}
-              className="secondary-btn"
+              onClick={() => navigate('/login')} 
+              className="btn-submit"
             >
-              Register Again
+              Go to Login
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
