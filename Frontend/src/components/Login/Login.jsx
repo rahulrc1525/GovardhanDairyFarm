@@ -227,7 +227,7 @@ const Login = ({ setShowLogin }) => {
                   name="email"
                   value={data.email}
                   placeholder="Email"
-                  onChange={onchangeHandler}
+                  onChange={onChangeHandler}
                   required
                 />
               </div>
