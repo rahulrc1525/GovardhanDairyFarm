@@ -23,9 +23,7 @@ import ContactPage from './pages/Contactus/Contactus';
 import Verify from './pages/Verify/Verify';
 import WhatsAppbot from './components/WhatsAppbot/WhatsAppbot';
 import Search from './pages/Search/Search';
-import VerifyEmail from './pages/Verifyemail/VerifyEmail';
-
-
+import verifyEmailWithMailboxLayer from './components/EmailVerifiers/verifyEmailWithMailboxLayer';
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
 
@@ -49,7 +47,7 @@ const App = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/search" element={<Search />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verify-email" element={<verifyEmailWithMailboxLayer/>} />
 
 
 

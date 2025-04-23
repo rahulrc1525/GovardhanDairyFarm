@@ -3,8 +3,9 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import nodemailer from "nodemailer";
+import { verifyEmailWithMailboxLayer } from "../utils/emailVerifier.js";
 
-// Configure nodemailer
+// Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE,
   auth: {
@@ -13,12 +14,97 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Register user with email verification
+// Generate tokens
+const generateAuthToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1d" });
+};
+
+const generateRefreshToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+};
+
+const generateEmailVerificationToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_EMAIL_SECRET, { expiresIn: "1d" });
+};
+
+// Login user with enhanced security
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const user = await userModel.findOne({ email });
+    
+    // Check if account is locked
+    if (user?.accountLockedUntil && user.accountLockedUntil > new Date()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Account locked. Try again after ${user.accountLockedUntil}` 
+      });
+    }
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
+
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Please verify your email before logging in" 
+      });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      // Increment login attempts
+      user.loginAttempts += 1;
+      
+      // Lock account after 5 failed attempts
+      if (user.loginAttempts >= 5) {
+        user.accountLockedUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+        await user.save();
+        return res.status(403).json({ 
+          success: false, 
+          message: "Account locked due to too many failed attempts. Try again in 30 minutes." 
+        });
+      }
+      
+      await user.save();
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
+
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.accountLockedUntil = null;
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate tokens
+    const token = generateAuthToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    res.status(200).json({ 
+      success: true, 
+      token, 
+      refreshToken,
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Enhanced register user with email verification
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   
   try {
-    // Validation
+    // Validate input
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
@@ -34,12 +120,21 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check if user exists
+    // Check if user already exists
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
-        message: "User already exists. Please login or use a different email." 
+        message: "User already exists. Please login instead." 
+      });
+    }
+
+    // Verify email with MailboxLayer
+    const isEmailValid = await verifyEmailWithMailboxLayer(email);
+    if (!isEmailValid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please provide a valid email address" 
       });
     }
 
@@ -47,19 +142,17 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create verification token
-    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { 
-      expiresIn: "1d" 
-    });
-
     // Create new user
     const newUser = new userModel({ 
       name, 
       email, 
-      password: hashedPassword,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      password: hashedPassword 
     });
+
+    // Generate email verification token
+    const verificationToken = generateEmailVerificationToken(newUser._id);
+    newUser.emailVerificationToken = verificationToken;
+    newUser.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     await newUser.save();
 
@@ -73,20 +166,15 @@ const registerUser = async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2c3e50;">Welcome to Govardhan Dairy Farm!</h2>
-          <p>Thank you for registering. Please verify your email address to complete your registration:</p>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="background-color: #3498db; color: white; padding: 10px 20px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Verify Email
-            </a>
-          </p>
-          <p>If the button doesn't work, copy and paste this link into your browser:</p>
-          <p style="word-break: break-all;">${verificationUrl}</p>
+          <p>Thank you for registering. Please verify your email address to complete your registration.</p>
+          <a href="${verificationUrl}" 
+             style="display: inline-block; padding: 10px 20px; background-color: #3498db; 
+             color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+            Verify Email
+          </a>
           <p>If you didn't create an account with us, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">
-            This link will expire in 24 hours. If it expires, you can request a new verification email.
+          <p style="margin-top: 30px; color: #7f8c8d; font-size: 0.9em;">
+            This link will expire in 24 hours.
           </p>
         </div>
       `,
@@ -96,14 +184,11 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({ 
       success: true, 
-      message: "Registration successful! Please check your email to verify your account." 
+      message: "Registration successful. Please check your email to verify your account." 
     });
   } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error during registration" 
-    });
+    console.error("Error during registration:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -113,246 +198,45 @@ const verifyEmail = async (req, res) => {
   
   try {
     if (!token) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Verification token is required" 
-      });
+      return res.status(400).json({ success: false, message: "Verification token is required" });
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid verification token" 
-      });
-    }
-
-    // Find user by token and email
+    const decoded = jwt.verify(token, process.env.JWT_EMAIL_SECRET);
+    
     const user = await userModel.findOne({ 
-      email: decoded.email,
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() }
+      _id: decoded.id,
+      emailVerificationToken: token
     });
 
     if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid or expired verification token" 
-      });
+      return res.status(400).json({ success: false, message: "Invalid or expired verification token" });
     }
 
-    // Mark as verified
+    // Check if token is expired
+    if (user.emailVerificationExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: "Verification token has expired" });
+    }
+
+    // Mark email as verified
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
     await user.save();
 
-    // Generate auth token
-    const authToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { 
-      expiresIn: "1d" 
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Email verified successfully!",
-      token: authToken,
-      userId: user._id,
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
+    res.status(200).json({ success: true, message: "Email verified successfully" });
   } catch (error) {
-    console.error("Email verification error:", error);
+    console.error("Error verifying email:", error);
     
-    if (error.name === 'TokenExpiredError') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Verification link has expired. Please request a new one." 
-      });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(400).json({ success: false, message: "Verification token has expired" });
     }
     
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error during email verification" 
-    });
-  }
-};
-
-// Resend verification email
-const resendVerificationEmail = async (req, res) => {
-  const { email } = req.body;
-  
-  try {
-    if (!email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email is required" 
-      });
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(400).json({ success: false, message: "Invalid verification token" });
     }
-
-    const user = await userModel.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "User not found" 
-      });
-    }
-
-    if (user.isEmailVerified) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email is already verified" 
-      });
-    }
-
-    // Create new verification token
-    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { 
-      expiresIn: "1d" 
-    });
-
-    // Update user with new token
-    user.emailVerificationToken = verificationToken;
-    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-    await user.save();
-
-    // Send verification email
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     
-    const mailOptions = {
-      from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Verify Your Email Address",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">Email Verification</h2>
-          <p>We received a request to verify your email address. Click the button below to complete verification:</p>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="background-color: #3498db; color: white; padding: 10px 20px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Verify Email
-            </a>
-          </p>
-          <p>If the button doesn't work, copy and paste this link into your browser:</p>
-          <p style="word-break: break-all;">${verificationUrl}</p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">
-            This link will expire in 24 hours.
-          </p>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Verification email sent. Please check your inbox." 
-    });
-  } catch (error) {
-    console.error("Resend verification error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error while resending verification email" 
-    });
-  }
-};
-
-// Login user with email verification check
-const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  
-  try {
-    // Basic validation
-    if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email and password are required" 
-      });
-    }
-
-    // Find user
-    const user = await userModel.findOne({ email });
-    
-    // Check if user exists
-    if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid credentials" 
-      });
-    }
-
-    // Check if account is locked
-    if (user.accountLocked && user.lockUntil > Date.now()) {
-      const remainingTime = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
-      return res.status(403).json({ 
-        success: false, 
-        message: `Account is locked. Try again in ${remainingTime} minutes.` 
-      });
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
-      // Increment login attempts
-      user.loginAttempts += 1;
-      
-      // Lock account after 5 failed attempts for 30 minutes
-      if (user.loginAttempts >= 5) {
-        user.accountLocked = true;
-        user.lockUntil = Date.now() + 30 * 60 * 1000; // 30 minutes
-      }
-      
-      await user.save();
-      
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid credentials" 
-      });
-    }
-
-    // Check email verification
-    if (!user.isEmailVerified) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Please verify your email before logging in",
-        code: "EMAIL_NOT_VERIFIED"
-      });
-    }
-
-    // Reset login attempts on successful login
-    user.loginAttempts = 0;
-    user.accountLocked = false;
-    user.lockUntil = undefined;
-    user.lastLogin = Date.now();
-    await user.save();
-
-    // Generate token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { 
-      expiresIn: "1d" 
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      token, 
-      userId: user._id,
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error during login" 
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -361,28 +245,21 @@ const forgotPassword = async (req, res) => {
   const { email } = req.body;
   
   try {
-    if (!email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email is required" 
-      });
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "If this email exists, a reset link has been sent" });
     }
 
-    const user = await userModel.findOne({ email });
-    
-    if (!user) {
-      // Don't reveal if user exists for security
-      return res.status(200).json({ 
-        success: true, 
-        message: "If this email exists, a reset link has been sent" 
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Please verify your email before resetting password" 
       });
     }
 
     // Generate reset token
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { 
-      expiresIn: "1h" 
-    });
-    
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_RESET_SECRET, { expiresIn: "1h" });
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
@@ -396,21 +273,16 @@ const forgotPassword = async (req, res) => {
       subject: "Password Reset Request",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">Password Reset Request</h2>
+          <h2 style="color: #2c3e50;">Password Reset</h2>
           <p>We received a request to reset your password. Click the button below to proceed:</p>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
-               style="background-color: #e74c3c; color: white; padding: 10px 20px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Reset Password
-            </a>
-          </p>
-          <p>If the button doesn't work, copy and paste this link into your browser:</p>
-          <p style="word-break: break-all;">${resetUrl}</p>
+          <a href="${resetUrl}" 
+             style="display: inline-block; padding: 10px 20px; background-color: #e74c3c; 
+             color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+            Reset Password
+          </a>
           <p>If you didn't request this, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">
-            This link will expire in 1 hour. For security reasons, please do not share this link.
+          <p style="margin-top: 30px; color: #7f8c8d; font-size: 0.9em;">
+            This link will expire in 1 hour.
           </p>
         </div>
       `,
@@ -420,14 +292,11 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json({ 
       success: true, 
-      message: "If this email exists, a reset link has been sent" 
+      message: "If this email exists, a password reset link has been sent" 
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error during password reset" 
-    });
+    console.error("Error during forgot password:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -437,39 +306,27 @@ const resetPassword = async (req, res) => {
   
   try {
     if (!token || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Token and new password are required" 
-      });
+      return res.status(400).json({ success: false, message: "Token and new password are required" });
     }
 
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_RESET_SECRET);
+    
+    const user = await userModel.findOne({ 
+      _id: decoded.id,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired reset token" });
+    }
+
+    // Validate new password
     if (password.length < 8) {
       return res.status(400).json({ 
         success: false, 
         message: "Password must be at least 8 characters long" 
-      });
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.id) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid reset token" 
-      });
-    }
-
-    // Find user by token
-    const user = await userModel.findOne({ 
-      _id: decoded.id,
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() } 
-    });
-
-    if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid or expired reset token" 
       });
     }
 
@@ -482,36 +339,73 @@ const resetPassword = async (req, res) => {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     user.loginAttempts = 0; // Reset login attempts
-    user.accountLocked = false;
-    user.lockUntil = undefined;
+    user.accountLockedUntil = null; // Unlock account if it was locked
     await user.save();
 
     res.status(200).json({ 
       success: true, 
-      message: "Password reset successful. You can now log in with your new password." 
+      message: "Password reset successfully. You can now login with your new password." 
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+    console.error("Error resetting password:", error);
     
-    if (error.name === 'TokenExpiredError') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Reset link has expired. Please request a new one." 
-      });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(400).json({ success: false, message: "Reset token has expired" });
     }
     
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error during password reset" 
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(400).json({ success: false, message: "Invalid reset token" });
+    }
+    
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Refresh token
+const refreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  
+  try {
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: "Refresh token is required" });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Generate new access token
+    const newToken = generateAuthToken(user._id);
+
+    res.status(200).json({ 
+      success: true, 
+      token: newToken,
+      userId: user._id
     });
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ success: false, message: "Refresh token expired" });
+    }
+    
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ success: false, message: "Invalid refresh token" });
+    }
+    
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 export default { 
   loginUser, 
   registerUser, 
-  verifyEmail,
-  resendVerificationEmail,
+  verifyEmail, 
   forgotPassword, 
-  resetPassword 
+  resetPassword,
+  refreshToken
 };

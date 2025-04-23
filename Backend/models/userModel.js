@@ -8,15 +8,13 @@ const userSchema = new mongoose.Schema(
       required: true, 
       unique: true,
       validate: {
-        validator: function(v) {
-          return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
-        },
+        validator: validator.isEmail,
         message: props => `${props.value} is not a valid email address!`
       }
     },
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },
-    role: { type: String, default: "user", enum: ["user", "admin"] },
+    role: { type: String, default: "user" },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
     emailVerificationExpires: { type: Date },
@@ -24,18 +22,12 @@ const userSchema = new mongoose.Schema(
     passwordResetExpires: { type: Date },
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
-    accountLocked: { type: Boolean, default: false },
-    lockUntil: { type: Date }
+    accountLockedUntil: { type: Date }
   },
   {
     timestamps: true,
     minimize: false,
   }
 );
-
-// Add indexes
-userSchema.index({ email: 1 });
-userSchema.index({ emailVerificationToken: 1 }, { sparse: true });
-userSchema.index({ passwordResetToken: 1 }, { sparse: true });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
