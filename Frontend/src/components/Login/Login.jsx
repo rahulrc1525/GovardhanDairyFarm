@@ -16,8 +16,8 @@ const Login = ({ setShowLogin }) => {
     confirmPassword: ""
   });
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
@@ -77,7 +77,7 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        setSuccessMessage(response.data.message || "Registration successful! Please check your email to verify your account.");
+        setSuccessMessage("Registration successful! Please check your email to verify your account.");
         setData({
           name: "",
           email: "",
@@ -98,8 +98,14 @@ const Login = ({ setShowLogin }) => {
     }
   };
 
-  const requestPasswordReset = async (event) => {
+  const handleForgotPassword = async (event) => {
     event.preventDefault();
+    
+    if (!data.email) {
+      setErrorMessage("Email is required");
+      return;
+    }
+    
     setIsLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -110,13 +116,8 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        setSuccessMessage(response.data.message || "If this email exists, a reset link has been sent.");
-        setShowForgotPassword(false);
-        setData({
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
+        setSuccessMessage("If this email is registered, you will receive a password reset link.");
+        setData(prev => ({ ...prev, email: "" }));
       } else {
         setErrorMessage(response.data.message || "Failed to send reset email. Please try again.");
       }
@@ -182,14 +183,22 @@ const Login = ({ setShowLogin }) => {
                 {isLoading ? <FaSpinner className="spin" /> : "Login"}
               </button>
               <p className="forgot-password-link">
-                <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
+                <a href="#" onClick={(e) => {
+                  e.preventDefault();
+                  setShowForgotPassword(true);
+                  setErrorMessage("");
+                  setSuccessMessage("");
+                }}>Forgot Password?</a>
               </p>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               {successMessage && <p className="success-message">{successMessage}</p>}
               <div className="register-link">
                 <p>
                   Don't have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Register</a>
+                  <a href="#" onClick={(e) => {
+                    e.preventDefault();
+                    toggleForm();
+                  }}>Register</a>
                 </p>
               </div>
             </form>
@@ -255,7 +264,10 @@ const Login = ({ setShowLogin }) => {
               <div className="register-link">
                 <p>
                   Already have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Login</a>
+                  <a href="#" onClick={(e) => {
+                    e.preventDefault();
+                    toggleForm();
+                  }}>Login</a>
                 </p>
               </div>
             </form>
@@ -265,7 +277,7 @@ const Login = ({ setShowLogin }) => {
         {/* Forgot Password Form */}
         {showForgotPassword && (
           <div className="form-box forgot-password">
-            <form onSubmit={requestPasswordReset}>
+            <form onSubmit={handleForgotPassword}>
               <h1>Reset Password</h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
@@ -285,7 +297,12 @@ const Login = ({ setShowLogin }) => {
               {successMessage && <p className="success-message">{successMessage}</p>}
               <div className="register-link">
                 <p>
-                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
+                  <a href="#" onClick={(e) => {
+                    e.preventDefault();
+                    setShowForgotPassword(false);
+                    setErrorMessage("");
+                    setSuccessMessage("");
+                  }}>Back to Login</a>
                 </p>
               </div>
             </form>

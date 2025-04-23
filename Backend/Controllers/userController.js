@@ -58,13 +58,14 @@ const registerUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Create new user
+    // Create new user (not verified)
     const newUser = new userModel({ 
       name, 
       email, 
       password: hashedPassword,
       emailVerificationToken: verificationToken,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      isEmailVerified: false // Explicitly set to false
     });
 
     await newUser.save();
@@ -100,7 +101,8 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({ 
       success: true, 
-      message: "Registration successful. Please check your email to verify your account." 
+      message: "Registration successful. Please check your email to verify your account.",
+      isEmailVerified: false // Make sure to send this
     });
   } catch (error) {
     console.error("Registration error:", error);
@@ -125,6 +127,13 @@ const verifyEmail = async (req, res) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    if (!decoded.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification token"
+      });
+    }
+
     // Find user by email from token
     const user = await userModel.findOne({ 
       email: decoded.email,
@@ -199,7 +208,7 @@ const loginUser = async (req, res) => {
     if (!user.isEmailVerified) {
       return res.status(403).json({ 
         success: false, 
-        message: "Please verify your email before logging in" 
+        message: "Please verify your email before logging in. Check your inbox for the verification link." 
       });
     }
 
@@ -243,7 +252,8 @@ const loginUser = async (req, res) => {
       user: {
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        isEmailVerified: user.isEmailVerified
       }
     });
   } catch (error) {
@@ -269,10 +279,10 @@ const forgotPassword = async (req, res) => {
     const user = await userModel.findOne({ email });
     
     if (!user) {
-      // Don't reveal if user exists for security
+      // For security, don't reveal if user exists
       return res.status(200).json({ 
         success: true, 
-        message: "If this email exists, a reset link has been sent" 
+        message: "If this email is registered, you will receive a password reset link." 
       });
     }
 
@@ -318,7 +328,7 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json({ 
       success: true, 
-      message: "If this email exists, a reset link has been sent" 
+      message: "If this email is registered, you will receive a password reset link." 
     });
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -350,6 +360,13 @@ const resetPassword = async (req, res) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    if (!decoded.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid reset token"
+      });
+    }
+
     // Find user by token
     const user = await userModel.findOne({ 
       _id: decoded.id,
@@ -386,7 +403,7 @@ const resetPassword = async (req, res) => {
     
     let message = "Server error during password reset";
     if (error.name === "TokenExpiredError") {
-      message = "Reset token has expired";
+      message = "Reset token has expired. Please request a new password reset link.";
     } else if (error.name === "JsonWebTokenError") {
       message = "Invalid reset token";
     }
