@@ -31,6 +31,7 @@ const allowedOrigins = [
   "https://govardhandairyfarm-admin.onrender.com",
   "https://govardhandairyfarm.shop",
   "https://govardhandairyfarm.onrender.com",
+  "https://govardhandairyfarmbackend.onrender.com",
   "http://localhost:3000" // For local development
 ];
 
