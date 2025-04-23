@@ -17,6 +17,7 @@ const Login = ({ setShowLogin }) => {
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
@@ -30,6 +31,7 @@ const Login = ({ setShowLogin }) => {
     event.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
     
     try {
       const response = await axios.post(`${url}/api/user/login`, {
@@ -45,7 +47,7 @@ const Login = ({ setShowLogin }) => {
         setErrorMessage(response.data.message || "Login failed. Please try again.");
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      console.error("Login error:", error);
       const errorMsg = error.response?.data?.message || 
                       error.message || 
                       "An error occurred during login. Please try again.";
@@ -65,6 +67,7 @@ const Login = ({ setShowLogin }) => {
     
     setIsLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
     
     try {
       const response = await axios.post(`${url}/api/user/register`, {
@@ -74,8 +77,7 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "Registration successful! Please check your email to verify your account.");
-        setIsRegisterActive(false);
+        setSuccessMessage(response.data.message || "Registration successful! Please check your email to verify your account.");
         setData({
           name: "",
           email: "",
@@ -86,51 +88,10 @@ const Login = ({ setShowLogin }) => {
         setErrorMessage(response.data.message || "Registration failed. Please try again.");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error("Registration error:", error);
       const errorMsg = error.response?.data?.message || 
                       error.message || 
                       "An error occurred during registration. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (event) => {
-    event.preventDefault();
-    
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/reset-password`, {
-        email: data.email,
-        password: data.password,
-      });
-
-      if (response.data.success) {
-        alert(response.data.message || "Password reset successfully. You can now login.");
-        setShowForgotPassword(false);
-        setErrorMessage("");
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        setErrorMessage(response.data.message || "Password reset failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred. Please try again.";
       setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
@@ -141,6 +102,7 @@ const Login = ({ setShowLogin }) => {
     event.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
     
     try {
       const response = await axios.post(`${url}/api/user/forgot-password`, {
@@ -148,14 +110,18 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        alert(response.data.message || "If this email exists, a reset link has been sent.");
+        setSuccessMessage(response.data.message || "If this email exists, a reset link has been sent.");
         setShowForgotPassword(false);
-        setErrorMessage("");
+        setData({
+          email: "",
+          password: "",
+          confirmPassword: ""
+        });
       } else {
         setErrorMessage(response.data.message || "Failed to send reset email. Please try again.");
       }
     } catch (error) {
-      console.error("Error requesting password reset:", error);
+      console.error("Password reset request error:", error);
       const errorMsg = error.response?.data?.message || 
                       error.message || 
                       "An error occurred. Please try again.";
@@ -167,6 +133,7 @@ const Login = ({ setShowLogin }) => {
 
   const toggleForm = () => {
     setErrorMessage("");
+    setSuccessMessage("");
     setIsRegisterActive(!isRegisterActive);
     setData({
       name: "",
@@ -218,6 +185,7 @@ const Login = ({ setShowLogin }) => {
                 <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
               </p>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
+              {successMessage && <p className="success-message">{successMessage}</p>}
               <div className="register-link">
                 <p>
                   Don't have an account?{' '}
@@ -283,6 +251,7 @@ const Login = ({ setShowLogin }) => {
                 {isLoading ? <FaSpinner className="spin" /> : "Register"}
               </button>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
+              {successMessage && <p className="success-message">{successMessage}</p>}
               <div className="register-link">
                 <p>
                   Already have an account?{' '}
@@ -313,6 +282,7 @@ const Login = ({ setShowLogin }) => {
                 {isLoading ? <FaSpinner className="spin" /> : "Send Reset Link"}
               </button>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
+              {successMessage && <p className="success-message">{successMessage}</p>}
               <div className="register-link">
                 <p>
                   <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>

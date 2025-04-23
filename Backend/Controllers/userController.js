@@ -3,9 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import nodemailer from "nodemailer";
-import axios from "axios";
 
-// Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE,
   auth: {
@@ -14,36 +12,23 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Helper function to verify email with MailboxLayer
-const verifyEmailWithMailboxLayer = async (email) => {
-  try {
-    const response = await axios.get(
-      `http://apilayer.net/api/check?access_key=${process.env.MAILBOXLAYER_API_KEY}&email=${email}&smtp=1&format=1`
-    );
-    
-    return {
-      valid: response.data.format_valid && response.data.mx_found && response.data.smtp_check,
-      score: response.data.score,
-      ...response.data
-    };
-  } catch (error) {
-    console.error("MailboxLayer verification error:", error);
-    return { valid: false, score: 0 };
-  }
-};
-
-// Register user with email verification
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   
   try {
-    // Basic validation
+    // Validation
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
     }
 
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email format" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid email format" 
+      });
     }
 
     if (password.length < 8) {
@@ -53,49 +38,35 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check if user already exists
+    // Check existing user
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
-        message: "User already exists" 
+        message: "User already exists. Please login." 
       });
     }
 
-    // Verify email with MailboxLayer
-    const emailVerification = await verifyEmailWithMailboxLayer(email);
-    
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create verification token
+    const verificationToken = jwt.sign(
+      { email }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "1d" }
+    );
 
     // Create new user
     const newUser = new userModel({ 
       name, 
       email, 
       password: hashedPassword,
-      emailQualityScore: emailVerification.score,
-      emailValid: emailVerification.valid
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
     });
 
-    // Auto-verify if enabled and email is valid
-    if (process.env.AUTO_VERIFY_EMAIL === 'true' && emailVerification.valid) {
-      newUser.isEmailVerified = true;
-      await newUser.save();
-      
-      return res.status(201).json({ 
-        success: true, 
-        message: "Registration successful. Your email has been automatically verified." 
-      });
-    }
-
-    // Otherwise, proceed with email verification
-    const verificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { 
-      expiresIn: "1d" 
-    });
-    
-    newUser.emailVerificationToken = verificationToken;
-    newUser.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     await newUser.save();
 
     // Send verification email
@@ -132,7 +103,7 @@ const registerUser = async (req, res) => {
       message: "Registration successful. Please check your email to verify your account." 
     });
   } catch (error) {
-    console.error("Error during registration:", error);
+    console.error("Registration error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Server error during registration" 
@@ -140,7 +111,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Verify email
 const verifyEmail = async (req, res) => {
   const { token } = req.query;
   
@@ -152,10 +122,14 @@ const verifyEmail = async (req, res) => {
       });
     }
 
-    // Find user by token
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user by email from token
     const user = await userModel.findOne({ 
+      email: decoded.email,
       emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() } 
+      emailVerificationExpires: { $gt: Date.now() }
     });
 
     if (!user) {
@@ -176,20 +150,26 @@ const verifyEmail = async (req, res) => {
       message: "Email verified successfully. You can now log in." 
     });
   } catch (error) {
-    console.error("Error verifying email:", error);
-    res.status(500).json({ 
+    console.error("Email verification error:", error);
+    
+    let message = "Server error during email verification";
+    if (error.name === "TokenExpiredError") {
+      message = "Verification token has expired";
+    } else if (error.name === "JsonWebTokenError") {
+      message = "Invalid verification token";
+    }
+
+    res.status(400).json({ 
       success: false, 
-      message: "Server error during email verification" 
+      message 
     });
   }
 };
 
-// Login user with enhanced security
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // Basic validation
     if (!email || !password) {
       return res.status(400).json({ 
         success: false, 
@@ -197,10 +177,8 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await userModel.findOne({ email });
     
-    // Check if user exists
     if (!user) {
       return res.status(400).json({ 
         success: false, 
@@ -269,7 +247,7 @@ const loginUser = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Error during login:", error);
+    console.error("Login error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Server error during login" 
@@ -277,7 +255,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Forgot password
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   
@@ -292,16 +269,19 @@ const forgotPassword = async (req, res) => {
     const user = await userModel.findOne({ email });
     
     if (!user) {
-      return res.status(400).json({ 
-        success: false, 
+      // Don't reveal if user exists for security
+      return res.status(200).json({ 
+        success: true, 
         message: "If this email exists, a reset link has been sent" 
       });
     }
 
     // Generate reset token
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { 
-      expiresIn: "1h" 
-    });
+    const resetToken = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "1h" }
+    );
     
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
@@ -341,7 +321,7 @@ const forgotPassword = async (req, res) => {
       message: "If this email exists, a reset link has been sent" 
     });
   } catch (error) {
-    console.error("Error during forgot password:", error);
+    console.error("Forgot password error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Server error during password reset" 
@@ -349,7 +329,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset password
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   
@@ -368,10 +347,14 @@ const resetPassword = async (req, res) => {
       });
     }
 
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
     // Find user by token
     const user = await userModel.findOne({ 
+      _id: decoded.id,
       passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() } 
+      passwordResetExpires: { $gt: Date.now() }
     });
 
     if (!user) {
@@ -399,10 +382,18 @@ const resetPassword = async (req, res) => {
       message: "Password reset successful. You can now log in with your new password." 
     });
   } catch (error) {
-    console.error("Error resetting password:", error);
-    res.status(500).json({ 
+    console.error("Password reset error:", error);
+    
+    let message = "Server error during password reset";
+    if (error.name === "TokenExpiredError") {
+      message = "Reset token has expired";
+    } else if (error.name === "JsonWebTokenError") {
+      message = "Invalid reset token";
+    }
+
+    res.status(400).json({ 
       success: false, 
-      message: "Server error during password reset" 
+      message 
     });
   }
 };
