@@ -676,15 +676,15 @@ const PlaceOrder = () => {
            (errors.ZipCode && errors.ZipCode.includes("contact us")) ? (
             <div className="pincode-error">
              <p>
-  Delivery not available in this area. Please
-  <Link
-    to="/Contact_us"
-    style={{ color: '#F37254', textDecoration: 'underline', marginLeft: '5px' }}
-  >
-    contact us
-  </Link>{' '}
-  for more information.
-</p>
+            Delivery not available in this area. Please
+            <Link
+              to="/Contact_us"
+              style={{ color: '#F37254', textDecoration: 'underline', marginLeft: '5px' }}
+                >
+              contact us
+              </Link>{' '}
+              for more information.
+              </p>
 
             </div>
           ) : null}

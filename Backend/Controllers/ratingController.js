@@ -34,7 +34,7 @@ const addOrUpdateRating = async (req, res) => {
 
         // Validate rating range
         const numericRating = Number(rating);
-        if (isNaN(numericRating) ){
+        if (isNaN(numericRating)) {
             return res.status(400).json({
                 success: false,
                 message: "Rating must be a number",
