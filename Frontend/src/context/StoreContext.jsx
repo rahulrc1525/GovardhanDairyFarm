@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 export const StoreContext = createContext(null);
@@ -13,13 +13,29 @@ const StoreContextProvider = ({ children }) => {
   const [foodList, setFoodList] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
+  const [userData, setUserData] = useState(() => {
+    const savedUser = localStorage.getItem("userData");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [foodRatings, setFoodRatings] = useState({});
 
+  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  const fetchCartData = async () => {
+  // Save auth data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", userId);
+    if (userData) {
+      localStorage.setItem("userData", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("userData");
+    }
+  }, [token, userId, userData]);
+
+  const fetchCartData = useCallback(async () => {
     if (!token || !userId) return;
 
     try {
@@ -29,18 +45,21 @@ const StoreContextProvider = ({ children }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data.success) {
-        setCartItems(response.data.cartData);
+        setCartItems(response.data.cartData || {});
       }
     } catch (error) {
       console.error("Fetch cart error:", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
-  };
+  }, [token, userId, url]);
 
   useEffect(() => {
     if (token && userId) {
       fetchCartData();
     }
-  }, [token, userId]);
+  }, [token, userId, fetchCartData]);
 
   const addToCart = async (itemId) => {
     if (!token || !userId) {
@@ -63,6 +82,9 @@ const StoreContextProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Add to cart error:", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -92,6 +114,9 @@ const StoreContextProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Remove from cart error:", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -120,9 +145,11 @@ const StoreContextProvider = ({ children }) => {
   const logout = () => {
     setToken("");
     setUserId("");
+    setUserData(null);
     setCartItems({});
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
+    localStorage.removeItem("userData");
     localStorage.removeItem("cart");
   };
 
@@ -142,6 +169,9 @@ const StoreContextProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Clear cart error:", error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -169,6 +199,12 @@ const StoreContextProvider = ({ children }) => {
     }));
   };
 
+  const setAuthData = (token, userId, userData) => {
+    setToken(token);
+    setUserId(userId);
+    setUserData(userData);
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -179,9 +215,9 @@ const StoreContextProvider = ({ children }) => {
         getTotalCartAmount,
         url,
         token,
-        setToken,
         userId,
-        setUserId,
+        userData,
+        setAuthData,
         logout,
         clearCart,
         fetchFoodRatings,
