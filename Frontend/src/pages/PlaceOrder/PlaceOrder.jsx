@@ -24,6 +24,21 @@ const PlaceOrder = () => {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [errors, setErrors] = useState({});
   const [pincodeSuggestions, setPincodeSuggestions] = useState(null);
+  const [manualValidation, setManualValidation] = useState(false);
+
+  // Predefined list of cities, states and pincodes for manual validation
+  const cityStatePincodeMap = [
+    { city: "Thane", state: "Maharashtra", pincodes: ["400601", "400602", "400603", "400604", "400605"] },
+    { city: "Mumbai", state: "Maharashtra", pincodes: ["400001", "400002", "400003", "400004", "400005"] },
+    { city: "Pune", state: "Maharashtra", pincodes: ["411001", "411002", "411003", "411004", "411005"] },
+    { city: "Nashik", state: "Maharashtra", pincodes: ["422001", "422002", "422003", "422004", "422005"] },
+    { city: "Delhi", state: "Delhi", pincodes: ["110001", "110002", "110003", "110004", "110005"] },
+    { city: "Bangalore", state: "Karnataka", pincodes: ["560001", "560002", "560003", "560004", "560005"] },
+    { city: "Hyderabad", state: "Telangana", pincodes: ["500001", "500002", "500003", "500004", "500005"] },
+    { city: "Chennai", state: "Tamil Nadu", pincodes: ["600001", "600002", "600003", "600004", "600005"] },
+    { city: "Kolkata", state: "West Bengal", pincodes: ["700001", "700002", "700003", "700004", "700005"] },
+    { city: "Ahmedabad", state: "Gujarat", pincodes: ["380001", "380002", "380003", "380004", "380005"] },
+  ];
 
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -59,13 +74,69 @@ const PlaceOrder = () => {
     setData((prevData) => ({ ...prevData, [name]: value }));
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
     
-    // Clear suggestions when pincode changes
     if (name === "ZipCode") {
       setPincodeSuggestions(null);
     }
   };
 
-  const validateCityStatePincode = async () => {
+  const validateCityStatePincodeManually = () => {
+    const { ZipCode, city, state } = data;
+    let isValid = true;
+    const newErrors = {};
+    setPincodeSuggestions(null);
+
+    if (!ZipCode || !city || !state) {
+      newErrors.ZipCode = "Pincode, city, and state are required";
+      return { isValid: false, newErrors };
+    }
+
+    // Basic pincode format check (6 digits for India)
+    if (!/^\d{6}$/.test(ZipCode)) {
+      newErrors.ZipCode = "Pincode must be 6 digits";
+      return { isValid: false, newErrors };
+    }
+
+    // Find matching entries in our predefined list
+    const matchingEntries = cityStatePincodeMap.filter(entry => 
+      entry.city.toLowerCase() === city.toLowerCase() && 
+      entry.state.toLowerCase() === state.toLowerCase()
+    );
+
+    if (matchingEntries.length === 0) {
+      newErrors.city = "City and state combination not found in our delivery areas";
+      newErrors.state = "City and state combination not found in our delivery areas";
+      isValid = false;
+      
+      // Show suggestions
+      const allCities = [...new Set(cityStatePincodeMap.map(item => item.city))];
+      const allStates = [...new Set(cityStatePincodeMap.map(item => item.state))];
+      
+      setPincodeSuggestions({
+        cities: allCities,
+        states: allStates,
+        message: "We currently deliver to these areas:"
+      });
+    } else {
+      // Check if pincode is valid for this city-state
+      const pincodeValid = matchingEntries.some(entry => 
+        entry.pincodes.includes(ZipCode)
+      );
+
+      if (!pincodeValid) {
+        newErrors.ZipCode = `Pincode not valid for ${city}, ${state}. Valid pincodes: ${matchingEntries[0].pincodes.join(", ")}`;
+        isValid = false;
+        
+        setPincodeSuggestions({
+          validPincodes: matchingEntries[0].pincodes,
+          message: `Valid pincodes for ${city}, ${state}:`
+        });
+      }
+    }
+
+    return { isValid, newErrors };
+  };
+
+  const validateCityStatePincodeAPI = async () => {
     const { ZipCode, city, state } = data;
     let isValid = true;
     const newErrors = {};
@@ -113,11 +184,12 @@ const PlaceOrder = () => {
         isValid = false;
         setPincodeSuggestions({
           states: uniqueStates,
-          districts: uniqueDistricts
+          districts: uniqueDistricts,
+          message: "Based on pincode, valid options are:"
         });
       }
 
-      // Check if city matches
+      // Check if city matches (compare with District from API)
       const isCityValid = uniqueDistricts.some(d => 
         d.toLowerCase().includes(city.toLowerCase()) || 
         city.toLowerCase().includes(d.toLowerCase())
@@ -128,17 +200,31 @@ const PlaceOrder = () => {
         isValid = false;
         setPincodeSuggestions({
           states: uniqueStates,
-          districts: uniqueDistricts
+          districts: uniqueDistricts,
+          message: "Based on pincode, valid options are:"
         });
       }
 
     } catch (error) {
       console.error("Error validating pincode:", error);
-      newErrors.ZipCode = "Error validating pincode. Please check manually.";
+      newErrors.ZipCode = "Error validating pincode. Please try manual validation.";
       isValid = false;
     }
 
     return { isValid, newErrors };
+  };
+
+  const validateCityStatePincode = async () => {
+    if (manualValidation) {
+      return validateCityStatePincodeManually();
+    } else {
+      try {
+        return await validateCityStatePincodeAPI();
+      } catch (error) {
+        console.error("API validation failed, falling back to manual", error);
+        return validateCityStatePincodeManually();
+      }
+    }
   };
 
   const validateForm = async () => {
@@ -378,12 +464,33 @@ const PlaceOrder = () => {
             </div>
           ))}
           
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={manualValidation}
+                onChange={() => setManualValidation(!manualValidation)}
+              />
+              Use manual validation (check if API fails)
+            </label>
+          </div>
+          
           {/* Pincode suggestions */}
           {pincodeSuggestions && (
             <div className="pincode-suggestions">
-              <h4>Pincode Information:</h4>
-              <p><strong>Valid Cities:</strong> {pincodeSuggestions.districts.join(", ")}</p>
-              <p><strong>Valid State:</strong> {pincodeSuggestions.states.join(", ")}</p>
+              <h4>{pincodeSuggestions.message || "Pincode Information:"}</h4>
+              {pincodeSuggestions.districts && (
+                <p><strong>Valid Cities:</strong> {pincodeSuggestions.districts.join(", ")}</p>
+              )}
+              {pincodeSuggestions.states && (
+                <p><strong>Valid States:</strong> {pincodeSuggestions.states.join(", ")}</p>
+              )}
+              {pincodeSuggestions.cities && (
+                <p><strong>Available Cities:</strong> {pincodeSuggestions.cities.join(", ")}</p>
+              )}
+              {pincodeSuggestions.validPincodes && (
+                <p><strong>Valid Pincodes:</strong> {pincodeSuggestions.validPincodes.join(", ")}</p>
+              )}
             </div>
           )}
         </form>
