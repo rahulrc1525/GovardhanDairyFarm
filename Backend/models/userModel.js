@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -10,26 +11,36 @@ const userSchema = new mongoose.Schema(
       required: true, 
       unique: true,
       validate: {
-        validator: validator.isEmail,
+        validator: function(v) {
+          return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
+        },
         message: props => `${props.value} is not a valid email address!`
       }
     },
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },
-    role: { type: String, default: "user" },
+    role: { type: String, default: "user", enum: ["user", "admin"] },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
     emailVerificationExpires: { type: Date },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
+    emailQualityScore: { type: Number }, // Score from MailboxLayer
+    emailValid: { type: Boolean }, // Is email valid according to MailboxLayer
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
-    accountLockedUntil: { type: Date }
+    accountLocked: { type: Boolean, default: false },
+    lockUntil: { type: Date }
   },
   {
     timestamps: true,
     minimize: false,
   }
 );
+
+// Add index for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ emailVerificationToken: 1 }, { sparse: true });
+userSchema.index({ passwordResetToken: 1 }, { sparse: true });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);

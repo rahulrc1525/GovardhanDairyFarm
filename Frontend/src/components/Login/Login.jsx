@@ -1,12 +1,12 @@
 import React, { useContext, useState } from 'react';
-import { FaUser, FaKey, FaEnvelope } from 'react-icons/fa';
+import { FaUser, FaKey, FaEnvelope, FaSpinner } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import './Login.css';
 import { StoreContext } from '../../context/StoreContext';
 import axios from "axios";
 
 const Login = ({ setShowLogin }) => {
-  const { url, setToken, setUserId } = useContext(StoreContext);
+  const { url, setAuthData } = useContext(StoreContext);
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [data, setData] = useState({
@@ -38,21 +38,18 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        const { token, userId } = response.data;
-        setToken(token);
-        setUserId(userId);
-        localStorage.setItem("token", token);
-        localStorage.setItem("userId", userId);
+        const { token, userId, user } = response.data;
+        setAuthData(token, userId, user);
         setShowLogin(false);
       } else {
         setErrorMessage(response.data.message || "Login failed. Please try again.");
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setErrorMessage(
-        error.response?.data?.message || 
-        "Invalid email or password. Please try again."
-      );
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      "An error occurred during login. Please try again.";
+      setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +74,7 @@ const Login = ({ setShowLogin }) => {
       });
 
       if (response.data.success) {
-        alert("Registration successful! Please check your email to verify your account.");
+        alert(response.data.message || "Registration successful! Please check your email to verify your account.");
         setIsRegisterActive(false);
         setData({
           name: "",
@@ -90,10 +87,10 @@ const Login = ({ setShowLogin }) => {
       }
     } catch (error) {
       console.error("Error during registration:", error);
-      setErrorMessage(
-        error.response?.data?.message || 
-        "An error occurred during registration. Please try again."
-      );
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      "An error occurred during registration. Please try again.";
+      setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -112,15 +109,16 @@ const Login = ({ setShowLogin }) => {
     
     try {
       const response = await axios.post(`${url}/api/user/reset-password`, {
-        token: data.token, // You'll need to get this from the URL in a real implementation
-        password: data.password
+        email: data.email,
+        password: data.password,
       });
 
       if (response.data.success) {
-        alert("Password reset successfully. You can now login with your new password.");
+        alert(response.data.message || "Password reset successfully. You can now login.");
         setShowForgotPassword(false);
         setErrorMessage("");
         setData({
+          name: "",
           email: "",
           password: "",
           confirmPassword: ""
@@ -130,10 +128,38 @@ const Login = ({ setShowLogin }) => {
       }
     } catch (error) {
       console.error("Error resetting password:", error);
-      setErrorMessage(
-        error.response?.data?.message || 
-        "An error occurred. Please try again."
-      );
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      "An error occurred. Please try again.";
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setErrorMessage("");
+    
+    try {
+      const response = await axios.post(`${url}/api/user/forgot-password`, {
+        email: data.email
+      });
+
+      if (response.data.success) {
+        alert(response.data.message || "If this email exists, a reset link has been sent.");
+        setShowForgotPassword(false);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(response.data.message || "Failed to send reset email. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      "An error occurred. Please try again.";
+      setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -185,12 +211,8 @@ const Login = ({ setShowLogin }) => {
                   required
                 />
               </div>
-              <button 
-                className="btn-submit" 
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? "Logging in..." : "Login"}
+              <button className="btn-submit" type="submit" disabled={isLoading}>
+                {isLoading ? <FaSpinner className="spin" /> : "Login"}
               </button>
               <p className="forgot-password-link">
                 <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
@@ -257,12 +279,8 @@ const Login = ({ setShowLogin }) => {
                   minLength="8"
                 />
               </div>
-              <button 
-                className="btn-submit" 
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? "Registering..." : "Register"}
+              <button className="btn-submit" type="submit" disabled={isLoading}>
+                {isLoading ? <FaSpinner className="spin" /> : "Register"}
               </button>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
@@ -278,7 +296,7 @@ const Login = ({ setShowLogin }) => {
         {/* Forgot Password Form */}
         {showForgotPassword && (
           <div className="form-box forgot-password">
-            <form onSubmit={handleForgotPassword}>
+            <form onSubmit={requestPasswordReset}>
               <h1>Reset Password</h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
@@ -291,36 +309,8 @@ const Login = ({ setShowLogin }) => {
                   required
                 />
               </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="password"
-                  value={data.password}
-                  placeholder="New Password (min 8 characters)"
-                  onChange={onChangeHandler}
-                  required
-                  minLength="8"
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={data.confirmPassword}
-                  placeholder="Confirm New Password"
-                  onChange={onChangeHandler}
-                  required
-                  minLength="8"
-                />
-              </div>
-              <button 
-                className="btn-submit" 
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? "Resetting..." : "Reset Password"}
+              <button className="btn-submit" type="submit" disabled={isLoading}>
+                {isLoading ? <FaSpinner className="spin" /> : "Send Reset Link"}
               </button>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
