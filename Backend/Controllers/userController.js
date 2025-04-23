@@ -166,8 +166,7 @@ const registerUser = async (req, res) => {
     newUser.emailVerificationToken = verificationToken;
     await newUser.save();
 
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    const mailOptions = {
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;    const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Email",

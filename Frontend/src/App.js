@@ -23,6 +23,7 @@ import ContactPage from './pages/Contactus/Contactus';
 import Verify from './pages/Verify/Verify';
 import WhatsAppbot from './components/WhatsAppbot/WhatsAppbot';
 import Search from './pages/Search/Search';
+import VerifyEmail from './pages/Verifyemail/VerifyEmail';
 
 
 const App = () => {
@@ -48,6 +49,8 @@ const App = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+
 
 
 
