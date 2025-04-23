@@ -675,9 +675,17 @@ const PlaceOrder = () => {
           {(errors.city && errors.city.includes("contact us")) || 
            (errors.ZipCode && errors.ZipCode.includes("contact us")) ? (
             <div className="pincode-error">
-              <p>
-                Delivery not available in this area. Please <Link to="/Contact_us">contact us</Link> for more information.
-              </p>
+             <p>
+  Delivery not available in this area. Please
+  <Link
+    to="/Contact_us"
+    style={{ color: '#F37254', textDecoration: 'underline', marginLeft: '5px' }}
+  >
+    contact us
+  </Link>{' '}
+  for more information.
+</p>
+
             </div>
           ) : null}
         </form>
