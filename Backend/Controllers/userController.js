@@ -4,6 +4,11 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import nodemailer from "nodemailer";
 import axios from "axios";
+import { 
+  verifyPhoneWithNumVerify, 
+  generateVerificationCode 
+} from "../utils/phoneVerification.js";
+
 
 // Configure nodemailer for sending emails
 const transporter = nodemailer.createTransport({
@@ -34,12 +39,12 @@ const verifyEmailWithMailboxLayer = async (email) => {
 
 // Register user with email verification
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phoneNumber } = req.body;
   
   try {
     // Basic validation
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res.status(400).json({ success: false, message: "Name, email, and password are required" });
     }
 
     if (!validator.isEmail(email)) {
@@ -53,18 +58,42 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await userModel.findOne({ email });
+    // Check if user already exists by email or phone
+    const existingUser = await userModel.findOne({ 
+      $or: [{ email }, { phoneNumber }] 
+    });
+    
     if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "User already exists" 
-      });
+      if (existingUser.email === email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email already registered" 
+        });
+      }
+      if (existingUser.phoneNumber === phoneNumber) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Phone number already registered" 
+        });
+      }
     }
 
     // Verify email with MailboxLayer
     const emailVerification = await verifyEmailWithMailboxLayer(email);
     
+    // Verify phone if provided
+    let phoneVerification = { valid: false };
+    if (phoneNumber && process.env.PHONE_VERIFICATION_ENABLED === 'true') {
+      phoneVerification = await verifyPhoneWithNumVerify(phoneNumber);
+      
+      if (!phoneVerification.valid) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid phone number. Please provide a valid phone number." 
+        });
+      }
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -74,32 +103,42 @@ const registerUser = async (req, res) => {
       name, 
       email, 
       password: hashedPassword,
+      phoneNumber: phoneVerification.valid ? phoneVerification.internationalFormat : undefined,
       emailQualityScore: emailVerification.score,
-      emailValid: emailVerification.valid
+      emailValid: emailVerification.valid,
+      phoneValid: phoneVerification.valid,
+      phoneCarrier: phoneVerification.carrier,
+      phoneCountry: phoneVerification.country_name,
+      isPhoneVerified: process.env.AUTO_VERIFY_WITH_PHONE === 'true' && phoneVerification.valid
     });
 
     // Auto-verify if enabled and email is valid
     if (process.env.AUTO_VERIFY_EMAIL === 'true' && emailVerification.valid) {
       newUser.isEmailVerified = true;
-      await newUser.save();
-      
-      return res.status(201).json({ 
-        success: true, 
-        message: "Registration successful. Your email has been automatically verified." 
-      });
     }
 
-    // Otherwise, proceed with email verification
-    const verificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { 
+    // Generate verification tokens
+    const emailVerificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { 
       expiresIn: "1d" 
     });
     
-    newUser.emailVerificationToken = verificationToken;
+    newUser.emailVerificationToken = emailVerificationToken;
     newUser.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    // Generate phone verification code if phone is provided but not auto-verified
+    if (phoneNumber && !newUser.isPhoneVerified) {
+      const phoneVerificationCode = generateVerificationCode();
+      newUser.phoneVerificationToken = await bcrypt.hash(phoneVerificationCode, 8);
+      newUser.phoneVerificationExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+      
+      // In a real app, you would send this code via SMS (e.g., using Twilio)
+      console.log(`Phone verification code for ${phoneNumber}: ${phoneVerificationCode}`);
+    }
+
     await newUser.save();
 
     // Send verification email
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${emailVerificationToken}`;
     
     const mailOptions = {
       from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
@@ -116,11 +155,9 @@ const registerUser = async (req, res) => {
               Verify Email
             </a>
           </p>
+          ${phoneNumber && !newUser.isPhoneVerified ? 
+            `<p>We've also sent a verification code to your phone number ${phoneNumber}.</p>` : ''}
           <p>If you didn't create an account with us, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">
-            This link will expire in 24 hours. If it expires, you can request a new verification email.
-          </p>
         </div>
       `,
     };
@@ -129,7 +166,9 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({ 
       success: true, 
-      message: "Registration successful. Please check your email to verify your account." 
+      message: "Registration successful. Please check your email to verify your account." + 
+        (phoneNumber && !newUser.isPhoneVerified ? " A phone verification code has also been sent." : ""),
+      requiresPhoneVerification: phoneNumber && !newUser.isPhoneVerified
     });
   } catch (error) {
     console.error("Error during registration:", error);
@@ -140,67 +179,77 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Verify email
-const verifyEmail = async (req, res) => {
-  const { token } = req.query;
+// Verify phone number
+const verifyPhone = async (req, res) => {
+  const { phoneNumber, code } = req.body;
   
   try {
-    if (!token) {
+    if (!phoneNumber || !code) {
       return res.status(400).json({ 
         success: false, 
-        message: "Verification token is required" 
+        message: "Phone number and verification code are required" 
       });
     }
 
-    // Find user by token
+    // Find user by phone number
     const user = await userModel.findOne({ 
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() } 
+      phoneNumber,
+      phoneVerificationExpires: { $gt: Date.now() }
     });
 
     if (!user) {
       return res.status(400).json({ 
         success: false, 
-        message: "Invalid or expired verification token" 
+        message: "Invalid phone number or verification code expired" 
       });
     }
 
-    // Mark as verified
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
+    // Check verification code
+    const isMatch = await bcrypt.compare(code, user.phoneVerificationToken);
+    if (!isMatch) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid verification code" 
+      });
+    }
+
+    // Mark phone as verified
+    user.isPhoneVerified = true;
+    user.phoneVerificationToken = undefined;
+    user.phoneVerificationExpires = undefined;
     await user.save();
 
     res.status(200).json({ 
       success: true, 
-      message: "Email verified successfully. You can now log in." 
+      message: "Phone number verified successfully" 
     });
   } catch (error) {
-    console.error("Error verifying email:", error);
+    console.error("Error verifying phone:", error);
     res.status(500).json({ 
       success: false, 
-      message: "Server error during email verification" 
+      message: "Server error during phone verification" 
     });
   }
 };
 
-// Login user with enhanced security
+// Enhanced login with phone number option
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, phoneNumber, password } = req.body;
   
   try {
     // Basic validation
-    if (!email || !password) {
+    if ((!email && !phoneNumber) || !password) {
       return res.status(400).json({ 
         success: false, 
-        message: "Email and password are required" 
+        message: "Email/phone and password are required" 
       });
     }
 
-    // Find user
-    const user = await userModel.findOne({ email });
+    // Find user by email or phone
+    const user = await userModel.findOne({ 
+      $or: [{ email }, { phoneNumber }] 
+    });
     
-    // Check if user exists
     if (!user) {
       return res.status(400).json({ 
         success: false, 
@@ -217,11 +266,19 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check email verification
-    if (!user.isEmailVerified) {
+    // Check email verification (if logged in with email)
+    if (email && !user.isEmailVerified) {
       return res.status(403).json({ 
         success: false, 
         message: "Please verify your email before logging in" 
+      });
+    }
+
+    // Check phone verification (if logged in with phone)
+    if (phoneNumber && !user.isPhoneVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Please verify your phone number before logging in" 
       });
     }
 
@@ -265,6 +322,7 @@ const loginUser = async (req, res) => {
       user: {
         name: user.name,
         email: user.email,
+        phoneNumber: user.phoneNumber,
         role: user.role
       }
     });
@@ -277,24 +335,28 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Forgot password
+// Forgot password with phone number option
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
+  const { email, phoneNumber } = req.body;
   
   try {
-    if (!email) {
+    if (!email && !phoneNumber) {
       return res.status(400).json({ 
         success: false, 
-        message: "Email is required" 
+        message: "Email or phone number is required" 
       });
     }
 
-    const user = await userModel.findOne({ email });
+    // Find user by email or phone
+    const user = await userModel.findOne({ 
+      $or: [{ email }, { phoneNumber }] 
+    });
     
     if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "If this email exists, a reset link has been sent" 
+      // Don't reveal if user exists for security
+      return res.status(200).json({ 
+        success: true, 
+        message: "If this account exists, a reset link has been sent" 
       });
     }
 
@@ -305,40 +367,50 @@ const forgotPassword = async (req, res) => {
     
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+    
+    // If resetting via phone, generate a code
+    if (phoneNumber) {
+      const resetCode = generateVerificationCode();
+      user.phoneResetToken = await bcrypt.hash(resetCode, 8);
+      user.phoneResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+      
+      // In a real app, you would send this code via SMS
+      console.log(`Password reset code for ${phoneNumber}: ${resetCode}`);
+    }
+
     await user.save();
 
-    // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
-    const mailOptions = {
-      from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset Request",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2c3e50;">Password Reset Request</h2>
-          <p>We received a request to reset your password. Click the button below to proceed:</p>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
-               style="background-color: #e74c3c; color: white; padding: 10px 20px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Reset Password
-            </a>
-          </p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">
-            This link will expire in 1 hour. For security reasons, please do not share this link.
-          </p>
-        </div>
-      `,
-    };
+    // Send reset email if requested via email
+    if (email) {
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+      
+      const mailOptions = {
+        from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Password Reset Request",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2c3e50;">Password Reset Request</h2>
+            <p>We received a request to reset your password. Click the button below to proceed:</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" 
+                 style="background-color: #e74c3c; color: white; padding: 10px 20px; 
+                        text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Reset Password
+              </a>
+            </p>
+            <p>If you didn't request this, please ignore this email.</p>
+          </div>
+        `,
+      };
 
-    await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+    }
 
     res.status(200).json({ 
       success: true, 
-      message: "If this email exists, a reset link has been sent" 
+      message: "If this account exists, a reset link has been sent",
+      resetVia: phoneNumber ? 'phone' : 'email'
     });
   } catch (error) {
     console.error("Error during forgot password:", error);
@@ -349,15 +421,15 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset password
+// Reset password with phone verification option
 const resetPassword = async (req, res) => {
-  const { token, password } = req.body;
+  const { token, phoneNumber, code, password } = req.body;
   
   try {
-    if (!token || !password) {
+    if ((!token && (!phoneNumber || !code)) || !password) {
       return res.status(400).json({ 
         success: false, 
-        message: "Token and new password are required" 
+        message: "Token or phone verification code and new password are required" 
       });
     }
 
@@ -368,16 +440,34 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Find user by token
-    const user = await userModel.findOne({ 
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() } 
-    });
+    // Find user by token or phone verification
+    let user;
+    if (token) {
+      user = await userModel.findOne({ 
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: Date.now() } 
+      });
+    } else {
+      user = await userModel.findOne({ 
+        phoneNumber,
+        phoneResetExpires: { $gt: Date.now() } 
+      });
+      
+      if (user) {
+        const isMatch = await bcrypt.compare(code, user.phoneResetToken);
+        if (!isMatch) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Invalid verification code" 
+          });
+        }
+      }
+    }
 
     if (!user) {
       return res.status(400).json({ 
         success: false, 
-        message: "Invalid or expired reset token" 
+        message: "Invalid or expired reset token/code" 
       });
     }
 
@@ -385,11 +475,13 @@ const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Update password and clear reset token
+    // Update password and clear reset tokens
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    user.loginAttempts = 0; // Reset login attempts
+    user.phoneResetToken = undefined;
+    user.phoneResetExpires = undefined;
+    user.loginAttempts = 0;
     user.accountLocked = false;
     user.lockUntil = undefined;
     await user.save();
@@ -411,6 +503,7 @@ export default {
   loginUser, 
   registerUser, 
   verifyEmail, 
+  verifyPhone,
   forgotPassword, 
   resetPassword 
 };

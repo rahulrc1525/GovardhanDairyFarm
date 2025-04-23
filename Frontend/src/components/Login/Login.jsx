@@ -9,14 +9,18 @@ const Login = ({ setShowLogin }) => {
   const { url, setAuthData } = useContext(StoreContext);
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [data, setData] = useState({
     name: "",
     email: "",
+    phoneNumber: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    verificationCode: ""
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [requiresPhoneVerification, setRequiresPhoneVerification] = useState(false);
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
@@ -34,6 +38,7 @@ const Login = ({ setShowLogin }) => {
     try {
       const response = await axios.post(`${url}/api/user/login`, {
         email: data.email,
+        phoneNumber: data.phoneNumber,
         password: data.password,
       });
 
@@ -70,18 +75,26 @@ const Login = ({ setShowLogin }) => {
       const response = await axios.post(`${url}/api/user/register`, {
         name: data.name,
         email: data.email,
+        phoneNumber: data.phoneNumber,
         password: data.password
       });
 
       if (response.data.success) {
-        alert(response.data.message || "Registration successful! Please check your email to verify your account.");
-        setIsRegisterActive(false);
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
+        if (response.data.requiresPhoneVerification) {
+          setRequiresPhoneVerification(true);
+          alert("Registration successful! Please check your phone for the verification code.");
+        } else {
+          alert(response.data.message || "Registration successful! Please check your email to verify your account.");
+          setIsRegisterActive(false);
+          setData({
+            name: "",
+            email: "",
+            phoneNumber: "",
+            password: "",
+            confirmPassword: "",
+            verificationCode: ""
+          });
+        }
       } else {
         setErrorMessage(response.data.message || "Registration failed. Please try again.");
       }
@@ -95,6 +108,44 @@ const Login = ({ setShowLogin }) => {
       setIsLoading(false);
     }
   };
+
+  const handlePhoneVerification = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setErrorMessage("");
+    
+    try {
+      const response = await axios.post(`${url}/api/user/verify-phone`, {
+        phoneNumber: data.phoneNumber,
+        code: data.verificationCode
+      });
+
+      if (response.data.success) {
+        alert("Phone number verified successfully! You can now log in.");
+        setRequiresPhoneVerification(false);
+        setIsRegisterActive(false);
+        setData({
+          name: "",
+          email: "",
+          phoneNumber: "",
+          password: "",
+          confirmPassword: "",
+          verificationCode: ""
+        });
+      } else {
+        setErrorMessage(response.data.message || "Verification failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during phone verification:", error);
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      "An error occurred during verification. Please try again.";
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const handleForgotPassword = async (event) => {
     event.preventDefault();
@@ -164,15 +215,17 @@ const Login = ({ setShowLogin }) => {
       setIsLoading(false);
     }
   };
-
   const toggleForm = () => {
     setErrorMessage("");
     setIsRegisterActive(!isRegisterActive);
+    setRequiresPhoneVerification(false);
     setData({
       name: "",
       email: "",
+      phoneNumber: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      verificationCode: ""
     });
   };
 
@@ -184,8 +237,32 @@ const Login = ({ setShowLogin }) => {
           <IoMdClose size={24} />
         </button>
 
+        {/* Phone Verification Form */}
+        {requiresPhoneVerification && (
+          <div className="form-box phone-verification">
+            <form onSubmit={handlePhoneVerification}>
+              <h1>Verify Phone Number</h1>
+              <p>We've sent a verification code to {data.phoneNumber}</p>
+              <div className="input-box">
+                <input
+                  type="text"
+                  name="verificationCode"
+                  value={data.verificationCode}
+                  placeholder="Enter verification code"
+                  onChange={onChangeHandler}
+                  required
+                />
+              </div>
+              <button className="btn-submit" type="submit" disabled={isLoading}>
+                {isLoading ? <FaSpinner className="spin" /> : "Verify"}
+              </button>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
+            </form>
+          </div>
+        )}
+
         {/* Login Form */}
-        {!isRegisterActive && !showForgotPassword && (
+        {!isRegisterActive && !showForgotPassword && !requiresPhoneVerification && (
           <div className="form-box login">
             <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
@@ -195,9 +272,8 @@ const Login = ({ setShowLogin }) => {
                   type="email"
                   name="email"
                   value={data.email}
-                  placeholder="Email"
+                  placeholder="Email or Phone"
                   onChange={onChangeHandler}
-                  required
                 />
               </div>
               <div className="input-box">
@@ -229,7 +305,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Register Form */}
-        {isRegisterActive && !showForgotPassword && (
+        {isRegisterActive && !showForgotPassword && !requiresPhoneVerification && (
           <div className="form-box register">
             <form onSubmit={handleRegister}>
               <h1>Register</h1>
@@ -253,6 +329,16 @@ const Login = ({ setShowLogin }) => {
                   placeholder="Email"
                   onChange={onChangeHandler}
                   required
+                />
+              </div>
+              <div className="input-box">
+                <FaPhone className="icon" />
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={data.phoneNumber}
+                  placeholder="Phone Number (with country code)"
+                  onChange={onChangeHandler}
                 />
               </div>
               <div className="input-box">
@@ -294,7 +380,7 @@ const Login = ({ setShowLogin }) => {
         )}
 
         {/* Forgot Password Form */}
-        {showForgotPassword && (
+        {showForgotPassword && !requiresPhoneVerification && (
           <div className="form-box forgot-password">
             <form onSubmit={requestPasswordReset}>
               <h1>Reset Password</h1>
@@ -304,7 +390,7 @@ const Login = ({ setShowLogin }) => {
                   type="email"
                   name="email"
                   value={data.email}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email or phone"
                   onChange={onChangeHandler}
                   required
                 />
