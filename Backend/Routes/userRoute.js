@@ -4,6 +4,7 @@ const { loginUser, registerUser, verifyEmail, forgotPassword, resetPassword } = 
 
 const userRouter = express.Router();
 
+// Public routes
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
 userRouter.get("/verify-email", verifyEmail);
