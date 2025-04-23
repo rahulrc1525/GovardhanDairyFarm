@@ -1,329 +1,145 @@
-import React, { useContext, useState } from 'react';
-import { FaUser, FaKey, FaEnvelope, FaSpinner } from 'react-icons/fa';
-import { IoMdClose } from 'react-icons/io';
-import './Login.css';
-import { StoreContext } from '../../context/StoreContext';
-import axios from "axios";
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { connectDB } from "./Config/db.js";
+import foodRouter from "./Routes/foodRoute.js";
+import userRouter from "./Routes/userRoute.js";
+import cartRouter from "./Routes/cartRoute.js";
+import contactRouter from "./Routes/contactRoute.js";
+import orderRouter from "./Routes/orderRoute.js";
+import { handleWebhookEvent } from "./Controllers/orderController.js";
+import salesRouter from "./Routes/salesRoute.js";
+import ratingRouter from "./Routes/ratingRoute.js";
+import path from "path";
+import { fileURLToPath } from 'url';
 
-const Login = ({ setShowLogin }) => {
-  const { url, setAuthData } = useContext(StoreContext);
-  const [isRegisterActive, setIsRegisterActive] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [data, setData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
+// Load environment variables
+dotenv.config();
+
+// Initialize Express app
+const app = express();
+const port = process.env.PORT || 4000;
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure CORS with allowed origins
+const allowedOrigins = [
+  "https://govardhandairyfarm-admin.onrzender.com",
+  "https://govardhandairyfarm.shop",
+  "https://govardhandairyfarm.onrender.com",
+  "https://govardhandairyfarmbackend.onrender.com",
+  "http://localhost:3000" // For local development
+];
+
+// Middleware setup
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Enhanced CORS configuration
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `CORS policy: ${origin} not allowed`;
+      console.warn(msg);
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 200 // For legacy browser support
+}));
+
+// Security middleware
+app.use(helmet());
+app.disable("x-powered-by");
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per window
+  message: "Too many requests from this IP, please try again later"
+});
+app.use(limiter);
+
+// Connect to database
+connectDB();
+
+// Serve static files
+app.use("/images", express.static(path.join(__dirname, "Uploads")));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${req.ip}`);
+  next();
+});
+
+// API routes
+app.use("/api/food", foodRouter);
+app.use("/api/user", userRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/contact", contactRouter);
+app.use("/api/order", orderRouter);
+app.use("/api/sales", salesRouter);
+app.use("/api/rating", ratingRouter);
+app.post("/api/order/webhook", express.raw({ type: 'application/json' }), handleWebhookEvent);
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({ 
+    success: true,
+    message: "Govardhan Dairy Farm API is running",
+    version: "1.0.0",
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || "development"
   });
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+});
 
-  const onChangeHandler = (event) => {
-    const { name, value } = event.target;
-    setData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+// 404 handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint not found"
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${err.stack}`);
+
+  const response = {
+    success: false,
+    message: "Internal Server Error"
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/login`, {
-        email: data.email,
-        password: data.password,
-      });
+  if (process.env.NODE_ENV === "development") {
+    response.error = err.message;
+    response.stack = err.stack;
+  }
 
-      if (response.data.success) {
-        const { token, userId, user } = response.data;
-        setAuthData(token, userId, user);
-        setShowLogin(false);
-      } else {
-        setErrorMessage(response.data.message || "Login failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred during login. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  res.status(500).json(response);
+});
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
-    
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/register`, {
-        name: data.name,
-        email: data.email,
-        password: data.password
-      });
-
-      if (response.data.success) {
-        alert(response.data.message || "Registration successful! Please check your email to verify your account.");
-        setIsRegisterActive(false);
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        setErrorMessage(response.data.message || "Registration failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error during registration:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred during registration. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (event) => {
-    event.preventDefault();
-    
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/reset-password`, {
-        email: data.email,
-        password: data.password,
-      });
-
-      if (response.data.success) {
-        alert(response.data.message || "Password reset successfully. You can now login.");
-        setShowForgotPassword(false);
-        setErrorMessage("");
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        setErrorMessage(response.data.message || "Password reset failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const requestPasswordReset = async (event) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    
-    try {
-      const response = await axios.post(`${url}/api/user/forgot-password`, {
-        email: data.email
-      });
-
-      if (response.data.success) {
-        alert(response.data.message || "If this email exists, a reset link has been sent.");
-        setShowForgotPassword(false);
-        setErrorMessage("");
-      } else {
-        setErrorMessage(response.data.message || "Failed to send reset email. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error requesting password reset:", error);
-      const errorMsg = error.response?.data?.message || 
-                      error.message || 
-                      "An error occurred. Please try again.";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleForm = () => {
-    setErrorMessage("");
-    setIsRegisterActive(!isRegisterActive);
-    setData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: ""
-    });
-  };
-
-  return (
-    <div className="login-modal">
-      <div className="overlay" onClick={() => setShowLogin(false)}></div>
-      <div className="login-background">
-        <button className="close-btn" onClick={() => setShowLogin(false)}>
-          <IoMdClose size={24} />
-        </button>
-
-        {/* Login Form */}
-        {!isRegisterActive && !showForgotPassword && (
-          <div className="form-box login">
-            <form onSubmit={handleLogin}>
-              <h1><b>Login</b></h1>
-              <div className="input-box">
-                <FaEnvelope className="icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={data.email}
-                  placeholder="Email"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="password"
-                  value={data.password}
-                  placeholder="Password"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? <FaSpinner className="spin" /> : "Login"}
-              </button>
-              <p className="forgot-password-link">
-                <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
-              </p>
-              {errorMessage && <p className="error-message">{errorMessage}</p>}
-              <div className="register-link">
-                <p>
-                  Don't have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Register</a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Register Form */}
-        {isRegisterActive && !showForgotPassword && (
-          <div className="form-box register">
-            <form onSubmit={handleRegister}>
-              <h1>Register</h1>
-              <div className="input-box">
-                <FaUser className="icon" />
-                <input
-                  type="text"
-                  name="name"
-                  value={data.name}
-                  placeholder="Full Name"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaEnvelope className="icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={data.email}
-                  placeholder="Email"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="password"
-                  value={data.password}
-                  placeholder="Password (min 8 characters)"
-                  onChange={onChangeHandler}
-                  required
-                  minLength="8"
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={data.confirmPassword}
-                  placeholder="Confirm Password"
-                  onChange={onChangeHandler}
-                  required
-                  minLength="8"
-                />
-              </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? <FaSpinner className="spin" /> : "Register"}
-              </button>
-              {errorMessage && <p className="error-message">{errorMessage}</p>}
-              <div className="register-link">
-                <p>
-                  Already have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Login</a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Forgot Password Form */}
-        {showForgotPassword && (
-          <div className="form-box forgot-password">
-            <form onSubmit={requestPasswordReset}>
-              <h1>Reset Password</h1>
-              <div className="input-box">
-                <FaEnvelope className="icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={data.email}
-                  placeholder="Enter your email"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? <FaSpinner className="spin" /> : "Send Reset Link"}
-              </button>
-              {errorMessage && <p className="error-message">{errorMessage}</p>}
-              <div className="register-link">
-                <p>
-                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Login;
+// Start server
+app.listen(port, () => {
+  console.log(`
+  ██████╗  ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗  █████╗ ██╗  ██╗███╗   ██╗
+  ██╔══██╗██╔═══██╗██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║████╗  ██║
+  ██║  ██║██║   ██║██║   ██║███████║██████╔╝██║  ██║███████║███████║██╔██╗ ██║
+  ██║  ██║██║   ██║╚██╗ ██╔╝██╔══██║██╔══██╗██║  ██║██╔══██║██╔══██║██║╚██╗██║
+  ██████╔╝╚██████╔╝ ╚████╔╝ ██║  ██║██║  ██║██████╔╝██║  ██║██║  ██║██║ ╚████║
+  ╚═════╝  ╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
+  
+  Server running on port ${port}
+  Environment: ${process.env.NODE_ENV || "development"}
+  Ready to serve your dairy needs! 🐄🥛
+  `);
+});
