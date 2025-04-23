@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./Placeorder.css";
 import { StoreContext } from "../../context/StoreContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 const PlaceOrder = () => {
@@ -24,6 +24,8 @@ const PlaceOrder = () => {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [errors, setErrors] = useState({});
   const [pincodeSuggestions, setPincodeSuggestions] = useState(null);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
   // Predefined list of cities, states and pincodes for manual validation
   const cityStatePincodeMap = [
@@ -44,14 +46,29 @@ const PlaceOrder = () => {
       pincodes: ["400703", "400704", "400705", "400706", "400707", "400708", "400709", "400710", "410206", "410208", "410210", "410218", "410222"]
     },
     {
-      city: "Kalyan-Dombivli",
+      city: "Kalyan",
       state: "Maharashtra",
-      pincodes: ["421301", "421302", "421303", "421304", "421305", "421306", "421308", "421201", "421202", "421203", "421204", "421205"]
+      pincodes: ["421301", "421302", "421303", "421304", "421305", "421306", "421308"]
+    },
+    {
+      city: "Dombivli",
+      state: "Maharashtra",
+      pincodes: ["421201", "421202", "421203", "421204", "421205"]
     },
     {
       city: "Mira-Bhayandar",
       state: "Maharashtra",
       pincodes: ["401101", "401102", "401103", "401104", "401105", "401106", "401107"]
+    },
+    {
+      city: "Vasai",
+      state: "Maharashtra",
+      pincodes: ["401201", "401202", "401203", "401204", "401207"]
+    },
+    {
+      city: "Virar",
+      state: "Maharashtra",
+      pincodes: ["401303", "401305"]
     },
     {
       city: "Bhiwandi",
@@ -67,11 +84,6 @@ const PlaceOrder = () => {
       city: "Ulhasnagar",
       state: "Maharashtra",
       pincodes: ["421001", "421002", "421003", "421004", "421005"]
-    },
-    {
-      city: "Vasai-Virar",
-      state: "Maharashtra",
-      pincodes: ["401201", "401202", "401203", "401204", "401207", "401303", "401305"]
     },
     {
       city: "Palghar",
@@ -249,6 +261,9 @@ const PlaceOrder = () => {
       pincodes: ["416001", "416002", "416003", "416004", "416005", "416006", "416007", "416008", "416009", "416010", "416011", "416012", "416013", "416101", "416102", "416103", "416104", "416105", "416106", "416107", "416108", "416109", "416110", "416111", "416112", "416113", "416114", "416115", "416116", "416122", "416143", "416144", "416146", "416201", "416202", "416203", "416204", "416205", "416206", "416207", "416208", "416209", "416210", "416211", "416212", "416213", "416214", "416215", "416216", "416218", "416219", "416220", "416221", "416229", "416230", "416231", "416232", "416234", "416235", "416236", "416301", "416302", "416303", "416304", "416305", "416306", "416307", "416308", "416310", "416311", "416312", "416313", "416314", "416315", "416316", "416401", "416402", "416403", "416404", "416405", "416406", "416407", "416408", "416409", "416410", "416411", "416412", "416413", "416414", "416415", "416416", "416417", "416418", "416419", "416420", "416421", "416422", "416423", "416424", "416425", "416426", "416427", "416428", "416429", "416430", "416431", "416432", "416433", "416434", "416436", "416437", "416438", "416439", "416440", "416441", "416442", "416443", "416444", "416445", "416446", "416447", "416448", "416449", "416450", "416451", "416452", "416453", "416601", "416602", "416603", "416604", "416605", "416606", "416607", "416608", "416609", "416610", "416611", "416612", "416613", "416614", "416615", "416616", "416617", "416618", "416619", "416620", "416621", "416622", "416623", "416624", "416625", "416626", "416628", "416629", "416630", "416631", "416632", "416633", "416634", "416635", "416636", "416637", "416638", "416639", "416640", "416641", "416642", "416643", "416644", "416645", "416646", "416647", "416648", "416649", "416650", "416651", "416652", "416653", "416654", "416655", "416656", "416657", "416658", "416659", "416660", "416661", "416662", "416663", "416664", "416665", "416666", "416667", "416668", "416669", "416670", "416671", "416672", "416673", "416674", "416675", "416676", "416677", "416678", "416679", "416680", "416681", "416682", "416683", "416684", "416685", "416686", "416687", "416688", "416689", "416690", "416691", "416692", "416693", "416694", "416695", "416696", "416697", "416698", "416699", "416801", "416802", "416803", "416804", "416805", "416806", "416807", "416808", "416809", "416810", "416811", "416812", "416813", "416814", "416815", "416816", "416817", "416818", "416819", "416820", "416821", "416822", "416823", "416824", "416825", "416826", "416827", "416828", "416829", "416830", "416831", "416832", "416833", "416834", "416835", "416836", "416837", "416838", "416839", "416840", "416841", "416842", "416843", "416844", "416845", "416846", "416847", "416848", "416849", "416850", "416851", "416852", "416853", "416854", "416855", "416856", "416857", "416858", "416859", "416860", "416861", "416862", "416863", "416864", "416865", "416866", "416867", "416868", "416869", "416870", "416871", "416872", "416873", "416874", "416875", "416876", "416877", "416878", "416879", "416880", "416881", "416882", "416883", "416884", "416885", "416886", "416887", "416888", "416889", "416890", "416891", "416892", "416893", "416894", "416895", "416896", "416897", "416898", "416899"]
     }
   ];
+
+  // Extract unique cities for suggestions
+  const allCities = [...new Set(cityStatePincodeMap.map(item => item.city))];
     
   useEffect(() => {
     const loadRazorpay = async () => {
@@ -287,6 +302,26 @@ const PlaceOrder = () => {
     if (name === "ZipCode") {
       setPincodeSuggestions(null);
     }
+
+    if (name === "city") {
+      // Filter cities based on input
+      const filteredCities = allCities.filter(city => 
+        city.toLowerCase().includes(value.toLowerCase())
+      );
+      setCitySuggestions(filteredCities);
+      setShowCitySuggestions(true);
+    } else {
+      setShowCitySuggestions(false);
+    }
+  };
+
+  const handleCitySelect = (city) => {
+    setData(prev => ({
+      ...prev,
+      city: city,
+      state: "Maharashtra" // Auto-fill state since we only deliver in Maharashtra
+    }));
+    setShowCitySuggestions(false);
   };
 
   const validateCityStatePincode = () => {
@@ -550,9 +585,6 @@ const PlaceOrder = () => {
             "lastName",
             "email",
             "street",
-            "city",
-            "state",
-            "ZipCode",
             "phone",
           ].map((field) => (
             <div className="form-group" key={field}>
@@ -573,13 +605,81 @@ const PlaceOrder = () => {
               )}
             </div>
           ))}
+
+          {/* City field with suggestions */}
+          <div className="form-group">
+            <label htmlFor="city">City</label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              onChange={onChangeHandler}
+              value={data.city}
+              required
+              placeholder="Enter City"
+              autoComplete="off"
+            />
+            {showCitySuggestions && citySuggestions.length > 0 && (
+              <div className="suggestions">
+                {citySuggestions.map((city, index) => (
+                  <div 
+                    key={index} 
+                    className="suggestion-item"
+                    onClick={() => handleCitySelect(city)}
+                  >
+                    {city}
+                  </div>
+                ))}
+              </div>
+            )}
+            {errors.city && (
+              <span className="error-message">{errors.city}</span>
+            )}
+          </div>
+
+          {/* State field */}
+          <div className="form-group">
+            <label htmlFor="state">State</label>
+            <input
+              type="text"
+              id="state"
+              name="state"
+              onChange={onChangeHandler}
+              value={data.state}
+              required
+              placeholder="Enter State"
+            />
+            {errors.state && (
+              <span className="error-message">{errors.state}</span>
+            )}
+          </div>
+
+          {/* ZipCode field */}
+          <div className="form-group">
+            <label htmlFor="ZipCode">Zip Code</label>
+            <input
+              type="text"
+              id="ZipCode"
+              name="ZipCode"
+              onChange={onChangeHandler}
+              value={data.ZipCode}
+              required
+              placeholder="Enter Zip Code"
+            />
+            {errors.ZipCode && (
+              <span className="error-message">{errors.ZipCode}</span>
+            )}
+          </div>
           
-          {/* Simplified error message for pincode validation */}
-          {errors.city && errors.city.includes("contact us") && (
+          {/* Error message for unavailable delivery area */}
+          {(errors.city && errors.city.includes("contact us")) || 
+           (errors.ZipCode && errors.ZipCode.includes("contact us")) ? (
             <div className="pincode-error">
-              <p>Delivery not available in this area. Please contact us for more information.</p>
+              <p>
+                Delivery not available in this area. Please <Link to="/Contact_us">contact us</Link> for more information.
+              </p>
             </div>
-          )}
+          ) : null}
         </form>
       </div>
 
