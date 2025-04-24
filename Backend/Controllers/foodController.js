@@ -76,6 +76,73 @@ const removeFood = async (req, res) => {
   }
 };
 
+// Add to foodController.js
+const getRecommendedFood = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    // Get top clicked foods
+    const mostClicked = await foodModel.find()
+      .sort({ clicks: -1 })
+      .limit(5)
+      .select('name categories clicks');
+
+    // Get best selling foods
+    const bestSelling = await foodModel.find()
+      .sort({ sales: -1 })
+      .limit(5)
+      .select('name categories sales');
+
+    // Get category-based recommendations
+    const userOrders = await orderModel.find({ user: userId })
+      .populate('items.food')
+      .limit(10);
+
+    const userCategories = [];
+    userOrders.forEach(order => {
+      order.items.forEach(item => {
+        userCategories.push(...item.food.categories);
+      });
+    });
+
+    const categoryRecommendations = await foodModel.find({
+      categories: { $in: [...new Set(userCategories)] }
+    }).limit(5);
+
+    // Combine and deduplicate recommendations
+    const recommendations = [
+      ...mostClicked,
+      ...bestSelling,
+      ...categoryRecommendations
+    ].reduce((acc, current) => {
+      const x = acc.find(item => item._id.equals(current._id));
+      if (!x) {
+        return acc.concat([current]);
+      } else {
+        return acc;
+      }
+    }, []).slice(0, 6); // Get top 6 unique recommendations
+
+    res.json({ success: true, data: recommendations });
+  } catch (error) {
+    console.error("Recommendation error:", error);
+    res.status(500).json({ success: false, message: "Error getting recommendations" });
+  }
+};
+
+// Add to foodController.js
+const updateClicks = async (req, res) => {
+  try {
+    const { id } = req.body;
+    await foodModel.findByIdAndUpdate(id, { $inc: { clicks: 1 } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Click update error:", error);
+    res.status(500).json({ success: false, message: "Error updating clicks" });
+  }
+};
+
+
 const updateFood = async (req, res) => {
   try {
     const { id, name, description, price, categories } = req.body;
@@ -94,37 +161,6 @@ const updateFood = async (req, res) => {
   }
 };
 
-const updateClicks = async (req, res) => {
-  try {
-    const { id } = req.body;
-    const food = await foodModel.findById(id);
-    if (!food) {
-      return res.status(404).json({ success: false, message: "Food item not found" });
-    }
-    food.clicks += 1;
-    await food.save();
-    res.json({ success: true, message: "Clicks updated" });
-  } catch (error) {
-    console.error("Error updating clicks:", error);
-    res.status(500).json({ success: false, message: "Error updating clicks" });
-  }
-};
 
-const getRecommendedFood = async (req, res) => {
-  try {
-    const foodItems = await foodModel.findz();
-    const recommendedFood = foodItems
-      .map((item) => {
-        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
-        return { ...item.toObject(), score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-    res.json({ success: true, data: recommendedFood });
-  } catch (error) {
-    console.error("Error getting recommended food:", error);
-    res.status(500).json({ success: false, message: "Error getting recommended food" });
-  }
-};
 
 export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood };
