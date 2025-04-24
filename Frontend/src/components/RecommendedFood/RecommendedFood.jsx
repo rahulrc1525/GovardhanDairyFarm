@@ -4,8 +4,6 @@ import "./RecommendedFood.css";
 import { StoreContext } from '../../context/StoreContext'; // Import the context
 import { assests } from '../../assests/assests'; // Import assets if needed
 
-const url = 'https://govardhandairyfarmbackend.onrender.com';
-
 const RecommendedFood = () => {
     const [recommendedFood, setRecommendedFood] = useState([]);
     const { addToCart, removeFromCart, token, cart } = useContext(StoreContext); // Use context for cart functionality
@@ -13,7 +11,11 @@ const RecommendedFood = () => {
     useEffect(() => {
         const fetchRecommendedFood = async () => {
             try {
-                const response = await axios.get(`${url}/api/food/recommended`);
+                const response = await axios.get(`https://govardhandairyfarmbackend.onrender.com/api/food/recommended`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
                 if (response.data.success) {
                     setRecommendedFood(response.data.data);
                 } else {
@@ -23,8 +25,10 @@ const RecommendedFood = () => {
                 console.error("Error fetching recommended food:", error);
             }
         };
-        fetchRecommendedFood();
-    }, []);
+        if(token) {
+            fetchRecommendedFood();
+        }
+    }, [token]);
 
     const handleIncrease = async (id) => {
         if (!token) {
@@ -36,7 +40,7 @@ const RecommendedFood = () => {
 
         // Update clicks
         try {
-            const response = await axios.post(`${url}/api/food/updateclicks`, { id }, {
+            const response = await axios.post(`https://govardhandairyfarmbackend.onrender.com/api/food/updateclicks`, { id }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

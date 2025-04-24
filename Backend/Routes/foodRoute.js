@@ -1,6 +1,7 @@
 import express from "express";
 import { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood } from "../Controllers/foodController.js";
 import multer from "multer";
+import authMiddleware from "../middleware/auth.js";
 
 const foodRouter = express.Router();
 
@@ -18,6 +19,6 @@ foodRouter.get("/list", listFood);
 foodRouter.post("/remove", removeFood);
 foodRouter.post("/update", updateFood); // New route for updating food
 foodRouter.post("/updateclicks", updateClicks);
-foodRouter.get("/recommended", getRecommendedFood);
+foodRouter.get("/recommended", authMiddleware, getRecommendedFood);
 
 export default foodRouter;
