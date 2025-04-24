@@ -22,43 +22,16 @@
   text-align: center;
 }
 
-/* RatingModal.css */
-.error-message {
-  color: #dc3545;
-  background: #ffe6e6;
-  padding: 10px;
-  border-radius: 5px;
-  margin: 10px 0;
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-}
-
-.retry-button {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
-  margin-top: 5px;
-  cursor: pointer;
-}
-
 .close-modal {
   position: absolute;
   top: 12px;
+  right: 12px;
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: #666;
   transition: color 0.2s;
-  left: 167px;
 }
 
 .close-modal:hover {
@@ -68,34 +41,59 @@
 .stars-container {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
+  gap: 2px;
+  margin: 15px 0;
 }
 
 .star {
   background: none;
   border: none;
-  font-size: 32px;
+  font-size: 20px;
   cursor: pointer;
   color: #ddd;
   transition: all 0.2s;
-  padding: 0 5px;
+  padding: 0 2px;
+  line-height: 1;
 }
 
 .star.filled {
   color: #FFD700;
+  text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
 }
 
 .star:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 .rating-labels {
   display: flex;
   justify-content: space-between;
   margin-bottom: 25px;
-  font-size: 12px;
+  font-size: 5px;
   color: #666;
+  padding: 0 5px;
+}
+
+.review-section {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.review-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+.review-section textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .submit-button {
@@ -108,6 +106,10 @@
   cursor: pointer;
   transition: background-color 0.3s;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .submit-button:hover {
@@ -119,10 +121,18 @@
   cursor: not-allowed;
 }
 
-.error-message {
-  color: #e53935;
-  margin: 10px 0;
-  font-size: 14px;
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .success-message {
