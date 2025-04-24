@@ -1,5 +1,4 @@
 import foodModel from "../models/foodModel.js";
-import orderModel from "../models/orderModel.js";
 import cloudinary from "cloudinary";
 import dotenv from "dotenv";
 
@@ -12,7 +11,6 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// AddFood function
 const addFood = async (req, res) => {
   try {
     if (!req.file) {
@@ -42,7 +40,8 @@ const addFood = async (req, res) => {
   }
 };
 
-// ListFood function
+// Rest of the code remains the same...
+
 const listFood = async (req, res) => {
   try {
     const foods = await foodModel.find();
@@ -53,7 +52,6 @@ const listFood = async (req, res) => {
   }
 };
 
-// RemoveFood function
 const removeFood = async (req, res) => {
   try {
     const { id } = req.body;
@@ -78,38 +76,7 @@ const removeFood = async (req, res) => {
   }
 };
 
-// UpdateFood function
-const updateFood = async (req, res) => {
-  try {
-    const { id, name, description, price, categories } = req.body;
-    const food = await foodModel.findByIdAndUpdate(
-      id,
-      { name, description, price, categories: categories.split(",") }, // Convert categories to array
-      { new: true }
-    );
-    if (!food) {
-      return res.status(404).json({ success: false, message: "Food item not found" });
-    }
-    res.json({ success: true, message: "Food updated successfully", data: food });
-  } catch (error) {
-    console.error("Error updating food:", error);
-    res.status(500).json({ success: false, message: "Error updating food", error: error.message });
-  }
-};
-
-// UpdateClicks function
-const updateClicks = async (req, res) => {
-  try {
-    const { id } = req.body;
-    await foodModel.findByIdAndUpdate(id, { $inc: { clicks: 1 } });
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Click update error:", error);
-    res.status(500).json({ success: false, message: "Error updating clicks" });
-  }
-};
-
-// GetRecommendedFood function with fix
+// Add to foodController.js
 const getRecommendedFood = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -127,16 +94,14 @@ const getRecommendedFood = async (req, res) => {
       .select('name categories sales');
 
     // Get category-based recommendations
-    const userOrders = await orderModel.find({ userId: userId }) // Fixed field name
-      .populate('items._id') // populate food items
+    const userOrders = await orderModel.find({ user: userId })
+      .populate('items.food')
       .limit(10);
 
     const userCategories = [];
     userOrders.forEach(order => {
       order.items.forEach(item => {
-        if (item._id && item._id.categories) {
-          userCategories.push(...item._id.categories);
-        }
+        userCategories.push(...item.food.categories);
       });
     });
 
@@ -164,5 +129,38 @@ const getRecommendedFood = async (req, res) => {
     res.status(500).json({ success: false, message: "Error getting recommendations" });
   }
 };
+
+// Add to foodController.js
+const updateClicks = async (req, res) => {
+  try {
+    const { id } = req.body;
+    await foodModel.findByIdAndUpdate(id, { $inc: { clicks: 1 } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Click update error:", error);
+    res.status(500).json({ success: false, message: "Error updating clicks" });
+  }
+};
+
+
+const updateFood = async (req, res) => {
+  try {
+    const { id, name, description, price, categories } = req.body;
+    const food = await foodModel.findByIdAndUpdate(
+      id,
+      { name, description, price, categories: categories.split(",") }, // Convert categories to array
+      { new: true }
+    );
+    if (!food) {
+      return res.status(404).json({ success: false, message: "Food item not found" });
+    }
+    res.json({ success: true, message: "Food updated successfully", data: food });
+  } catch (error) {
+    console.error("Error updating food:", error);
+    res.status(500).json({ success: false, message: "Error updating food", error: error.message });
+  }
+};
+
+
 
 export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood };

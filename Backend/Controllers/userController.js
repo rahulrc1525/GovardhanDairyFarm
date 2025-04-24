@@ -180,36 +180,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// New function to update clickedItems for user
-const updateClickedItem = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { foodId } = req.body;
-
-    if (!foodId) {
-      return res.status(400).json({ success: false, message: "foodId is required" });
-    }
-
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // Check if foodId already exists in clickedItems
-    const clickedItem = user.clickedItems.find(item => item.foodId.toString() === foodId);
-    if (clickedItem) {
-      clickedItem.count += 1;
-    } else {
-      user.clickedItems.push({ foodId, count: 1 });
-    }
-
-    await user.save();
-    res.status(200).json({ success: true, message: "Clicked item updated" });
-  } catch (error) {
-    console.error("Error updating clicked item:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
-export default { loginUser, registerUser, verifyEmail, forgotPassword, resetPassword, updateClickedItem };
-
+export default { loginUser, registerUser, verifyEmail, forgotPassword, resetPassword };
