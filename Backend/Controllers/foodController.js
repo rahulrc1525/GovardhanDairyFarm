@@ -106,7 +106,7 @@ const updateClicks = async (req, res) => {
 };
 
 
-const getRecommended = async (req, res) => {
+const getRecommendedFood = async (req, res) => {
   try {
     const foods = await foodModel.aggregate([
       {
