@@ -18,12 +18,10 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address, userEmail } = req.body;
 
-    // Create items array with full image URLs
     const orderItems = await Promise.all(items.map(async (item) => {
       const foodItem = await foodModel.findById(item._id);
       let imageUrl = foodItem.image;
       
-      // Ensure the image URL is complete (add base URL if it's just a path)
       if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
         imageUrl = `${process.env.BASE_URL}/uploads/${imageUrl}`;
       }
@@ -33,7 +31,7 @@ const placeOrder = async (req, res) => {
         name: item.name || foodItem.name,
         price: item.price || foodItem.price,
         quantity: item.quantity,
-        image: imageUrl // Store complete image URL
+        image: imageUrl
       };
     }));
 
@@ -73,101 +71,58 @@ const verifyOrder = async (req, res) => {
       .update(body)
       .digest("hex");
 
-    // In verifyOrder function, update the email sending part:
-if (expectedSignature === razorpay_signature) {
-  await orderModel.findByIdAndUpdate(orderId, { 
-    status: "Food Processing", 
-    payment: true 
-  });
-  
-  const order = await orderModel.findById(orderId).populate('userId');
-  if (order) {
-    try {
-      const userEmail = order.userEmail || (order.userId && order.userId.email);
-      const adminEmail = process.env.ADMIN_EMAIL;
+    if (expectedSignature === razorpay_signature) {
+      await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
+      
+      const order = await orderModel.findById(orderId);
+      if (order) {
+        const userEmail = order.userEmail;
+        const adminEmail = process.env.ADMIN_EMAIL;
 
-      if (!userEmail) {
-        console.error('No user email found for order:', orderId);
-      } else {
-        // Send email to user
-        const userSubject = 'Your Order Confirmation - Govardhan Dairy Farm';
+        // User email template
+        const userSubject = 'Order Confirmation - Govardhan Dairy Farm';
         const userHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-            <h2 style="color: #4CAF50; text-align: center;">Thank you for your order!</h2>
-            <p style="font-size: 16px;">Your order #${orderId} has been successfully placed.</p>
-            
-            <h3 style="color: #4CAF50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Order Details</h3>
-            <ul style="list-style: none; padding: 0;">
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Thank you for your order!</h2>
+            <p>Your order (#${orderId}) has been successfully placed.</p>
+            <h3>Order Details</h3>
+            <ul>
               ${order.items.map(item => `
-                <li style="padding: 8px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between;">
-                  <span>${item.name} x ${item.quantity}</span>
-                  <span>₹${item.price * item.quantity}</span>
-                </li>
+                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
               `).join('')}
             </ul>
-            
-            <div style="text-align: right; margin-top: 20px; font-weight: bold;">
-              Total: ₹${order.amount / 100}
-            </div>
-            
-            <h3 style="color: #4CAF50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Delivery Address</h3>
-            <p>
-              ${order.address.street},<br>
-              ${order.address.city}, ${order.address.state},<br>
-              ${order.address.ZipCode}
-            </p>
-            
-            <p style="margin-top: 30px; text-align: center; color: #777;">
-              We'll notify you when your order is out for delivery.
-            </p>
+            <p><strong>Total Amount:</strong> ₹${order.amount / 100}</p>
+            <p><strong>Delivery Address:</strong><br>
+            ${Object.values(order.address).join(', ')}</p>
+            <p>We'll notify you when your order status updates.</p>
           </div>
         `;
 
-        await sendEmail(userEmail, userSubject, null, userHtml);
-      }
-
-      // Send email to admin
-      if (adminEmail) {
-        const adminSubject = `New Order #${orderId} - Govardhan Dairy Farm`;
+        // Admin email template
+        const adminSubject = `New Order #${orderId} Received`;
         const adminHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">New Order Notification</h2>
-            <p>Order ID: <strong>${orderId}</strong></p>
-            <p>Customer Email: <strong>${userEmail || 'Not provided'}</strong></p>
-            
-            <h3 style="color: #4CAF50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Order Items</h3>
-            <ul style="list-style: none; padding: 0;">
+            <p>Customer: ${userEmail}</p>
+            <h3>Order Details</h3>
+            <ul>
               ${order.items.map(item => `
-                <li style="padding: 8px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between;">
-                  <span>${item.name} x ${item.quantity}</span>
-                  <span>₹${item.price * item.quantity}</span>
-                </li>
+                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
               `).join('')}
             </ul>
-            
-            <div style="text-align: right; margin-top: 20px; font-weight: bold;">
-              Total: ₹${order.amount / 100}
-            </div>
-            
-            <h3 style="color: #4CAF50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Delivery Address</h3>
-            <p>
-              ${order.address.street},<br>
-              ${order.address.city}, ${order.address.state},<br>
-              ${order.address.ZipCode}
-            </p>
+            <p><strong>Total Amount:</strong> ₹${order.amount / 100}</p>
           </div>
         `;
 
-        await sendEmail(adminEmail, adminSubject, null, adminHtml);
+        // Send emails
+        await Promise.all([
+          sendEmail(userEmail, userSubject, null, userHtml),
+          sendEmail(adminEmail, adminSubject, null, adminHtml)
+        ]);
       }
-    } catch (emailError) {
-      console.error('Error sending order confirmation emails:', emailError);
-      // Don't fail the whole operation if email fails
-    }
-  }
 
-  return res.status(200).json({ success: true, message: "Payment verified" });
-} else {
+      return res.status(200).json({ success: true, message: "Payment verified" });
+    } else {
       await orderModel.findByIdAndDelete(orderId);
       return res.status(400).json({ success: false, message: "Payment verification failed" });
     }
@@ -176,6 +131,7 @@ if (expectedSignature === razorpay_signature) {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
+
 
 // Get orders of a user
 const userOrders = async (req, res) => {
@@ -208,46 +164,29 @@ const updateStatus = async (req, res) => {
       orderId,
       { status },
       { new: true }
-    ).populate('userId');
+    );
 
     if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Send email notification for status changes
-    if (["Out for delivery", "Delivered"].includes(status)) {
-      try {
-        const userEmail = updatedOrder.userEmail || (updatedOrder.userId && updatedOrder.userId.email);
-        
-        if (userEmail) {
-          const subject = `Order #${orderId} Status Update - Govardhan Dairy Farm`;
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-              <h2 style="color: #4CAF50;">Order Status Updated</h2>
-              <p>Your order #${orderId} status has been updated to:</p>
-              <p style="font-size: 18px; font-weight: bold; color: ${status === 'Delivered' ? '#4CAF50' : '#2196F3'};">
-                ${status}
-              </p>
-              
-              ${status === 'Delivered' ? `
-                <p style="font-size: 16px; margin-top: 20px;">
-                  Thank you for shopping with Govardhan Dairy Farm! We hope you enjoy your products.
-                </p>
-              ` : `
-                <p style="font-size: 16px; margin-top: 20px;">
-                  Your order is on its way to you. Please have your payment ready if it's cash on delivery.
-                </p>
-              `}
-            </div>
-          `;
+    const subject = `Order #${orderId} Status Update`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #4CAF50;">Order Status Updated</h2>
+        <p>Your order status has been updated to: <strong>${status}</strong></p>
+        <h3>Order Summary</h3>
+        <ul>
+          ${updatedOrder.items.map(item => `
+            <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+          `).join('')}
+        </ul>
+        <p><strong>Total Amount:</strong> ₹${updatedOrder.amount / 100}</p>
+        <p>Thank you for choosing Govardhan Dairy Farm!</p>
+      </div>
+    `;
 
-          await sendEmail(userEmail, subject, null, html);
-        }
-      } catch (emailError) {
-        console.error('Error sending status update email:', emailError);
-        // Don't fail the whole operation if email fails
-      }
-    }
+    await sendEmail(updatedOrder.userEmail, subject, null, html);
 
     res.status(200).json({ success: true, message: "Order status updated" });
   } catch (error) {

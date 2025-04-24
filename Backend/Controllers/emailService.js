@@ -1,9 +1,6 @@
+// emailService.js (enhanced)
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-// Create reusable transporter object
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -12,22 +9,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify transporter connection
-transporter.verify((error) => {
-  if (error) {
-    console.error('Error with mail transporter:', error);
-  } else {
-    console.log('Mail transporter is ready to send emails');
-  }
-});
-
 export const sendEmail = async (to, subject, text, html) => {
+  if (!to || !subject) {
+    console.error('Missing required email parameters');
+    return;
+  }
+
   const mailOptions = {
-    from: `"Govardhan Dairy Farm" <${process.env.EMAIL_USER}>`, // More professional sender format
+    from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    text: text || html.replace(/<[^>]*>/g, ''), // Fallback text content
-    html,
+    text: text || '',
+    html: html || text,
   };
 
   try {
@@ -36,6 +29,6 @@ export const sendEmail = async (to, subject, text, html) => {
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
-    throw error; // Re-throw to handle in calling function
+    return false;
   }
 };
