@@ -46,63 +46,65 @@ const RatingModal = ({
         }
     }, [foodId, orderId, token, url]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // Updated handleSubmit function
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        if (rating === 0) {
-            setError("Please select a rating");
-            return;
-        }
+    if (rating === 0) {
+        setError("Please select a rating");
+        return;
+    }
 
-        setIsSubmitting(true);
-        setError(null);
-        setSuccess(false);
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
 
-        try {
-            const response = await axios.post(
-                `${url}/api/rating/add`,
-                {
-                    foodId,
-                    orderId,
-                    rating,
-                    review,
+    try {
+        const response = await axios.post(
+            `${url}/api/rating/add`,
+            {
+                foodId,
+                orderId,
+                rating,
+                review,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    timeout: 10000
-                }
-            );
-
-            if (!response.data.success) {
-                throw new Error(response.data.message || "Rating submission failed");
+                timeout: 10000
             }
+        );
 
-            setSuccess(true);
-
-            if (updateFoodRatings) {
-                await updateFoodRatings(foodId);
-            }
-
-            setTimeout(() => {
-                if (onRatingSubmit) {
-                    onRatingSubmit(response.data.data);
-                }
-                onClose();
-            }, 1500);
-        } catch (error) {
-            console.error("Rating submission error:", error);
-            setError(
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to submit rating. Please try again."
-            );
-        } finally {
-            setIsSubmitting(false);
+        if (!response.data.success) {
+            throw new Error(response.data.message || "Rating submission failed");
         }
-    };
+
+        setSuccess(true);
+
+        // Update local state with new rating data
+        if (updateFoodRatings) {
+            updateFoodRatings(foodId, response.data.data);
+        }
+
+        setTimeout(() => {
+            onClose();
+            if (onRatingSubmit) {
+                onRatingSubmit(response.data.data);
+            }
+        }, 1500);
+    } catch (error) {
+        console.error("Rating submission error:", error);
+        setError(
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to submit rating. Please try again."
+        );
+    } finally {
+        setIsSubmitting(false);
+    }
+};
 
     return (
         <div className="rating-modal-overlay">

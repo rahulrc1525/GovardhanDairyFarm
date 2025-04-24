@@ -271,70 +271,70 @@ const getFoodRatings = async (req, res) => {
     }
 };
 
+// Updated checkRatingEligibility function
 const checkRatingEligibility = async (req, res) => {
     try {
-        const { foodId, orderId } = req.query;
-        const userId = req.user.id;
-
-        // Validate required fields
-        if (!foodId || !orderId) {
-            return res.status(400).json({
-                success: false,
-                message: "Food ID and Order ID are required"
-            });
-        }
-
-        // Check if order exists and is delivered
-        const order = await orderModel.findOne({
-            _id: orderId,
-            userId,
-            status: "Delivered",
+      const { foodId, orderId } = req.query;
+      const userId = req.user.id;
+  
+      if (!foodId || !orderId) {
+        return res.status(400).json({
+          success: false,
+          message: "Food ID and Order ID are required"
         });
-
-        if (!order) {
-            return res.status(200).json({
-                success: true,
-                canRate: false,
-                reason: "Order not found or not delivered"
-            });
-        }
-
-        // Check if food item exists in the order
-        const foodItemInOrder = order.items.some(item =>
-            item._id && item._id.toString() === foodId.toString()
-        );
-
-        if (!foodItemInOrder) {
-            return res.status(200).json({
-                success: true,
-                canRate: false,
-                reason: "Food item not found in this order"
-            });
-        }
-
-        // Check if rating already exists
-        const food = await foodModel.findOne({
-            _id: foodId,
-            'ratings.userId': userId,
-            'ratings.orderId': orderId
-        });
-
+      }
+  
+      // Check if order exists and is delivered
+      const order = await orderModel.findOne({
+        _id: orderId,
+        user: userId, // Changed from userId to user to match schema
+        status: "Delivered",
+      });
+  
+      if (!order) {
         return res.status(200).json({
-            success: true,
-            canRate: true,
-            hasExistingRating: !!food,
-            orderDelivered: true
+          success: true,
+          canRate: false,
+          reason: "Order not found or not delivered"
         });
-
+      }
+  
+      // Check if food item exists in the order
+      const foodItemInOrder = order.items.some(item =>
+        item._id && item._id.toString() === foodId.toString()
+      );
+  
+      if (!foodItemInOrder) {
+        return res.status(200).json({
+          success: true,
+          canRate: false,
+          reason: "Food item not found in this order"
+        });
+      }
+  
+      // Check if rating already exists
+      const food = await foodModel.findOne({
+        _id: foodId,
+        'ratings.userId': userId,
+        'ratings.orderId': orderId
+      });
+  
+      return res.status(200).json({
+        success: true,
+        canRate: true,
+        hasExistingRating: !!food,
+        orderDelivered: true
+      });
+  
     } catch (error) {
-        logError(error, "checkRatingEligibility");
-        return res.status(500).json({
-            success: false,
-            message: "Error checking rating eligibility",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+      logError(error, "checkRatingEligibility");
+      return res.status(500).json({
+        success: false,
+        message: "Error checking rating eligibility",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
-};
+  };
 
 export {
     addOrUpdateRating as addRating,

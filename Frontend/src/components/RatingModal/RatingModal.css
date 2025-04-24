@@ -22,6 +22,33 @@
   text-align: center;
 }
 
+/* RatingModal.css */
+.error-message {
+  color: #dc3545;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+.retry-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
 .close-modal {
   position: absolute;
   top: 12px;

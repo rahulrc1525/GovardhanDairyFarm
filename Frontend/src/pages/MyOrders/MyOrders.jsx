@@ -76,10 +76,11 @@ const MyOrders = () => {
     return `${baseUrl}/uploads/${imageUrl}`;
   };
 
-  const handleRatingSubmit = async (foodId) => {
-    await fetchOrders();
-    setShowRatingModal(false);
-  };
+  // Updated handleRatingSubmit
+const handleRatingSubmit = async (newRatingData) => {
+  await fetchOrders();
+  setShowRatingModal(false);
+};
 
   const handleRateItem = async (foodId, orderId) => {
     try {

@@ -162,12 +162,17 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
-  const updateFoodRatings = (foodId, newRatingData) => {
-    setFoodRatings((prev) => ({
+  // Updated updateFoodRatings function
+const updateFoodRatings = (foodId, newRatingData) => {
+  setFoodRatings((prev) => ({
       ...prev,
-      [foodId]: newRatingData,
-    }));
-  };
+      [foodId]: {
+          averageRating: newRatingData.averageRating,
+          totalRatings: newRatingData.totalRatings,
+          ratings: newRatingData.ratings
+      }
+  }));
+};
 
   return (
     <StoreContext.Provider
