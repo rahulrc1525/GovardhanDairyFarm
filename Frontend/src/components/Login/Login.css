@@ -53,6 +53,42 @@
 form {
   width: 100%;
 }
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.link-button {
+  background: none;
+  border: none;
+  color: #3498db;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.link-button:hover {
+  color: #2980b9;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 h1 {
   font-size: 28px; /* Larger heading */
@@ -166,41 +202,38 @@ button {
   text-decoration: underline; /* Add underline on hover */
 }
 
-/* Success message styling */
-.success-message {
-  color: #5ed527;
+
+/* Phone Verification Styles */
+.form-box.phone-verification {
+  padding: 30px;
+}
+
+.form-box.phone-verification p {
   text-align: center;
-  margin: 15px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  margin-bottom: 20px;
+  color: white;
 }
 
-.success-message svg {
-  font-size: 18px;
+/* Phone Input Styles */
+.input-box input[type="tel"] {
+  padding-left: 40px;
 }
 
-/* Loading state for buttons */
-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Password strength indicator */
-.password-strength {
-  margin-top: 5px;
-  font-size: 12px;
-  color: #777;
-}
-
-.password-strength.strong {
+.input-box .fa-phone {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #5ed527;
 }
 
-.password-strength.weak {
-  color: #ff6b6b;
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  .form-box.phone-verification {
+    padding: 20px 15px;
+  }
 }
+
 /* Responsive Design */
 /* Responsive Design */
 @media (max-width: 768px) {

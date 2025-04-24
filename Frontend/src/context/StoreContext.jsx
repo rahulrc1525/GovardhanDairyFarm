@@ -13,40 +13,15 @@ const StoreContextProvider = ({ children }) => {
   const [foodList, setFoodList] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
   const [foodRatings, setFoodRatings] = useState({});
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  useEffect(() => {
-    if (token && userId) {
-      fetchUserData();
-      fetchCartData();
-    }
-  }, [token, userId]);
-
-  const fetchUserData = async () => {
-    try {
-      const response = await axios.get(`${url}/api/user/check-auth`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        setUser(response.data.user);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      logout();
-    }
-  };
-
   const fetchCartData = async () => {
+    if (!token || !userId) return;
+
     try {
       const response = await axios.post(
         `${url}/api/cart/get`,
@@ -60,6 +35,12 @@ const StoreContextProvider = ({ children }) => {
       console.error("Fetch cart error:", error);
     }
   };
+
+  useEffect(() => {
+    if (token && userId) {
+      fetchCartData();
+    }
+  }, [token, userId]);
 
   const addToCart = async (itemId) => {
     if (!token || !userId) {
@@ -139,11 +120,9 @@ const StoreContextProvider = ({ children }) => {
   const logout = () => {
     setToken("");
     setUserId("");
-    setUser(null);
     setCartItems({});
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
-    localStorage.removeItem("user");
     localStorage.removeItem("cart");
   };
 
@@ -203,8 +182,6 @@ const StoreContextProvider = ({ children }) => {
         setToken,
         userId,
         setUserId,
-        user,
-        setUser,
         logout,
         clearCart,
         fetchFoodRatings,
