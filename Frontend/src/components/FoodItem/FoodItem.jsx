@@ -27,34 +27,41 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
   const averageRating = ratingData.averageRating || 0;
   const totalRatings = ratingData.totalRatings || 0;
 
+  // Add this useEffect to handle rating updates
+useEffect(() => {
+  if (showRating && foodRatings[id]?.ratings) {
+      const newAverage = foodRatings[id].averageRating;
+      const newTotal = foodRatings[id].totalRatings;
+      // Force re-render of star display
+  }
+}, [foodRatings[id]]);
+  
   useEffect(() => {
     if (showRating) {
-      const initializeRatings = async () => {
-        if (!ratingData.ratings) {
-          await fetchFoodRatings(id);
-        }
-        if (orderId && token) {
-          await checkRatingEligibility();
-        }
-      };
-      initializeRatings();
+      if (!ratingData.ratings) {
+        fetchFoodRatings(id);
+      }
+      
+      if (orderId && token) {
+        checkRatingEligibility();
+      }
     }
-  }, [id, token, orderId, showRating]);
-
-  useEffect(() => {
-    // Update quantity when cart changes
-    setQuantity(cart[id] || 0);
-  }, [cart[id]]);
+  }, [id, token, orderId, showRating, ratingData.ratings]);
 
   const checkRatingEligibility = async () => {
     try {
       setLoadingRating(true);
+      
       const response = await axios.get(`${url}/api/rating/check-eligibility`, {
         params: { foodId: id, orderId },
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setUserCanRate(response.data.success ? response.data.canRate : false);
+      if (response.data.success) {
+        setUserCanRate(response.data.canRate);
+      } else {
+        setUserCanRate(false);
+      }
     } catch (error) {
       console.error("Rating eligibility check failed:", error);
       setUserCanRate(false);
@@ -65,38 +72,34 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
 
   const handleRatingSubmit = (newRatingData) => {
     if (updateFoodRatings) {
-      updateFoodRatings(id, {
-        averageRating: newRatingData.averageRating,
-        totalRatings: newRatingData.totalRatings,
-        ratings: newRatingData.ratings
-      });
+      updateFoodRatings(id, newRatingData);
     }
     setShowRatingModal(false);
-    checkRatingEligibility(); // Re-check eligibility after submission
   };
 
   const renderStars = () => {
+    const stars = [];
     const fullStars = Math.floor(averageRating);
     const hasHalfStar = averageRating % 1 >= 0.5;
 
+    for (let i = 1; i <= 5; i++) {
+      let starClass = 'empty';
+      if (i <= fullStars) {
+        starClass = 'full';
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        starClass = 'half';
+      }
+
+      stars.push(
+        <span key={i} className={`star ${starClass}`}>
+          ★
+        </span>
+      );
+    }
+
     return (
       <div className="stars-display">
-        {[...Array(5)].map((_, index) => {
-          let starClass = 'empty';
-          const starValue = index + 1;
-          
-          if (starValue <= fullStars) {
-            starClass = 'full';
-          } else if (starValue === fullStars + 1 && hasHalfStar) {
-            starClass = 'half';
-          }
-
-          return (
-            <span key={starValue} className={`star ${starClass}`}>
-              ★
-            </span>
-          );
-        })}
+        {stars}
         <span className="rating-text">
           {averageRating ? averageRating.toFixed(1) : 'No ratings'} 
           {totalRatings > 0 && ` (${totalRatings})`}
@@ -111,16 +114,15 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
       return;
     }
 
+    addToCart(id);
+    setQuantity(prev => prev + 1);
+
     try {
-      addToCart(id);
-      setQuantity(prev => prev + 1);
       await axios.post(`${url}/api/food/updateclicks`, { id }, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (error) {
       console.error("Error updating clicks:", error);
-      removeFromCart(id); // Rollback on error
-      setQuantity(prev => Math.max(0, prev - 1));
     }
   };
 
@@ -139,19 +141,15 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
           src={image} 
           alt={name}
           onLoad={() => setImageLoaded(true)}
-          onError={() => setImageLoaded(true)} // Fallback if image fails to load
         />
         {!imageLoaded && <div className="image-placeholder"></div>}
       </div>
-      
       <div className="food-item-info">
         <div className="food-item-name-rating">
           <h3>{name}</h3>
           {showRating && renderStars()}
         </div>
-        
         <p className="food-item-desc">{description}</p>
-        
         <div className="food-item-bottom">
           <p className="food-item-price">₹{price}</p>
           <div className="food-item-action">
@@ -159,7 +157,6 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
               src={assests.remove_icon_red}
               alt="Remove"
               onClick={handleDecrease}
-              className={quantity === 0 ? 'disabled' : ''}
             />
             <span>{quantity}</span>
             <img
@@ -169,29 +166,29 @@ const FoodItem = ({ id, name, price, description, image, orderId, showRating = t
             />
           </div>
         </div>
-
         {userCanRate && (
           <button 
             className="rate-button"
             onClick={() => setShowRatingModal(true)}
             disabled={loadingRating}
           >
-            {loadingRating ? (
-              <span className="button-spinner"></span>
-            ) : "Rate this item"}
+            {loadingRating ? "Checking..." : "Rate this item"}
           </button>
         )}
       </div>
 
       {showRatingModal && (
         <RatingModal
-          foodId={id}
-          orderId={orderId}
-          onClose={() => setShowRatingModal(false)}
-          onRatingSubmit={handleRatingSubmit}
-          url={url}
-          token={token}
-        />
+        foodId={id}
+        orderId={orderId}
+        onClose={() => setShowRatingModal(false)}
+        onRatingSubmit={(newRatingData) => {
+            updateFoodRatings(id, newRatingData);
+            setShowRatingModal(false);
+        }}
+        url={url}
+        token={token}
+    />
       )}
     </div>
   );
