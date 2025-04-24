@@ -17,12 +17,19 @@ const transporter = nodemailer.createTransport({
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() });
+    
     if (!user) {
-      return res.status(400).json({ success: false, message: "User does not exist" });
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // Compare password
+    if (!user.isEmailVerified) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Email not verified. Check your inbox." 
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
@@ -31,7 +38,7 @@ const loginUser = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
     res.status(200).json({ success: true, token, userId: user._id });
   } catch (error) {
-    console.error("Error during login:", error);
+    console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -121,17 +128,48 @@ const registerUser = async (req, res) => {
 const verifyEmail = async (req, res) => {
   const { token } = req.query;
   try {
-    const user = await userModel.findOne({ emailVerificationToken: token });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await userModel.findOne({
+      _id: decoded.id,
+      emailVerificationToken: token
+    });
+
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid token" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid verification link" 
+      });
     }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email already verified" 
+      });
+    }
+
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     await user.save();
-    res.status(200).json({ success: true, message: "Email verified successfully" });
+
+    // Send welcome email
+    await transporter.sendMail({
+      from: `"Govardhan Dairy" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Welcome to Govardhan Dairy!",
+      html: `<p>Your email has been successfully verified!</p>`,
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Email verified successfully" 
+    });
   } catch (error) {
-    console.error("Error verifying email:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Verification error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || "Invalid verification link" 
+    });
   }
 };
 
@@ -139,45 +177,93 @@ const verifyEmail = async (req, res) => {
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() });
+    
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Generate a reset token (optional, if you want to use tokens)
+    if (!user.isEmailVerified) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Email not verified. Verify your email first." 
+      });
+    }
+
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     user.passwordResetToken = resetToken;
     user.passwordResetExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    res.status(200).json({ success: true, message: "Proceed to reset password" });
-  } catch (error) {
-    console.error("Error during forgot password:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+ // Send password reset email
+ const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+ await transporter.sendMail({
+   from: `"Govardhan Dairy" <${process.env.EMAIL_USER}>`,
+   to: user.email,
+   subject: "Password Reset Request",
+   html: `<p>Click <a href="${resetUrl}">here</a> to reset your password (valid for 1 hour)</p>`,
+ });
+
+ res.status(200).json({ 
+   success: true, 
+   message: "Password reset instructions sent to your email" 
+ });
+} catch (error) {
+ console.error("Forgot password error:", error);
+ res.status(500).json({ success: false, message: "Server error" });
+}
 };
 
+// Updated reset password
 const resetPassword = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await userModel.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
-    }
+const { token, password } = req.body;
+try {
+ const decoded = jwt.verify(token, process.env.JWT_SECRET);
+ const user = await userModel.findOne({
+   _id: decoded.id,
+   passwordResetToken: token,
+   passwordResetExpires: { $gt: Date.now() }
+ });
 
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+ if (!user) {
+   return res.status(400).json({ 
+     success: false, 
+     message: "Invalid or expired token" 
+   });
+ }
 
-    // Update the user's password
-    user.password = hashedPassword;
-    await user.save();
+ if (password.length < 8) {
+   return res.status(400).json({ 
+     success: false, 
+     message: "Password must be at least 8 characters" 
+   });
+ }
 
-    res.status(200).json({ success: true, message: "Password reset successful" });
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
+ const hashedPassword = await bcrypt.hash(password, 10);
+ user.password = hashedPassword;
+ user.passwordResetToken = undefined;
+ user.passwordResetExpires = undefined;
+ await user.save();
+
+ // Send confirmation email
+ await transporter.sendMail({
+   from: `"Govardhan Dairy" <${process.env.EMAIL_USER}>`,
+   to: user.email,
+   subject: "Password Changed Successfully",
+   html: `<p>Your password has been successfully updated.</p>`,
+ });
+
+ res.status(200).json({ 
+   success: true, 
+   message: "Password reset successful" 
+ });
+} catch (error) {
+ console.error("Reset password error:", error);
+ res.status(500).json({ 
+   success: false, 
+   message: error.message || "Server error" 
+ });
+}
 };
 
 export default { loginUser, registerUser, verifyEmail, forgotPassword, resetPassword };

@@ -1,66 +1,87 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import "./ResetPassword.css"; // Add styles if needed
+import { FaKey } from 'react-icons/fa';
+import './ResetPassword.css';
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Get the token from the URL
+  const { token } = useParams();
   const navigate = useNavigate();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: ""
+  });
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+    
+    if (formData.password !== formData.confirmPassword) {
+      setMessage({ type: 'error', text: 'Passwords do not match' });
       return;
     }
-  
+
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
-        token,
-        password,
-      });
-  
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/user/reset-password`,
+        {
+          token,
+          password: formData.password
+        }
+      );
+
       if (response.data.success) {
-        setMessage("Password reset successfully. You can now login.");
-        setTimeout(() => {
-          navigate("/login"); // Redirect to login page
-        }, 3000);
-      } else {
-        setMessage(response.data.message || "Failed to reset password.");
+        setMessage({
+          type: 'success',
+          text: 'Password reset successfully. Redirecting to login...'
+        });
+        setTimeout(() => navigate('/login'), 3000);
       }
     } catch (error) {
-      console.error("Error resetting password:", error);
-      setMessage("An error occurred. Please try again.");
+      console.error('Reset password error:', error);
+      const errorMsg = error.response?.data?.message || 'An error occurred';
+      setMessage({ type: 'error', text: errorMsg });
     }
   };
 
   return (
     <div className="reset-password-container">
-      <h2>Reset Password</h2>
+      <h2>Reset Your Password</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>New Password</label>
+        <div className="input-group">
+          <FaKey className="icon" />
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            placeholder="New Password"
+            value={formData.password}
+            onChange={handleChange}
             required
+            minLength="8"
           />
         </div>
-        <div className="form-group">
-          <label>Confirm New Password</label>
+        <div className="input-group">
+          <FaKey className="icon" />
           <input
             type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            name="confirmPassword"
+            placeholder="Confirm New Password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
             required
+            minLength="8"
           />
         </div>
-        {message && <p className="message">{message}</p>}
-        <button type="submit">Reset Password</button>
+        {message.text && (
+          <div className={`message ${message.type}`}>{message.text}</div>
+        )}
+        <button type="submit" className="submit-btn">
+          Reset Password
+        </button>
       </form>
     </div>
   );
