@@ -38,7 +38,7 @@ const RecommendedFood = () => {
 
         addToCart(id);
 
-        // Update clicks
+        // Update clicks globally
         try {
             const response = await axios.post(`https://govardhandairyfarmbackend.onrender.com/api/food/updateclicks`, { id }, {
                 headers: {
@@ -46,12 +46,28 @@ const RecommendedFood = () => {
                 },
             });
             if (response.data.success) {
-                console.log("Clicks updated");
+                console.log("Clicks updated globally");
             } else {
                 console.error("Failed to update clicks:", response.data.message);
             }
         } catch (error) {
             console.error("Error updating clicks:", error);
+        }
+
+        // Update clicks per user
+        try {
+            const response = await axios.post(`https://govardhandairyfarmbackend.onrender.com/api/user/updateclick`, { foodId: id }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.data.success) {
+                console.log("User click updated");
+            } else {
+                console.error("Failed to update user click:", response.data.message);
+            }
+        } catch (error) {
+            console.error("Error updating user click:", error);
         }
     };
 

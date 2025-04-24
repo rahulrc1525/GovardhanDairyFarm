@@ -2,6 +2,19 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 
+const clickedItemSchema = new mongoose.Schema({
+  foodId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "food",
+    required: true,
+  },
+  count: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -25,17 +38,17 @@ const userSchema = new mongoose.Schema({
     required: [true, "Password is required"],
     minlength: [8, "Password must be at least 8 characters"]
   },
-    cartData: { type: Object, default: {} },
-    role: { type: String, default: "user" },
-    isEmailVerified: { type: Boolean, default: false },
-    emailVerificationToken: { type: String },
-    passwordResetToken: { type: String },
-    passwordResetExpires: { type: Date },
-  },
-  {
-    timestamps: true,
-    minimize: false,
-  }
-);
+  cartData: { type: Object, default: {} },
+  clickedItems: [clickedItemSchema], // New field to track user clicks on food items
+  role: { type: String, default: "user" },
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
+},
+{
+  timestamps: true,
+  minimize: false,
+});
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
