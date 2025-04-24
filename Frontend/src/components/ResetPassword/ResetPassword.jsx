@@ -12,6 +12,7 @@ const ResetPassword = () => {
     confirmPassword: ""
   });
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,9 +20,12 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+    setMessage({ type: '', text: '' });
+
     if (formData.password !== formData.confirmPassword) {
       setMessage({ type: 'error', text: 'Passwords do not match' });
+      setIsSubmitting(false);
       return;
     }
 
@@ -37,14 +41,16 @@ const ResetPassword = () => {
       if (response.data.success) {
         setMessage({
           type: 'success',
-          text: 'Password reset successfully. Redirecting to login...'
+          text: 'Password reset successfully! Redirecting to login...'
         });
         setTimeout(() => navigate('/login'), 3000);
       }
     } catch (error) {
-      console.error('Reset password error:', error);
-      const errorMsg = error.response?.data?.message || 'An error occurred';
+      const errorMsg = error.response?.data?.message || 
+        'Password reset failed. Please try again.';
       setMessage({ type: 'error', text: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -57,7 +63,7 @@ const ResetPassword = () => {
           <input
             type="password"
             name="password"
-            placeholder="New Password"
+            placeholder="New Password (min 8 characters)"
             value={formData.password}
             onChange={handleChange}
             required
@@ -76,11 +82,19 @@ const ResetPassword = () => {
             minLength="8"
           />
         </div>
+        
         {message.text && (
-          <div className={`message ${message.type}`}>{message.text}</div>
+          <div className={`message ${message.type}`}>
+            {message.text}
+          </div>
         )}
-        <button type="submit" className="submit-btn">
-          Reset Password
+
+        <button 
+          type="submit" 
+          className="submit-btn"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Processing...' : 'Reset Password'}
         </button>
       </form>
     </div>

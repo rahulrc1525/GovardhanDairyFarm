@@ -52,37 +52,67 @@ const Login = ({ setShowLogin }) => {
   const handleRegister = async (event) => {
     event.preventDefault();
     
-    // Frontend validation
-    if (!data.name || !data.email || !data.password) {
-      setErrorMessage("All fields are required");
-      return;
-    }
-    
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match");
-      return;
-    }
+    // Clear previous errors
+  setErrorMessage("");
+
+   // Frontend validation
+  const missingFields = [];
+  if (!data.name) missingFields.push("Name");
+  if (!data.email) missingFields.push("Email");
+  if (!data.password) missingFields.push("Password");
   
-    try {
-      const { confirmPassword, ...registrationData } = data;
-      const response = await axios.post(`${url}/api/user/register`, registrationData);
-      
-      if (response.data.success) {
-        alert("Registration successful! Please check your email for verification.");
-        setIsRegisterActive(false);
-        setErrorMessage("");
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
-      setErrorMessage(errorMsg);
-      
-      // Handle case where user was created but email failed
-      if (error.response?.status === 500) {
-        alert("Account created but verification email failed. Contact support.");
-      }
+  if (missingFields.length > 0) {
+    setErrorMessage(`Required: ${missingFields.join(", ")}`);
+    return;
+  }
+
+  if (data.password !== data.confirmPassword) {
+    setErrorMessage("Passwords do not match");
+    return;
+  }
+
+  try {
+    const { confirmPassword, ...registrationData } = data;
+    const response = await axios.post(
+      `${url}/api/user/register`,
+      registrationData
+    );
+
+    if (response.data.success) {
+      alert("Registration successful! Check your email for verification.");
+      setIsRegisterActive(false);
+      setData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+      });
     }
-  };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 
+      "Registration failed. Please try again.";
+    
+    // Handle specific error cases
+    if (error.response?.status === 400) {
+      setErrorMessage(errorMessage);
+    } else if (error.response?.status === 500) {
+      alert("Account created but verification failed. Contact support.");
+    } else {
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  }
+};
+
+// Add email format validation in register form
+<input
+  type="email"
+  name="email"
+  value={data.email}
+  placeholder="Email"
+  onChange={onChangeHandler}
+  pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+  required
+/>
 
   const handleForgotPassword = async (event) => {
     event.preventDefault();
