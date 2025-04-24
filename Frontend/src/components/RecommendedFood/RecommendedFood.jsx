@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import "./RecommendedFood.css";
 import { StoreContext } from '../../context/StoreContext';
-import { assests } from './../../assests/assests';
+import { assests } from '../../assests/assests';
 
 const RecommendedFood = () => {
     const [recommendedFood, setRecommendedFood] = useState([]);
@@ -39,18 +39,10 @@ const RecommendedFood = () => {
 
         addToCart(id);
 
-        // Update clicks
         try {
-            const response = await axios.post(`${url}/api/food/updateclicks`, { id }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            await axios.post(`${url}/api/food/updateclicks`, { id }, {
+                headers: { Authorization: `Bearer ${token}` }
             });
-            if (response.data.success) {
-                console.log("Clicks updated");
-            } else {
-                console.error("Failed to update clicks:", response.data.message);
-            }
         } catch (error) {
             console.error("Error updating clicks:", error);
         }
@@ -88,10 +80,24 @@ const RecommendedFood = () => {
                                         }}
                                     />
                                 </div>
-                                <h3>{item.name}</h3>
-                                <p>₹{item.price}</p>
-                                <div className="food-item-action">
-                                    {/* Keep existing action buttons */}
+                                <div className="recommended-food-details">
+                                    <h3>{item.name}</h3>
+                                    <p className="recommended-food-price">₹{item.price}</p>
+                                    <div className="food-item-action">
+                                        <img
+                                            src={assests.remove_icon_red}
+                                            alt="Remove"
+                                            onClick={() => handleDecrease(item._id)}
+                                            className="food-item-action-icon"
+                                        />
+                                        <span className="quantity-display">{quantity}</span>
+                                        <img
+                                            src={assests.add_icon_green}
+                                            alt="Add"
+                                            onClick={() => handleIncrease(item._id)}
+                                            className="food-item-action-icon"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         );
