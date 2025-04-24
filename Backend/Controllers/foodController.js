@@ -112,14 +112,41 @@ const updateClicks = async (req, res) => {
 
 const getRecommendedFood = async (req, res) => {
   try {
-    const foodItems = await foodModel.find();
+    // Get all food items with at least some engagement
+    const foodItems = await foodModel.find({
+      $or: [
+        { sales: { $gt: 0 } },
+        { clicks: { $gt: 0 } }
+      ]
+    });
+
+    if (foodItems.length === 0) {
+      // If no items have engagement, return newest items
+      const newestItems = await foodModel.find()
+        .sort({ createdAt: -1 })
+        .limit(10);
+      return res.json({ success: true, data: newestItems });
+    }
+
+    // Calculate normalized scores (0-1) for each metric
+    const maxSales = Math.max(...foodItems.map(item => item.sales), 1);
+    const maxClicks = Math.max(...foodItems.map(item => item.clicks), 1);
+
     const recommendedFood = foodItems
       .map((item) => {
-        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
+        // Normalize scores between 0 and 1
+        const normalizedSales = item.sales / maxSales;
+        const normalizedClicks = item.clicks / maxClicks;
+        
+        // Weighted score (60% sales, 30% clicks, 10% recency)
+        const recencyScore = 0.1 * (1 - (Date.now() - item.createdAt) / (Date.now() - new Date('2020-01-01')));
+        const score = (0.6 * normalizedSales) + (0.3 * normalizedClicks) + recencyScore;
+        
         return { ...item.toObject(), score };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
+
     res.json({ success: true, data: recommendedFood });
   } catch (error) {
     console.error("Error getting recommended food:", error);

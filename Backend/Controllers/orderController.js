@@ -220,6 +220,17 @@ const updateStatus = async (req, res) => {
   }
 };
 
+const updateFoodSales = async (order) => {
+  try {
+    for (const item of order.items) {
+      await foodModel.findByIdAndUpdate(item._id, {
+        $inc: { sales: item.quantity }
+      });
+    }
+  } catch (error) {
+    console.error("Error updating food sales:", error);
+  }
+};
 // Handle webhook events
 const handleWebhookEvent = async (req, res) => {
   try {
@@ -232,6 +243,16 @@ const handleWebhookEvent = async (req, res) => {
   } catch (error) {
     console.error("Error handling webhook event:", error);
     res.status(500).json({ success: false });
+  }
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    const order = await orderModel.findOne({ _id: paymentIntent.metadata.orderId });
+    
+    if (order && !order.payment) {
+      order.payment = true;
+      await order.save();
+      await updateFoodSales(order); // Add this line
+    }
   }
 };
 
