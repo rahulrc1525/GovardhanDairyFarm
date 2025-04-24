@@ -55,6 +55,64 @@ const placeOrder = async (req, res) => {
     };
     const razorpayOrder = await razorpay.orders.create(options);
 
+    // Send order placed email to user and admin immediately after order creation
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const userEmailToSend = userEmail || (await userModel.findById(userId)).email;
+
+    const userSubject = 'Your Order Confirmation';
+    const userHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #4CAF50;">Thank you for your order!</h2>
+        <p>Your order has been successfully placed. Below are the details:</p>
+        <h3>Order Summary</h3>
+        <ul>
+          <li><strong>Order ID:</strong> ${newOrder._id}</li>
+          <li><strong>Items:</strong></li>
+          <ul>
+            ${newOrder.items.map(item => `
+              <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+            `).join('')}
+          </ul>
+          <li><strong>Total Amount:</strong> ₹${newOrder.amount}</li>
+          <li><strong>Delivery Address:</strong></li>
+          <ul>
+            <li>${newOrder.address.street || ''}, ${newOrder.address.city || ''}, ${newOrder.address.state || ''}, ${newOrder.address.ZipCode || ''}</li>
+          </ul>
+        </ul>
+        <p>We will notify you once your order is out for delivery.</p>
+        <p>Thank you for shopping with us!</p>
+      </div>
+    `;
+
+    await sendEmail(userEmailToSend, userSubject, null, userHtml);
+
+    const adminSubject = 'New Order Placed';
+    const adminHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #4CAF50;">New Order Placed</h2>
+        <p>A new order has been placed. Below are the details:</p>
+        <h3>Order Summary</h3>
+        <ul>
+          <li><strong>Order ID:</strong> ${newOrder._id}</li>
+          <li><strong>User Email:</strong> ${userEmailToSend}</li>
+          <li><strong>Items:</strong></li>
+          <ul>
+            ${newOrder.items.map(item => `
+              <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+            `).join('')}
+          </ul>
+          <li><strong>Total Amount:</strong> ₹${newOrder.amount}</li>
+          <li><strong>Delivery Address:</strong></li>
+          <ul>
+            <li>${newOrder.address.street || ''}, ${newOrder.address.city || ''}, ${newOrder.address.state || ''}, ${newOrder.address.ZipCode || ''}</li>
+          </ul>
+        </ul>
+        <p>Please process the order as soon as possible.</p>
+      </div>
+    `;
+
+    await sendEmail(adminEmail, adminSubject, null, adminHtml);
+
     res.status(201).json({ success: true, order: razorpayOrder, orderId: newOrder._id });
   } catch (error) {
     console.error("Error placing order:", error);
@@ -99,7 +157,7 @@ const verifyOrder = async (req, res) => {
               <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
               <li><strong>Delivery Address:</strong></li>
               <ul>
-                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+                <li>${order.address.street || ''}, ${order.address.city || ''}, ${order.address.state || ''}, ${order.address.ZipCode || ''}</li>
               </ul>
             </ul>
             <p>We will notify you once your order is out for delivery.</p>
@@ -128,7 +186,7 @@ const verifyOrder = async (req, res) => {
               <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
               <li><strong>Delivery Address:</strong></li>
               <ul>
-                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+                <li>${order.address.street || ''}, ${order.address.city || ''}, ${order.address.state || ''}, ${order.address.ZipCode || ''}</li>
               </ul>
             </ul>
             <p>Please process the order as soon as possible.</p>
