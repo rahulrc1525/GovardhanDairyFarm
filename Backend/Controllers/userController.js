@@ -40,12 +40,16 @@ const loginUser = async (req, res) => {
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "All fields are required." });
+    }
+
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
 
-    // Validate email and password
     if (!validator.isEmail(email)) {
       return res.status(400).json({ success: false, message: "Invalid email format" });
     }
@@ -80,7 +84,6 @@ const registerUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 // Verify email
 const verifyEmail = async (req, res) => {
   const { token } = req.query;

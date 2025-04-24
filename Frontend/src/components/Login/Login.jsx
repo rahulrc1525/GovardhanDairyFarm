@@ -50,18 +50,24 @@ const Login = ({ setShowLogin }) => {
 
   const handleRegister = async (event) => {
     event.preventDefault();
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+    const { confirmPassword, ...registrationData } = data;
     try {
-      const response = await axios.post(`${url}/api/user/register`, data);
-
+      const response = await axios.post(`${url}/api/user/register`, registrationData);
       if (response.data.success) {
-        alert("Registration successful! Please log in.");
+        alert("Registration successful! Please verify your email.");
         setIsRegisterActive(false);
+        setErrorMessage("");
       } else {
         setErrorMessage(response.data.message);
       }
     } catch (error) {
       console.error("Error during registration:", error);
-      setErrorMessage("An error occurred during registration. Please try again.");
+      const errorMsg = error.response?.data?.message || "An error occurred during registration. Please try again.";
+      setErrorMessage(errorMsg);
     }
   };
 
@@ -148,53 +154,64 @@ const Login = ({ setShowLogin }) => {
 
         {/* Register Form */}
         {isRegisterActive && !showForgotPassword && (
-          <div className="form-box register">
-            <form onSubmit={handleRegister}>
-              <h1>Register</h1>
-              <div className="input-box">
-                <FaUser className="icon" />
-                <input
-                  type="text"
-                  name="name"
-                  value={data.name}
-                  placeholder="Username"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaEnvelope className="icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={data.email}
-                  placeholder="Email"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="password"
-                  value={data.password}
-                  placeholder="Password"
-                  onChange={onChangeHandler}
-                  required
-                />
-              </div>
-              <button className="btn-submit" type="submit">Register</button>
-              {errorMessage && <p className="error-message">{errorMessage}</p>}
-              <div className="register-link">
-                <p>
-                  Already have an account?{' '}
-                  <a href="#" onClick={toggleForm}>Login</a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
+  <div className="form-box register">
+    <form onSubmit={handleRegister}>
+      <h1>Register</h1>
+      <div className="input-box">
+        <FaUser className="icon" />
+        <input
+          type="text"
+          name="name"
+          value={data.name || ""}
+          placeholder="Username"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaEnvelope className="icon" />
+        <input
+          type="email"
+          name="email"
+          value={data.email}
+          placeholder="Email"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaKey className="icon" />
+        <input
+          type="password"
+          name="password"
+          value={data.password}
+          placeholder="Password"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaKey className="icon" />
+        <input
+          type="password"
+          name="confirmPassword"
+          value={data.confirmPassword || ""}
+          placeholder="Confirm Password"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <button className="btn-submit" type="submit">Register</button>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      <div className="register-link">
+        <p>
+          Already have an account?{' '}
+          <a href="#" onClick={toggleForm}>Login</a>
+        </p>
+      </div>
+    </form>
+  </div>
+)}
 
         {/* Forgot Password Form */}
         {showForgotPassword && (
