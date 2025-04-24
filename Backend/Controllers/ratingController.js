@@ -336,9 +336,63 @@ const checkRatingEligibility = async (req, res) => {
     }
 };
 
+// New function to get ratings for multiple food items in batch
+const getBatchRatings = async (req, res) => {
+    try {
+        const { foodIds } = req.body;
+
+        if (!Array.isArray(foodIds) || foodIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "foodIds must be a non-empty array",
+            });
+        }
+
+        // Validate all foodIds
+        for (const id of foodIds) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid food ID format: ${id}`,
+                });
+            }
+        }
+
+        // Find all food items with ratings
+        const foods = await foodModel.find({
+            _id: { $in: foodIds }
+        }).select('ratings name averageRating');
+
+        // Prepare response data
+        const data = foods.map(food => ({
+            foodId: food._id,
+            foodName: food.name,
+            averageRating: food.averageRating || 0,
+            totalRatings: food.ratings ? food.ratings.length : 0,
+            ratings: food.ratings ? food.ratings.sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            ) : []
+        }));
+
+        return res.status(200).json({
+            success: true,
+            data
+        });
+
+    } catch (error) {
+        logError(error, "getBatchRatings");
+        return res.status(500).json({
+            success: false,
+            message: "Error getting batch ratings",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
 export {
     addOrUpdateRating as addRating,
     getUserRating,
     getFoodRatings,
-    checkRatingEligibility
+    checkRatingEligibility,
+    getBatchRatings
 };
