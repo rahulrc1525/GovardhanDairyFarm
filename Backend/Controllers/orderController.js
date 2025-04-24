@@ -80,9 +80,7 @@ const verifyOrder = async (req, res) => {
       if (order && order.userId) {
         const userEmail = order.userId.email;
         const adminEmail = process.env.ADMIN_EMAIL;
-        await Promise.all(order.items.map(async (item) => {
-          await foodModel.findByIdAndUpdate(item._id, { $inc: { purchases: item.quantity } });
-        }));
+        
 
         // Send email to user
         const userSubject = 'Your Order Confirmation';
