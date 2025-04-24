@@ -110,6 +110,21 @@ const updateClicks = async (req, res) => {
   }
 };
 
-z
+const getRecommendedFood = async (req, res) => {
+  try {
+    const foodItems = await foodModel.find();
+    const recommendedFood = foodItems
+      .map((item) => {
+        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
+        return { ...item.toObject(), score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+    res.json({ success: true, data: recommendedFood });
+  } catch (error) {
+    console.error("Error getting recommended food:", error);
+    res.status(500).json({ success: false, message: "Error getting recommended food" });
+  }
+};
 
 export { addFood, listFood, removeFood, updateFood, updateClicks, getRecommendedFood };
