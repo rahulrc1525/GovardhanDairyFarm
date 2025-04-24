@@ -112,7 +112,7 @@ const updateClicks = async (req, res) => {
 
 const getRecommendedFood = async (req, res) => {
   try {
-    const foodItems = await foodModel.find();
+    const foodItems = await foodModel.findz();
     const recommendedFood = foodItems
       .map((item) => {
         const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks

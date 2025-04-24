@@ -1,34 +1,29 @@
-// emailService.js (enhanced)
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL_USER, // Admin email
+    pass: process.env.EMAIL_PASS, // Admin email password
   },
 });
 
 export const sendEmail = async (to, subject, text, html) => {
-  if (!to || !subject) {
-    console.error('Missing required email parameters');
-    return;
-  }
-
   const mailOptions = {
-    from: `Govardhan Dairy Farm <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_USER, // Send from the admin email
     to,
     subject,
-    text: text || '',
-    html: html || text,
+    text,
+    html, // Add HTML content for a professional email format
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
-    return true;
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully to:', to);
   } catch (error) {
     console.error('Error sending email:', error);
-    return false;
   }
 };

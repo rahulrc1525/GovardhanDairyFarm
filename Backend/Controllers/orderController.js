@@ -18,10 +18,12 @@ const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address, userEmail } = req.body;
 
+    // Create items array with full image URLs
     const orderItems = await Promise.all(items.map(async (item) => {
       const foodItem = await foodModel.findById(item._id);
       let imageUrl = foodItem.image;
       
+      // Ensure the image URL is complete (add base URL if it's just a path)
       if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
         imageUrl = `${process.env.BASE_URL}/uploads/${imageUrl}`;
       }
@@ -31,7 +33,7 @@ const placeOrder = async (req, res) => {
         name: item.name || foodItem.name,
         price: item.price || foodItem.price,
         quantity: item.quantity,
-        image: imageUrl
+        image: imageUrl // Store complete image URL
       };
     }));
 
@@ -74,51 +76,66 @@ const verifyOrder = async (req, res) => {
     if (expectedSignature === razorpay_signature) {
       await orderModel.findByIdAndUpdate(orderId, { status: "Food Processing", payment: true });
       
-      const order = await orderModel.findById(orderId);
-      if (order) {
-        const userEmail = order.userEmail;
+      const order = await orderModel.findById(orderId).populate('userId');
+      if (order && order.userId) {
+        const userEmail = order.userId.email;
         const adminEmail = process.env.ADMIN_EMAIL;
 
-        // User email template
-        const userSubject = 'Order Confirmation - Govardhan Dairy Farm';
+        // Send email to user
+        const userSubject = 'Your Order Confirmation';
         const userHtml = `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">Thank you for your order!</h2>
-            <p>Your order (#${orderId}) has been successfully placed.</p>
-            <h3>Order Details</h3>
+            <p>Your order has been successfully placed. Below are the details:</p>
+            <h3>Order Summary</h3>
             <ul>
-              ${order.items.map(item => `
-                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
-              `).join('')}
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
             </ul>
-            <p><strong>Total Amount:</strong> ₹${order.amount / 100}</p>
-            <p><strong>Delivery Address:</strong><br>
-            ${Object.values(order.address).join(', ')}</p>
-            <p>We'll notify you when your order status updates.</p>
+            <p>We will notify you once your order is out for delivery.</p>
+            <p>Thank you for shopping with us!</p>
           </div>
         `;
 
-        // Admin email template
-        const adminSubject = `New Order #${orderId} Received`;
+        await sendEmail(userEmail, userSubject, null, userHtml);
+
+        // Send email to admin
+        const adminSubject = 'New Order Placed';
         const adminHtml = `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #4CAF50;">New Order Notification</h2>
-            <p>Customer: ${userEmail}</p>
-            <h3>Order Details</h3>
+            <h2 style="color: #4CAF50;">New Order Placed</h2>
+            <p>A new order has been placed. Below are the details:</p>
+            <h3>Order Summary</h3>
             <ul>
-              ${order.items.map(item => `
-                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
-              `).join('')}
+              <li><strong>Order ID:</strong> ${orderId}</li>
+              <li><strong>User Email:</strong> ${userEmail}</li>
+              <li><strong>Items:</strong></li>
+              <ul>
+                ${order.items.map(item => `
+                  <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+                `).join('')}
+              </ul>
+              <li><strong>Total Amount:</strong> ₹${order.amount / 100}</li>
+              <li><strong>Delivery Address:</strong></li>
+              <ul>
+                <li>${order.address.street}, ${order.address.city}, ${order.address.state}, ${order.address.ZipCode}</li>
+              </ul>
             </ul>
-            <p><strong>Total Amount:</strong> ₹${order.amount / 100}</p>
+            <p>Please process the order as soon as possible.</p>
           </div>
         `;
 
-        // Send emails
-        await Promise.all([
-          sendEmail(userEmail, userSubject, null, userHtml),
-          sendEmail(adminEmail, adminSubject, null, adminHtml)
-        ]);
+        await sendEmail(adminEmail, adminSubject, null, adminHtml);
       }
 
       return res.status(200).json({ success: true, message: "Payment verified" });
@@ -131,7 +148,6 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
-
 
 // Get orders of a user
 const userOrders = async (req, res) => {
@@ -164,29 +180,38 @@ const updateStatus = async (req, res) => {
       orderId,
       { status },
       { new: true }
-    );
+    ).populate('userId');
 
     if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const subject = `Order #${orderId} Status Update`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-        <h2 style="color: #4CAF50;">Order Status Updated</h2>
-        <p>Your order status has been updated to: <strong>${status}</strong></p>
-        <h3>Order Summary</h3>
-        <ul>
-          ${updatedOrder.items.map(item => `
-            <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
-          `).join('')}
-        </ul>
-        <p><strong>Total Amount:</strong> ₹${updatedOrder.amount / 100}</p>
-        <p>Thank you for choosing Govardhan Dairy Farm!</p>
-      </div>
-    `;
+    if (status === "Out for delivery" || status === "Delivered") {
+      const userEmail = updatedOrder.userId.email;
 
-    await sendEmail(updatedOrder.userEmail, subject, null, html);
+      const subject = `Your Order Status Update`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Order Status Updated</h2>
+          <p>Your order status has been updated to <strong>${status}</strong>. Below are the details:</p>
+          <h3>Order Summary</h3>
+          <ul>
+            <li><strong>Order ID:</strong> ${updatedOrder._id}</li>
+            <li><strong>Status:</strong> ${status}</li>
+            <li><strong>Items:</strong></li>
+            <ul>
+              ${updatedOrder.items.map(item => `
+                <li>${item.name} - ₹${item.price} x ${item.quantity}</li>
+              `).join('')}
+            </ul>
+            <li><strong>Total Amount:</strong> ₹${updatedOrder.amount / 100}</li>
+          </ul>
+          <p>Thank you for shopping with us!</p>
+        </div>
+      `;
+
+      await sendEmail(userEmail, subject, null, html);
+    }
 
     res.status(200).json({ success: true, message: "Order status updated" });
   } catch (error) {
@@ -194,6 +219,7 @@ const updateStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating order status" });
   }
 };
+
 // Handle webhook events
 const handleWebhookEvent = async (req, res) => {
   try {
