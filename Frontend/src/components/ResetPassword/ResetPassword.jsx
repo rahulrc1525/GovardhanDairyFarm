@@ -1,67 +1,118 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
-import "./ResetPassword.css"; // Add styles if needed
+import React, { useState, useContext } from 'react';
+import { FaKey, FaCheck, FaSpinner } from 'react-icons/fa';
+import { StoreContext } from '../../context/StoreContext';
+import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
+import './Login.css';
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Get the token from the URL
-  const navigate = useNavigate();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const { url } = useContext(StoreContext);
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const [data, setData] = useState({
+    password: '',
+    confirmPassword: ''
+  });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords don't match");
       return;
     }
-  
+    
+    if (data.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+    
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/user/reset-password`, {
+      const response = await axios.post(`${url}/api/user/reset-password`, {
         token,
-        password,
+        password: data.password
       });
-  
+
       if (response.data.success) {
-        setMessage("Password reset successfully. You can now login.");
-        setTimeout(() => {
-          navigate("/login"); // Redirect to login page
-        }, 3000);
-      } else {
-        setMessage(response.data.message || "Failed to reset password.");
+        setSuccessMessage(response.data.message);
+        setData({
+          password: '',
+          confirmPassword: ''
+        });
       }
     } catch (error) {
-      console.error("Error resetting password:", error);
-      setMessage("An error occurred. Please try again.");
+      setErrorMessage(error.response?.data?.message || "Password reset failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  if (!token) {
+    return (
+      <div className="login-modal">
+        <div className="login-background">
+          <h1>Invalid Reset Link</h1>
+          <p>The password reset link is invalid or has expired.</p>
+          <p>Please request a new password reset link.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="reset-password-container">
-      <h2>Reset Password</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>New Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Confirm New Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-        {message && <p className="message">{message}</p>}
-        <button type="submit">Reset Password</button>
-      </form>
+    <div className="login-modal">
+      <div className="login-background">
+        <form onSubmit={handleSubmit}>
+          <h1>Reset Password</h1>
+          {successMessage ? (
+            <div className="success-message">
+              <FaCheck /> {successMessage}
+            </div>
+          ) : (
+            <>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="password"
+                  value={data.password}
+                  placeholder="New Password (min 8 characters)"
+                  onChange={onChangeHandler}
+                  required
+                  minLength="8"
+                />
+              </div>
+              <div className="input-box">
+                <FaKey className="icon" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={data.confirmPassword}
+                  placeholder="Confirm New Password"
+                  onChange={onChangeHandler}
+                  required
+                  minLength="8"
+                />
+              </div>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
+              <button className="btn-submit" type="submit" disabled={isLoading}>
+                {isLoading ? <FaSpinner className="spinner" /> : "Reset Password"}
+              </button>
+            </>
+          )}
+        </form>
+      </div>
     </div>
   );
 };
