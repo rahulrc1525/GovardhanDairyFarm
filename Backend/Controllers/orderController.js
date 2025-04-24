@@ -35,6 +35,7 @@ const placeOrder = async (req, res) => {
         quantity: item.quantity,
         image: imageUrl // Store complete image URL
       };
+      
     }));
 
     const newOrder = await orderModel.create({
@@ -46,7 +47,15 @@ const placeOrder = async (req, res) => {
       status: "Food Processing",
     });
 
+    // Update sales count for each food item
+    await Promise.all(items.map(async (item) => {
+      await foodModel.findByIdAndUpdate(item._id, {
+        $inc: { sales: item.quantity }
+      });
+    }));
+
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
 
     const options = {
       amount: amount,

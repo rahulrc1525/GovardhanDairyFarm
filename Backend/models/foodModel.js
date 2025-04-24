@@ -81,16 +81,18 @@ const foodSchema = new mongoose.Schema({
     min: 0,
     max: 5
   }
-}, {
+},  {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: true // Enable automatic index creation
 });
 
 // Indexes for better performance
+foodSchema.index({ clicks: -1 });
+foodSchema.index({ sales: -1 });
+foodSchema.index({ categories: 1 });
 foodSchema.index({ averageRating: -1 });
-foodSchema.index({ 'ratings.userId': 1 });
-foodSchema.index({ 'ratings.orderId': 1 });
 
 // Calculate average rating before saving
 foodSchema.pre('save', function(next) {
@@ -108,6 +110,4 @@ foodSchema.virtual('ratingCount').get(function() {
   return this.ratings.length;
 });
 
-const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
-
-export default foodModel;
+export default mongoose.models.food || mongoose.model("food", foodSchema);
