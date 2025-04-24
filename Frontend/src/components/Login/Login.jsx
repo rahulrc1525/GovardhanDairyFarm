@@ -7,119 +7,112 @@ import axios from "axios";
 
 const Login = ({ setShowLogin }) => {
   const { url, setToken, setUserId } = useContext(StoreContext);
-  const [activeForm, setActiveForm] = useState('login'); // 'login', 'register', 'forgot'
-  const [formData, setFormData] = useState({
+  const [isRegisterActive, setIsRegisterActive] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [data, setData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
   };
 
-  const validateForm = () => {
-    if (!formData.email) {
-      setError("Email is required");
-      return false;
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post(`${url}/api/user/login`, {
+        email: data.email,
+        password: data.password,
+      });
+
+      if (response.data.success) {
+        const { token, userId } = response.data;
+        setToken(token);
+        setUserId(userId);
+        localStorage.setItem("token", token);
+        localStorage.setItem("userId", userId);
+        setShowLogin(false);
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      setErrorMessage("Invalid email or password. Please try again.");
+    }
+  };
+
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    
+    // Frontend validation
+    if (!data.name || !data.email || !data.password) {
+      setErrorMessage("All fields are required");
+      return;
     }
     
-    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      setError("Invalid email format");
-      return false;
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      return;
     }
-
-    if (activeForm !== 'forgot' && !formData.password) {
-      setError("Password is required");
-      return false;
-    }
-
-    if (activeForm === 'register') {
-      if (!formData.name) {
-        setError("Name is required");
-        return false;
+  
+    try {
+      const { confirmPassword, ...registrationData } = data;
+      const response = await axios.post(`${url}/api/user/register`, registrationData);
+      
+      if (response.data.success) {
+        alert("Registration successful! Please check your email for verification.");
+        setIsRegisterActive(false);
+        setErrorMessage("");
       }
-      if (formData.password.length < 8) {
-        setError("Password must be at least 8 characters");
-        return false;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match");
-        return false;
+    } catch (error) {
+      console.error("Registration error:", error);
+      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
+      setErrorMessage(errorMsg);
+      
+      // Handle case where user was created but email failed
+      if (error.response?.status === 500) {
+        alert("Account created but verification email failed. Contact support.");
       }
     }
-
-    if (activeForm === 'forgot' && formData.password && formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return false;
-    }
-
-    setError("");
-    return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    try {
-      let response;
-      
-      if (activeForm === 'login') {
-        response = await axios.post(`${url}/api/user/login`, {
-          email: formData.email,
-          password: formData.password
-        });
-        
-        if (response.data.success) {
-          const { token, userId, name, email } = response.data;
-          setToken(token);
-          setUserId(userId);
-          localStorage.setItem("token", token);
-          localStorage.setItem("userId", userId);
-          setShowLogin(false);
-        }
-      } 
-      else if (activeForm === 'register') {
-        response = await axios.post(`${url}/api/user/register`, {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password
-        });
-        
-        if (response.data.success) {
-          alert(response.data.message);
-          setActiveForm('login');
-          setError("");
-        }
-      } 
-      else if (activeForm === 'forgot') {
-        response = await axios.post(`${url}/api/user/reset-password`, {
-          token: formData.resetToken,
-          password: formData.password
-        });
-        
-        if (response.data.success) {
-          alert("Password reset successfully. You can now login.");
-          setActiveForm('login');
-          setError("");
-        }
-      }
-
-      if (response && !response.data.success) {
-        setError(response.data.message || "An error occurred");
-      }
-    } catch (err) {
-      console.error(`${activeForm} error:`, err);
-      setError(err.response?.data?.message || "An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
+  const handleForgotPassword = async (event) => {
+    event.preventDefault();
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
     }
+
+    try {
+      const response = await axios.post(`${url}/api/user/reset-password`, {
+        email: data.email,
+        password: data.password,
+      });
+
+      if (response.data.success) {
+        alert("Password reset successfully. You can now login.");
+        setShowForgotPassword(false);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      setErrorMessage("An error occurred. Please try again.");
+    }
+  };
+
+  const toggleForm = () => {
+    setErrorMessage("");
+    setIsRegisterActive(!isRegisterActive);
   };
 
   return (
@@ -130,18 +123,19 @@ const Login = ({ setShowLogin }) => {
           <IoMdClose size={24} />
         </button>
 
-        {activeForm === 'login' && (
+        {/* Login Form */}
+        {!isRegisterActive && !showForgotPassword && (
           <div className="form-box login">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleLogin}>
               <h1><b>Login</b></h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
+                  value={data.email}
                   placeholder="Email"
-                  onChange={handleChange}
+                  onChange={onChangeHandler}
                   required
                 />
               </div>
@@ -150,109 +144,101 @@ const Login = ({ setShowLogin }) => {
                 <input
                   type="password"
                   name="password"
-                  value={formData.password}
+                  value={data.password}
                   placeholder="Password"
-                  onChange={handleChange}
+                  onChange={onChangeHandler}
                   required
                 />
               </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? 'Loading...' : 'Login'}
-              </button>
+              <button className="btn-submit" type="submit">Login</button>
               <p className="forgot-password-link">
-                <a href="#" onClick={() => setActiveForm('forgot')}>
-                  Forgot Password?
-                </a>
+                <a href="#" onClick={() => setShowForgotPassword(true)}>Forgot Password?</a>
               </p>
-              {error && <p className="error-message">{error}</p>}
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>
-                  Don't have an account?{' '}
-                  <a href="#" onClick={() => setActiveForm('register')}>
-                    Register
-                  </a>
+                  Don’t have an account?{' '}
+                  <a href="#" onClick={toggleForm}>Register</a>
                 </p>
               </div>
             </form>
           </div>
         )}
 
-        {activeForm === 'register' && (
-          <div className="form-box register">
-            <form onSubmit={handleSubmit}>
-              <h1>Register</h1>
-              <div className="input-box">
-                <FaUser className="icon" />
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  placeholder="Full Name"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaEnvelope className="icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  placeholder="Email"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  placeholder="Password (min 8 chars)"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="input-box">
-                <FaKey className="icon" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  placeholder="Confirm Password"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? 'Registering...' : 'Register'}
-              </button>
-              {error && <p className="error-message">{error}</p>}
-              <div className="register-link">
-                <p>
-                  Already have an account?{' '}
-                  <a href="#" onClick={() => setActiveForm('login')}>
-                    Login
-                  </a>
-                </p>
-              </div>
-            </form>
-          </div>
-        )}
+        {/* Register Form */}
+        {isRegisterActive && !showForgotPassword && (
+  <div className="form-box register">
+    <form onSubmit={handleRegister}>
+      <h1>Register</h1>
+      <div className="input-box">
+        <FaUser className="icon" />
+        <input
+          type="text"
+          name="name"
+          value={data.name || ""}
+          placeholder="Username"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaEnvelope className="icon" />
+        <input
+          type="email"
+          name="email"
+          value={data.email}
+          placeholder="Email"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaKey className="icon" />
+        <input
+          type="password"
+          name="password"
+          value={data.password}
+          placeholder="Password"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <div className="input-box">
+        <FaKey className="icon" />
+        <input
+          type="password"
+          name="confirmPassword"
+          value={data.confirmPassword || ""}
+          placeholder="Confirm Password"
+          onChange={onChangeHandler}
+          required
+        />
+      </div>
+      <button className="btn-submit" type="submit">Register</button>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      <div className="register-link">
+        <p>
+          Already have an account?{' '}
+          <a href="#" onClick={toggleForm}>Login</a>
+        </p>
+      </div>
+    </form>
+  </div>
+)}
 
-        {activeForm === 'forgot' && (
+        {/* Forgot Password Form */}
+        {showForgotPassword && (
           <div className="form-box forgot-password">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleForgotPassword}>
               <h1>Reset Password</h1>
               <div className="input-box">
                 <FaEnvelope className="icon" />
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
-                  placeholder="Your Email"
-                  onChange={handleChange}
+                  value={data.email}
+                  placeholder="Enter your email"
+                  onChange={onChangeHandler}
                   required
                 />
               </div>
@@ -261,9 +247,10 @@ const Login = ({ setShowLogin }) => {
                 <input
                   type="password"
                   name="password"
-                  value={formData.password}
+                  value={data.password}
                   placeholder="New Password"
-                  onChange={handleChange}
+                  onChange={onChangeHandler}
+                  required
                 />
               </div>
               <div className="input-box">
@@ -271,20 +258,17 @@ const Login = ({ setShowLogin }) => {
                 <input
                   type="password"
                   name="confirmPassword"
-                  value={formData.confirmPassword}
+                  value={data.confirmPassword}
                   placeholder="Confirm New Password"
-                  onChange={handleChange}
+                  onChange={onChangeHandler}
+                  required
                 />
               </div>
-              <button className="btn-submit" type="submit" disabled={isLoading}>
-                {isLoading ? 'Processing...' : 'Reset Password'}
-              </button>
-              {error && <p className="error-message">{error}</p>}
+              <button className="btn-submit" type="submit">Reset Password</button>
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
               <div className="register-link">
                 <p>
-                  <a href="#" onClick={() => setActiveForm('login')}>
-                    Back to Login
-                  </a>
+                  <a href="#" onClick={() => setShowForgotPassword(false)}>Back to Login</a>
                 </p>
               </div>
             </form>

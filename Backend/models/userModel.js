@@ -7,8 +7,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Name is required"],
     trim: true,
-    minlength: [2, "Name must be at least 2 characters"],
-    maxlength: [50, "Name cannot exceed 50 characters"]
+    minlength: [2, "Name must be at least 2 characters"]
   },
   email: {
     type: String,
@@ -24,47 +23,19 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, "Password is required"],
-    minlength: [8, "Password must be at least 8 characters"],
-    select: false
+    minlength: [8, "Password must be at least 8 characters"]
   },
-  cartData: { 
-    type: Object, 
-    default: {} 
+    cartData: { type: Object, default: {} },
+    role: { type: String, default: "user" },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
-  role: { 
-    type: String, 
-    enum: ["user", "admin"], 
-    default: "user" 
-  },
-  isEmailVerified: { 
-    type: Boolean, 
-    default: false 
-  },
-  emailVerificationToken: { 
-    type: String,
-    select: false
-  },
-  passwordResetToken: { 
-    type: String,
-    select: false
-  },
-  passwordResetExpires: { 
-    type: Date,
-    select: false
+  {
+    timestamps: true,
+    minimize: false,
   }
-}, {
-  timestamps: true,
-  minimize: false
-});
-
-// Prevent password from being returned in queries
-userSchema.methods.toJSON = function() {
-  const user = this.toObject();
-  delete user.password;
-  delete user.emailVerificationToken;
-  delete user.passwordResetToken;
-  delete user.passwordResetExpires;
-  return user;
-};
+);
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
