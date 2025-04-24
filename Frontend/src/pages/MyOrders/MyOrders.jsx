@@ -81,16 +81,12 @@ const MyOrders = () => {
     setShowRatingModal(false);
   };
 
-  const handleRateItem = async (foodId, orderId) => {
-    try {
-      setSelectedFood(foodId);
-      setSelectedOrder(orderId);
-      setShowRatingModal(true);
-    } catch (error) {
-      console.error("Error in handleRateItem:", error);
-      alert("Error preparing rating form");
-    }
+  const handleRateItem = (foodId, orderId) => {
+    setSelectedFood(foodId);
+    setSelectedOrder(orderId);
+    setShowRatingModal(true);
   };
+  
 
   useEffect(() => {
     fetchOrders();

@@ -148,6 +148,10 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
+// Add to verifyOrder function after successful payment
+await Promise.all(order.items.map(async (item) => {
+  await foodModel.findByIdAndUpdate(item._id, { $inc: { purchases: item.quantity } });
+}));
 
 // Get orders of a user
 const userOrders = async (req, res) => {
