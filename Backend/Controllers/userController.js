@@ -39,49 +39,82 @@ const loginUser = async (req, res) => {
 // Register user
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
+  
   try {
-    // Validate required fields
+    // Validation
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required." });
-    }
-
-    const existingUser = await userModel.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
     }
 
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email format" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid email format" 
+      });
     }
 
     if (password.length < 8) {
-      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password must be at least 8 characters" 
+      });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Check existing user
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email already registered" 
+      });
+    }
 
-    // Create new user
-    const newUser = new userModel({ name, email, password: hashedPassword });
-    const verificationToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    // Create user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new userModel({ 
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword 
+    });
+
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { id: newUser._id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "1d" }
+    );
+    
     newUser.emailVerificationToken = verificationToken;
     await newUser.save();
 
-    // Send verification email
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify Your Email",
-      html: `<p>Please click <a href="${verificationUrl}">here</a> to verify your email.</p>`,
-    };
-    await transporter.sendMail(mailOptions);
+    // Send verification email (async)
+    try {
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+      await transporter.sendMail({
+        from: `"Govardhan Dairy" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Verify Your Email",
+        html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email</p>`,
+      });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      // Continue even if email fails
+    }
 
-    res.status(201).json({ success: true, message: "Registration successful. Please verify your email." });
+    res.status(201).json({ 
+      success: true,
+      message: "Registration successful. Please verify your email."
+    });
+
   } catch (error) {
-    console.error("Error during registration:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Registration error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Registration failed. Please try again." 
+    });
   }
 };
 // Verify email

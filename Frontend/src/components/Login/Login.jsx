@@ -10,6 +10,7 @@ const Login = ({ setShowLogin }) => {
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [data, setData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -50,24 +51,36 @@ const Login = ({ setShowLogin }) => {
 
   const handleRegister = async (event) => {
     event.preventDefault();
-    if (data.password !== data.confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+    
+    // Frontend validation
+    if (!data.name || !data.email || !data.password) {
+      setErrorMessage("All fields are required");
       return;
     }
-    const { confirmPassword, ...registrationData } = data;
+    
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      return;
+    }
+  
     try {
+      const { confirmPassword, ...registrationData } = data;
       const response = await axios.post(`${url}/api/user/register`, registrationData);
+      
       if (response.data.success) {
-        alert("Registration successful! Please verify your email.");
+        alert("Registration successful! Please check your email for verification.");
         setIsRegisterActive(false);
         setErrorMessage("");
-      } else {
-        setErrorMessage(response.data.message);
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      const errorMsg = error.response?.data?.message || "An error occurred during registration. Please try again.";
+      console.error("Registration error:", error);
+      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
       setErrorMessage(errorMsg);
+      
+      // Handle case where user was created but email failed
+      if (error.response?.status === 500) {
+        alert("Account created but verification email failed. Contact support.");
+      }
     }
   };
 
