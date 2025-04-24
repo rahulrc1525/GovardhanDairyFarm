@@ -14,7 +14,6 @@ const RatingModal = ({
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [review, setReview] = useState('');
     const [existingRating, setExistingRating] = useState(null);
@@ -33,10 +32,8 @@ const RatingModal = ({
                     setReview(response.data.data.rating.review || '');
                 }
             } catch (error) {
-                console.error("Error fetching user rating:", error);
-                // Don't show error if no rating exists yet
                 if (error.response?.status !== 404) {
-                    setError("Failed to fetch existing rating. Please try again.");
+                    console.error("Error fetching user rating:", error);
                 }
             }
         };
@@ -46,65 +43,49 @@ const RatingModal = ({
         }
     }, [foodId, orderId, token, url]);
 
-    // Updated handleSubmit function
-const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    if (rating === 0) {
-        setError("Please select a rating");
-        return;
-    }
+        if (rating === 0) return;
 
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(false);
+        setIsSubmitting(true);
 
-    try {
-        const response = await axios.post(
-            `${url}/api/rating/add`,
-            {
-                foodId,
-                orderId,
-                rating,
-                review,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
+        try {
+            const response = await axios.post(
+                `${url}/api/rating/add`,
+                {
+                    foodId,
+                    orderId,
+                    rating,
+                    review,
                 },
-                timeout: 10000
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000
+                }
+            );
+
+            if (response.data.success) {
+                setSuccess(true);
+                if (updateFoodRatings) {
+                    updateFoodRatings(foodId, response.data.data);
+                }
+                setTimeout(() => {
+                    onClose();
+                    if (onRatingSubmit) {
+                        onRatingSubmit(response.data.data);
+                    }
+                }, 1500);
             }
-        );
-
-        if (!response.data.success) {
-            throw new Error(response.data.message || "Rating submission failed");
+        } catch (error) {
+            console.error("Rating submission error:", error);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setSuccess(true);
-
-        // Update local state with new rating data
-        if (updateFoodRatings) {
-            updateFoodRatings(foodId, response.data.data);
-        }
-
-        setTimeout(() => {
-            onClose();
-            if (onRatingSubmit) {
-                onRatingSubmit(response.data.data);
-            }
-        }, 1500);
-    } catch (error) {
-        console.error("Rating submission error:", error);
-        setError(
-            error.response?.data?.message ||
-            error.message ||
-            "Failed to submit rating. Please try again."
-        );
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+    };
 
     return (
         <div className="rating-modal-overlay">
@@ -166,19 +147,6 @@ const handleSubmit = async (e) => {
                                 maxLength="500"
                             />
                         </div>
-
-                        {error && (
-                            <div className="error-message">
-                                <p>{error}</p>
-                                <button
-                                    onClick={() => setError(null)}
-                                    className="retry-button"
-                                    disabled={isSubmitting}
-                                >
-                                    Try Again
-                                </button>
-                            </div>
-                        )}
 
                         <button
                             type="submit"
