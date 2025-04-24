@@ -57,16 +57,11 @@ const addOrUpdateRating = async (req, res) => {
         }
 
         // Check if order exists and is delivered
-        // Update the order check in addOrUpdateRating
-const order = await orderModel.findOne({
-    _id: orderId,
-    userId: userId,
-    status: "Delivered",
-  });
-  
-  // Add error logging for database operations
-  console.log("Order check result:", order);
-  console.log("Food item check:", foodItemInOrder);
+        const order = await orderModel.findOne({
+            _id: orderId,
+            userId: userId,
+            status: "Delivered",
+        });
 
         if (!order) {
             return res.status(400).json({

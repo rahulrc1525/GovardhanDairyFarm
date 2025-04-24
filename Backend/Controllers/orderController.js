@@ -80,7 +80,6 @@ const verifyOrder = async (req, res) => {
       if (order && order.userId) {
         const userEmail = order.userId.email;
         const adminEmail = process.env.ADMIN_EMAIL;
-        
 
         // Send email to user
         const userSubject = 'Your Order Confirmation';
@@ -149,8 +148,6 @@ const verifyOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying payment" });
   }
 };
-// Add to verifyOrder function after successful payment
-
 
 // Get orders of a user
 const userOrders = async (req, res) => {

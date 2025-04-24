@@ -97,39 +97,33 @@ const updateFood = async (req, res) => {
 const updateClicks = async (req, res) => {
   try {
     const { id } = req.body;
-    await foodModel.findByIdAndUpdate(id, { $inc: { clicks: 1 } });
-    res.json({ success: true });
+    const food = await foodModel.findById(id);
+    if (!food) {
+      return res.status(404).json({ success: false, message: "Food item not found" });
+    }
+    food.clicks += 1;
+    await food.save();
+    res.json({ success: true, message: "Clicks updated" });
   } catch (error) {
     console.error("Error updating clicks:", error);
     res.status(500).json({ success: false, message: "Error updating clicks" });
   }
 };
 
-
 const getRecommendedFood = async (req, res) => {
   try {
-    const foods = await foodModel.aggregate([
-      {
-        $project: {
-          name: 1,
-          price: 1,
-          image: 1,
-          score: {
-            $add: [
-              { $multiply: ["$clicks", 0.4] },
-              { $multiply: ["$purchases", 0.6] }
-            ]
-          }
-        }
-      },
-      { $sort: { score: -1 } },
-      { $limit: 8 }
-    ]);
-    
-    res.json({ success: true, data: foods });
+    const foodItems = await foodModel.find();
+    const recommendedFood = foodItems
+      .map((item) => {
+        const score = item.sales * 0.7 + item.clicks * 0.3; // Assign a weightage of 70% to sales and 30% to clicks
+        return { ...item.toObject(), score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+    res.json({ success: true, data: recommendedFood });
   } catch (error) {
-    console.error("Error fetching recommendations:", error);
-    res.status(500).json({ success: false, message: "Error fetching recommendations" });
+    console.error("Error getting recommended food:", error);
+    res.status(500).json({ success: false, message: "Error getting recommended food" });
   }
 };
 

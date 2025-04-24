@@ -4,7 +4,6 @@ import multer from "multer";
 
 const foodRouter = express.Router();
 
-
 const storage = multer.diskStorage({
   destination: "Uploads",
   filename: (req, file, cb) => {
@@ -20,6 +19,5 @@ foodRouter.post("/remove", removeFood);
 foodRouter.post("/update", updateFood); // New route for updating food
 foodRouter.post("/updateclicks", updateClicks);
 foodRouter.get("/recommended", getRecommendedFood);
-
 
 export default foodRouter;
