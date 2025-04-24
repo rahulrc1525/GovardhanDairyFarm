@@ -28,10 +28,9 @@ const __dirname = path.dirname(__filename);
 
 // Configure CORS with allowed origins
 const allowedOrigins = [
-  "https://govardhandairyfarm-admin.onrzender.com",
+  "https://govardhandairyfarm-admin.onrender.com",
   "https://govardhandairyfarm.shop",
   "https://govardhandairyfarm.onrender.com",
-  "https://govardhandairyfarmbackend.onrender.com",
   "http://localhost:3000" // For local development
 ];
 
