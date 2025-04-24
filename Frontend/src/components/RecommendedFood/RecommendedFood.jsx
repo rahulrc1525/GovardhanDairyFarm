@@ -8,13 +8,11 @@ const url = 'https://govardhandairyfarmbackend.onrender.com';
 
 const RecommendedFood = () => {
     const [recommendedFood, setRecommendedFood] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const { addToCart, removeFromCart, token, cart } = useContext(StoreContext);
+    const { addToCart, removeFromCart, token, cart } = useContext(StoreContext); // Use context for cart functionality
 
     useEffect(() => {
         const fetchRecommendedFood = async () => {
             try {
-                setLoading(true);
                 const response = await axios.get(`${url}/api/food/recommended`);
                 if (response.data.success) {
                     setRecommendedFood(response.data.data);
@@ -23,8 +21,6 @@ const RecommendedFood = () => {
                 }
             } catch (error) {
                 console.error("Error fetching recommended food:", error);
-            } finally {
-                setLoading(false);
             }
         };
         fetchRecommendedFood();
@@ -60,9 +56,6 @@ const RecommendedFood = () => {
             removeFromCart(id);
         }
     };
-    if (loading) {
-        return <div className="loading-spinner">Loading recommendations...</div>;
-    }
 
     return (
         <div>
