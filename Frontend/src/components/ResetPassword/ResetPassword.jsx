@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaKey } from 'react-icons/fa';
-import './ResetPassword.css';
+import "./ResetPassword.css";
+import { FaKey, FaCheck } from "react-icons/fa";
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -11,92 +11,109 @@ const ResetPassword = () => {
     password: "",
     confirmPassword: ""
   });
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setMessage({ type: '', text: '' });
-
+    
     if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' });
-      setIsSubmitting(false);
+      setMessage({ text: "Passwords do not match", type: "error" });
       return;
     }
 
+    if (formData.password.length < 8) {
+      setMessage({ 
+        text: "Password must be at least 8 characters", 
+        type: "error" 
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/user/reset-password`,
-        {
-          token,
-          password: formData.password
-        }
+        `${process.env.REACT_APP_API_URL || ""}/api/user/reset-password`,
+        { token, password: formData.password }
       );
 
       if (response.data.success) {
-        setMessage({
-          type: 'success',
-          text: 'Password reset successfully! Redirecting to login...'
+        setMessage({ 
+          text: "Password reset successfully! Redirecting to login...", 
+          type: "success" 
         });
-        setTimeout(() => navigate('/login'), 3000);
+        setTimeout(() => navigate("/login"), 3000);
+      } else {
+        setMessage({ 
+          text: response.data.message || "Failed to reset password", 
+          type: "error" 
+        });
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 
-        'Password reset failed. Please try again.';
-      setMessage({ type: 'error', text: errorMsg });
+      console.error("Reset password error:", error);
+      setMessage({ 
+        text: error.response?.data?.message || "An error occurred", 
+        type: "error" 
+      });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="reset-password-container">
-      <h2>Reset Your Password</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="input-group">
-          <FaKey className="icon" />
-          <input
-            type="password"
-            name="password"
-            placeholder="New Password (min 8 characters)"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength="8"
-          />
-        </div>
-        <div className="input-group">
-          <FaKey className="icon" />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm New Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            minLength="8"
-          />
-        </div>
-        
-        {message.text && (
-          <div className={`message ${message.type}`}>
-            {message.text}
+      <div className="reset-password-card">
+        <h2>Reset Your Password</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>New Password</label>
+            <div className="input-with-icon">
+              <FaKey className="input-icon" />
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter new password"
+                required
+                minLength="8"
+              />
+            </div>
           </div>
-        )}
-
-        <button 
-          type="submit" 
-          className="submit-btn"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Processing...' : 'Reset Password'}
-        </button>
-      </form>
+          <div className="form-group">
+            <label>Confirm New Password</label>
+            <div className="input-with-icon">
+              <FaCheck className="input-icon" />
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm new password"
+                required
+                minLength="8"
+              />
+            </div>
+          </div>
+          {message.text && (
+            <div className={`message ${message.type}`}>
+              {message.text}
+            </div>
+          )}
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? "Processing..." : "Reset Password"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

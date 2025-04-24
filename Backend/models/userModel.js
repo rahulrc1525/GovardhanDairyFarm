@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -18,8 +19,7 @@ const userSchema = new mongoose.Schema({
     validate: {
       validator: validator.isEmail,
       message: "Invalid email format"
-    },
-    index: true
+    }
   },
   password: {
     type: String,
@@ -27,31 +27,44 @@ const userSchema = new mongoose.Schema({
     minlength: [8, "Password must be at least 8 characters"],
     select: false
   },
-  cartData: {
-    type: Object,
-    default: {}
+  cartData: { 
+    type: Object, 
+    default: {} 
   },
-  role: {
+  role: { 
+    type: String, 
+    enum: ["user", "admin"], 
+    default: "user" 
+  },
+  isEmailVerified: { 
+    type: Boolean, 
+    default: false 
+  },
+  emailVerificationToken: { 
     type: String,
-    enum: ["user", "admin"],
-    default: "user"
+    select: false
   },
-  isEmailVerified: {
-    type: Boolean,
-    default: false
-  },
-  emailVerificationToken: {
+  passwordResetToken: { 
     type: String,
-    index: true
+    select: false
   },
-  passwordResetToken: {
-    type: String,
-    index: true
-  },
-  passwordResetExpires: Date
+  passwordResetExpires: { 
+    type: Date,
+    select: false
+  }
 }, {
   timestamps: true,
   minimize: false
 });
+
+// Prevent password from being returned in queries
+userSchema.methods.toJSON = function() {
+  const user = this.toObject();
+  delete user.password;
+  delete user.emailVerificationToken;
+  delete user.passwordResetToken;
+  delete user.passwordResetExpires;
+  return user;
+};
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
