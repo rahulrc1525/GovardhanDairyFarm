@@ -5,34 +5,39 @@ import FoodItem from '../FoodItem/FoodItem';
 
 const FoodDisplay = ({ category }) => {
   const { foodList } = useContext(StoreContext);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [filteredFoodList, setFilteredFoodList] = useState([]);
 
   useEffect(() => {
-    // Simulate loading delay for UX or wait for context update
-    const timeout = setTimeout(() => {
+    // Always show loading when category changes or on initial render
+    setIsLoading(true);
+    
+    const filterFoods = () => {
       if (category === 'All') {
-        setFilteredFoodList(foodList);
-      } else {
-        const filtered = foodList.filter(
-          (item) => item.categories && item.categories.includes(category)
-        );
-        setFilteredFoodList(filtered);
+        return foodList;
       }
-      setLoading(false);
-    }, 500); // You can adjust this delay or remove if foodList is async loaded
+      return foodList.filter(
+        (item) => item.categories && item.categories.includes(category)
+      );
+    };
 
-    return () => clearTimeout(timeout);
+    // Simulate loading delay (remove or adjust if using real API calls)
+    const timer = setTimeout(() => {
+      setFilteredFoodList(filterFoods());
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [category, foodList]);
 
   return (
     <div className="food-display" id="food-display">
-      <h2> Discover Nature’s Bounty</h2>
+      <h2>Discover Nature's Bounty</h2>
       <div className="food-display-list">
-        {loading ? (
+        {isLoading ? (
           <div className="loader-container">
             <div className="loader"></div>
-            <p>Loading products...</p>
+            <p>Loading delicious options...</p>
           </div>
         ) : filteredFoodList.length > 0 ? (
           filteredFoodList.map((item) => (
@@ -46,7 +51,7 @@ const FoodDisplay = ({ category }) => {
             />
           ))
         ) : (
-          <p>No products available for this category.</p>
+          <p className="no-products-message">No products available in this category</p>
         )}
       </div>
     </div>
