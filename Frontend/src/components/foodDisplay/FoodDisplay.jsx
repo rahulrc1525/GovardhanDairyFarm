@@ -20,10 +20,8 @@ const FoodDisplay = ({ category }) => {
       );
     };
 
-    // Simulate API call delay
     const timer = setTimeout(() => {
-      const filtered = filterFoods();
-      setFilteredFoodList(filtered);
+      setFilteredFoodList(filterFoods());
       setIsLoading(false);
     }, 500);
 
@@ -53,7 +51,7 @@ const FoodDisplay = ({ category }) => {
         ) : (
           <div className="loader-container">
             <div className="loader"></div>
-            <p>Gathering fresh products...</p>
+            <p>Our fresh products are getting ready! Please wait...</p>
           </div>
         )}
       </div>
