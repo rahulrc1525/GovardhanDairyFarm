@@ -7,9 +7,9 @@ const FoodDisplay = ({ category }) => {
   const { foodList } = useContext(StoreContext);
   const [isLoading, setIsLoading] = useState(true);
   const [filteredFoodList, setFilteredFoodList] = useState([]);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
-    // Always show loading when category changes or on initial render
     setIsLoading(true);
     
     const filterFoods = () => {
@@ -21,10 +21,10 @@ const FoodDisplay = ({ category }) => {
       );
     };
 
-    // Simulate loading delay (remove or adjust if using real API calls)
     const timer = setTimeout(() => {
       setFilteredFoodList(filterFoods());
       setIsLoading(false);
+      setInitialLoad(false);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -34,7 +34,7 @@ const FoodDisplay = ({ category }) => {
     <div className="food-display" id="food-display">
       <h2>Discover Nature's Bounty</h2>
       <div className="food-display-list">
-        {isLoading ? (
+        {isLoading || initialLoad ? (
           <div className="loader-container">
             <div className="loader"></div>
             <p>Loading delicious options...</p>
