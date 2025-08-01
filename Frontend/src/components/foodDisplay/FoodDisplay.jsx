@@ -7,10 +7,11 @@ const FoodDisplay = ({ category }) => {
   const { foodList } = useContext(StoreContext);
   const [isLoading, setIsLoading] = useState(true);
   const [filteredFoodList, setFilteredFoodList] = useState([]);
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [showEmptyState, setShowEmptyState] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
+    setShowEmptyState(false);
     
     const filterFoods = () => {
       if (category === 'All') {
@@ -22,9 +23,13 @@ const FoodDisplay = ({ category }) => {
     };
 
     const timer = setTimeout(() => {
-      setFilteredFoodList(filterFoods());
+      const filtered = filterFoods();
+      setFilteredFoodList(filtered);
       setIsLoading(false);
-      setInitialLoad(false);
+      if (filtered.length === 0) {
+        // Show empty state loader for 2 seconds before showing message
+        setShowEmptyState(true);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
@@ -34,7 +39,7 @@ const FoodDisplay = ({ category }) => {
     <div className="food-display" id="food-display">
       <h2>Discover Nature's Bounty</h2>
       <div className="food-display-list">
-        {isLoading || initialLoad ? (
+        {isLoading ? (
           <div className="loader-container">
             <div className="loader"></div>
             <p>Loading delicious options...</p>
@@ -50,9 +55,12 @@ const FoodDisplay = ({ category }) => {
               image={item.image}
             />
           ))
-        ) : (
-          <p className="no-products-message">No products available in this category</p>
-        )}
+        ) : showEmptyState ? (
+          <div className="loader-container">
+            <div className="loader"></div>
+            <p>Fresh products coming soon...</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
