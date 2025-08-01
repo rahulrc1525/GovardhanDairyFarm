@@ -51,7 +51,7 @@ const FoodDisplay = ({ category }) => {
             />
           ))
         ) : (
-          <p className="no-products-message">No products available in this category</p>
+          <p className="no-products-message">Our fresh products are getting ready! Please wait...</p>
         )}
       </div>
     </div>
