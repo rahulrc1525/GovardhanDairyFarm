@@ -7,11 +7,9 @@ const FoodDisplay = ({ category }) => {
   const { foodList } = useContext(StoreContext);
   const [isLoading, setIsLoading] = useState(true);
   const [filteredFoodList, setFilteredFoodList] = useState([]);
-  const [showEmptyState, setShowEmptyState] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    setShowEmptyState(false);
     
     const filterFoods = () => {
       if (category === 'All') {
@@ -22,14 +20,11 @@ const FoodDisplay = ({ category }) => {
       );
     };
 
+    // Simulate API call delay
     const timer = setTimeout(() => {
       const filtered = filterFoods();
       setFilteredFoodList(filtered);
       setIsLoading(false);
-      if (filtered.length === 0) {
-        // Show empty state loader for 2 seconds before showing message
-        setShowEmptyState(true);
-      }
     }, 500);
 
     return () => clearTimeout(timer);
@@ -55,12 +50,12 @@ const FoodDisplay = ({ category }) => {
               image={item.image}
             />
           ))
-        ) : showEmptyState ? (
+        ) : (
           <div className="loader-container">
             <div className="loader"></div>
-            <p>Fresh products coming soon...</p>
+            <p>Gathering fresh products...</p>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
