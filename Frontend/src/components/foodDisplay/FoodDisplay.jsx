@@ -37,6 +37,7 @@ const FoodDisplay = ({ category }) => {
         {isLoading ? (
           <div className="loader-container">
             <div className="loader"></div>
+            <p>Loading delicious options...</p>
           </div>
         ) : filteredFoodList.length > 0 ? (
           filteredFoodList.map((item) => (
@@ -49,7 +50,10 @@ const FoodDisplay = ({ category }) => {
               image={item.image}
             />
           ))
-        ) : null}
+        ) : (
+          // Only show this message when NOT loading and list is empty
+          <p className="no-products-message">No products available in this category</p>
+        )}
       </div>
     </div>
   );
